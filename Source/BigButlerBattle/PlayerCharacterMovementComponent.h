@@ -10,7 +10,7 @@
 class APlayerCharacter;
 
 UENUM(BlueprintType)
-enum class ECustomMovementTypeEnum : uint8
+enum class ECustomMovementType : uint8
 {
 	MOVE_None			UMETA(DisplayName = "None"),
 	MOVE_Skateboard		UMETA(DisplayName = "Skateboard")
@@ -26,7 +26,7 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
-	ECustomMovementTypeEnum CurrentCustomMovementMode = ECustomMovementTypeEnum::MOVE_Skateboard;
+	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
 	bool bStandstill = false;
 
@@ -44,6 +44,8 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	bool IsStandstill() const { return bStandstill; }
+
+	bool IsMovingOnGround() const override;
 
 protected:
 	void BeginPlay() override;
