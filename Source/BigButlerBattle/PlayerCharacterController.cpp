@@ -29,8 +29,7 @@ void APlayerCharacterController::SetupInputComponent()
 	check(InputComponent != nullptr);
 
 	// Action Mappings
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, ControlledPlayer, &APlayerCharacter::Jump);
-
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacterController::Jump);
 
 	// Axis Mappings
 	InputComponent->BindAxis("Forward", this, &APlayerCharacterController::MoveForward);
@@ -52,4 +51,10 @@ void APlayerCharacterController::MoveRight(float Value)
 	{
 		ControlledPlayer->AddMovementInput(ControlledPlayer->GetActorRightVector() * Value);
 	}
+}
+
+void APlayerCharacterController::Jump()
+{
+	if (IsValid(ControlledPlayer))
+		ControlledPlayer->Jump();
 }

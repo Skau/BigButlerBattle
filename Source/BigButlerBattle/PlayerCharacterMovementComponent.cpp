@@ -17,14 +17,14 @@ bool UPlayerCharacterMovementComponent::IsMovingOnGround() const
 
 void UPlayerCharacterMovementComponent::BeginPlay()
 {
+	Super::BeginPlay();
+
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
 
 void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction)
 {
 	Super::TickComponent(deltaTime, TickType, thisTickFunction);
-
-	UE_LOG(LogTemp, Warning, TEXT("Contraint? %d"), static_cast<int>(bConstrainToPlane));
 
 }
 
