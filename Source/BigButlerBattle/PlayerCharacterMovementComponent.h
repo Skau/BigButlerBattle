@@ -33,6 +33,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement")
 	float StandstillThreshold = 50.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Ground Friction"))
+	float SkateboardGroundFriction = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Braking Deceleration"))
+	float SkateboardBrakingDeceleration = 100.f;
+
 public:
 	UPlayerCharacterMovementComponent();
 
@@ -48,4 +54,7 @@ protected:
 	void PhysCustom(float deltaTime, int32 Iterations) override;
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
+
+private:
+	void CalcSkateboardVelocity(float DeltaTime);
 };
