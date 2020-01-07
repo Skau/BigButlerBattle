@@ -3,6 +3,7 @@
 
 #include "PlayerCharacterController.h"
 #include "PlayerCharacter.h"
+#include "PlayerWidget.h"
 
 
 APlayerCharacterController::APlayerCharacterController()
@@ -13,6 +14,14 @@ APlayerCharacterController::APlayerCharacterController()
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SetInputMode(FInputModeUIOnly());
+
+	if (PlayerWidgetType)
+	{
+		PlayerWidget = Cast<UPlayerWidget>(CreateWidget(this, PlayerWidgetType));
+		PlayerWidget->AddToViewport(0);
+	}
 
 	ControlledPlayer = Cast<APlayerCharacter>(GetPawn());
 	check(ControlledPlayer != nullptr);

@@ -7,7 +7,7 @@
 #include "PlayerCharacterController.generated.h"
 
 class APlayerCharacter;
-
+class UPlayerWidget;
 /**
  * 
  */
@@ -28,6 +28,12 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* ControlledPlayer;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPlayerWidget> PlayerWidgetType;
+
+	UPROPERTY(BlueprintReadOnly)
+	UPlayerWidget* PlayerWidget;
 
 private:
 
