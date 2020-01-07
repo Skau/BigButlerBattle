@@ -26,8 +26,10 @@ protected:
 
 	void SetupInputComponent() override;
 	
+	UPROPERTY(BlueprintReadOnly)
+	APlayerCharacter* ControlledPlayer;
+
 private:
-	APlayerCharacter* Character;
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);

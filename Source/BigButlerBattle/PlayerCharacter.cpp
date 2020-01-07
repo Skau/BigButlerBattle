@@ -20,7 +20,8 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());	
+	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
+	check(Movement != nullptr);
 }
 
 void APlayerCharacter::Tick(float DeltaTime)

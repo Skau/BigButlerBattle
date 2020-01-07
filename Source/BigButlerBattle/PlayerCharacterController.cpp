@@ -14,13 +14,8 @@ void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Character = Cast<APlayerCharacter>(GetPawn());
-
-	if(Character)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Found character"))
-	}
-
+	ControlledPlayer = Cast<APlayerCharacter>(GetPawn());
+	check(ControlledPlayer != nullptr);
 }
 
 void APlayerCharacterController::Tick(float DeltaTime)
@@ -31,15 +26,10 @@ void APlayerCharacterController::Tick(float DeltaTime)
 void APlayerCharacterController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-
-	if (InputComponent == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("InputComponent is NULL"))
-		return;
-	}
+	check(InputComponent != nullptr);
 
 	// Action Mappings
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, Character, &APlayerCharacter::Jump);
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, ControlledPlayer, &APlayerCharacter::Jump);
 
 
 	// Axis Mappings
@@ -52,7 +42,7 @@ void APlayerCharacterController::MoveForward(float Value)
 {
 	if (Value != 0)
 	{
-		Character->AddMovementInput(Character->GetActorForwardVector() * Value);
+		ControlledPlayer->AddMovementInput(ControlledPlayer->GetActorForwardVector() * Value);
 	}
 }
 
@@ -60,6 +50,6 @@ void APlayerCharacterController::MoveRight(float Value)
 {
 	if (Value != 0)
 	{
-		Character->AddMovementInput(Character->GetActorRightVector() * Value);
+		ControlledPlayer->AddMovementInput(ControlledPlayer->GetActorRightVector() * Value);
 	}
 }
