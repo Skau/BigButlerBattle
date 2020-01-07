@@ -4,7 +4,8 @@
 #include "PlayerCharacter.h"
 #include "PlayerCharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -13,6 +14,12 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("SkateboardMesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
+
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
+	SpringArm->SetupAttachment(RootComponent);
+
+	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
 }
 

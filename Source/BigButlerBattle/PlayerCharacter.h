@@ -9,6 +9,8 @@
 
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
+class UCameraComponent;
+class USpringArmComponent;
 
 UCLASS()
 class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
@@ -29,4 +31,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* SkateboardMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* Camera;
+
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* SpringArm;
 };
