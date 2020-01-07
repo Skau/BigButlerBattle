@@ -28,8 +28,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementTypeEnum CurrentCustomMovementMode = ECustomMovementTypeEnum::MOVE_Skateboard;
 
+	bool bStandstill = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement")
+	float StandstillThreshold = 50.f;
+
 public:
 	UPlayerCharacterMovementComponent();
+
+	UFUNCTION(BlueprintPure)
+	bool IsStandstill() const { return bStandstill; }
 
 protected:
 	void BeginPlay() override;

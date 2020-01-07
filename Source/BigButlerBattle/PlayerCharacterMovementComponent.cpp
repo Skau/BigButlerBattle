@@ -38,21 +38,17 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		return;
 	}
 
+	if (Velocity.ContainsNaN())
+		UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN before Iteration (%s)\n%s"), *GetPathNameSafe(this))
+
+	bStandstill = Velocity.Size() < StandstillThreshold;
+
 	if (!CharacterOwner || (!CharacterOwner->GetController() && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy)))
 	{
 		Acceleration = FVector::ZeroVector;
 		Velocity = FVector::ZeroVector;
 		return;
 	}
-
-	if (!UpdatedComponent->IsQueryCollisionEnabled())
-	{
-		SetMovementMode(MOVE_Walking);
-		return;
-	}
-
-	if (Velocity.ContainsNaN())
-		UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN before Iteration (%s)\n%s"), * GetPathNameSafe(this))
 
 	bJustTeleported = false;
 	bool bCheckedFall = false;
@@ -210,13 +206,6 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 				const FVector RequestedAdjustment = GetPenetrationAdjustment(Hit);
 				ResolvePenetration(RequestedAdjustment, Hit, UpdatedComponent->GetComponentQuat());
 				bForceNextFloorCheck = true;
-			}
-
-			// check if just entered water
-			if (IsSwimming())
-			{
-				StartSwimming(OldLocation, Velocity, timeTick, remainingTime, Iterations);
-				return;
 			}
 
 			// See if we need to start falling.
