@@ -23,7 +23,12 @@ protected:
 	void BeginPlay() override;
 
 	void Tick(float DeltaTime) override;
+
+	void SetupInputComponent() override;
 	
 private:
 	APlayerCharacter* Character;
+
+	void MoveForward(float Value);
+	void MoveRight(float Value);
 };

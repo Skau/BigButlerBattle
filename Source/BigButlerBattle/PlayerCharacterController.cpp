@@ -27,3 +27,39 @@ void APlayerCharacterController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+void APlayerCharacterController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (InputComponent == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("InputComponent is NULL"))
+		return;
+	}
+
+	// Action Mappings
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, Character, &APlayerCharacter::Jump);
+
+
+	// Axis Mappings
+	InputComponent->BindAxis("Forward", this, &APlayerCharacterController::MoveForward);
+	InputComponent->BindAxis("Right", this, &APlayerCharacterController::MoveRight);
+
+}
+
+void APlayerCharacterController::MoveForward(float Value)
+{
+	if (Value != 0)
+	{
+		Character->AddMovementInput(Character->GetActorForwardVector() * Value);
+	}
+}
+
+void APlayerCharacterController::MoveRight(float Value)
+{
+	if (Value != 0)
+	{
+		Character->AddMovementInput(Character->GetActorRightVector() * Value);
+	}
+}
