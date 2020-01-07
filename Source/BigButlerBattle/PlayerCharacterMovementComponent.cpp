@@ -180,6 +180,14 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 	}
 }
 
+void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
+
+	if (MovementMode == MOVE_Custom && CustomMovementMode == static_cast<int>(ECustomMovementType::MOVE_None))
+		SetMovementMode(MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
+}
+
 void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 {
 	// Do not update velocity when using root motion or when SimulatedProxy and not simulating root motion - SimulatedProxy are repped their Velocity

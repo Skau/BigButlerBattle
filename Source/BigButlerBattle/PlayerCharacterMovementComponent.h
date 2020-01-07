@@ -57,6 +57,8 @@ protected:
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
 
+	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
+
 private:
 	void CalcSkateboardVelocity(float DeltaTime);
 };
