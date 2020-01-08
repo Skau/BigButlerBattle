@@ -41,7 +41,7 @@ void APlayerCharacterController::MoveForward(float Value)
 {
 	if (Value != 0)
 	{
-		ControlledPlayer->AddMovementInput(ControlledPlayer->GetActorForwardVector() * Value);
+		ControlledPlayer->AddMovementInput(FVector::ForwardVector * Value);
 	}
 }
 
@@ -49,7 +49,7 @@ void APlayerCharacterController::MoveRight(float Value)
 {
 	if (Value != 0)
 	{
-		ControlledPlayer->AddMovementInput(ControlledPlayer->GetActorRightVector() * Value);
+		ControlledPlayer->AddMovementInput(FVector::RightVector * Value);
 	}
 }
 

@@ -60,5 +60,11 @@ protected:
 	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
 private:
+	FVector InputDir;
+
 	void CalcSkateboardVelocity(float DeltaTime);
+
+	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
+	FORCEINLINE FVector GetForwardInput() const { return FVector{InputDir.X, 0, 0}; }
+	FORCEINLINE FVector CalcAcceleration() const { return GetForwardInput() * GetMaxAcceleration(); }
 };

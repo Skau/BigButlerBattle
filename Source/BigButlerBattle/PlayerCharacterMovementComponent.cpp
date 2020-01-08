@@ -24,8 +24,9 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 
 void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction)
 {
-	Super::TickComponent(deltaTime, TickType, thisTickFunction);
+	InputDir = GetPendingInputVector();
 
+	Super::TickComponent(deltaTime, TickType, thisTickFunction);
 }
 
 void UPlayerCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
@@ -199,6 +200,8 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	SkateboardGroundFriction = FMath::Max(0.f, SkateboardGroundFriction);
 	const float MaxAccel = GetMaxAcceleration();
 	float MaxSpeed = GetMaxSpeed();
+
+	Acceleration = CalcAcceleration();
 
 	// Check if path following requested movement
 	bool bZeroRequestedAcceleration = true;
