@@ -266,11 +266,15 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	}
 
 	// Apply rotation based on input
-	auto forwardDir = UpdatedComponent->GetForwardVector();
-	Velocity = Velocity.RotateAngleAxis(CalcRotation() * DeltaTime, FVector(0, 0, 1));
-	UpdatedComponent->SetWorldRotation(Velocity.Rotation());
+	auto forwardDir = GetOwner()->GetActorForwardVector();
+	auto rotAmount = CalcRotation() * DeltaTime;
+	GetOwner()->AddActorWorldRotation(FRotator{ 0.f, rotAmount, 0.f});
 
-	ClampForwardVelocity();
+	// Set velocity to be facing same direction as forward dir.
+	if (!Velocity.IsNearlyZero())
+		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+
+	// ClampForwardVelocity();
 
 	// Apply additional requested acceleration
 	if (!bZeroRequestedAcceleration)
@@ -289,7 +293,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
 {
 	auto input = GetForwardInput();
-	float factor = (input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration * -1.f;
+	float factor = input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
 	return UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 }
 
