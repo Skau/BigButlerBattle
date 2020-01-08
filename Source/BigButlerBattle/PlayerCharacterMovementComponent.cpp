@@ -207,7 +207,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	bool bZeroRequestedAcceleration = true;
 	FVector RequestedAcceleration = FVector::ZeroVector;
 	float RequestedSpeed = 0.0f;
-	if (ApplyRequestedMove(DeltaTime, MaxAccel, MaxSpeed, BrakingFriction, SkateboardGroundDeceleration, RequestedAcceleration, RequestedSpeed))
+	if (ApplyRequestedMove(DeltaTime, MaxAccel, MaxSpeed, BrakingFriction, SkateboardForwardGroundDeceleration, RequestedAcceleration, RequestedSpeed))
 	{
 		bZeroRequestedAcceleration = false;
 	}
@@ -241,7 +241,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	if ((bZeroAcceleration && bZeroRequestedAcceleration) || bVelocityOverMax)
 	{
 		const FVector OldVelocity = Velocity;
-		ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardGroundDeceleration);
+		ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration);
 
 		// Don't allow braking to lower us below max speed if we started above it.
 		if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
