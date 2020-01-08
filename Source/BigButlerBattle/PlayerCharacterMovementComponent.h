@@ -33,8 +33,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
 	float StandstillThreshold = 50.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardGroundDeceleration = 100.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
+	float SkateboardForwardGroundDeceleration = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Right Ground Deceleration", ClampMin = "0", UIMin = "0"))
+	float SkateboardRightRollingGroundDeceleration = 4096.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardBreakingDeceleration = 1024.f;
