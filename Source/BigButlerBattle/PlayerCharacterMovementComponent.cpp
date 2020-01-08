@@ -197,7 +197,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		return;
 	}
 
-	SkateboardGroundFriction = FMath::Max(0.f, SkateboardGroundFriction);
 	const float MaxAccel = GetMaxAcceleration();
 	float MaxSpeed = GetMaxSpeed();
 
@@ -207,7 +206,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	bool bZeroRequestedAcceleration = true;
 	FVector RequestedAcceleration = FVector::ZeroVector;
 	float RequestedSpeed = 0.0f;
-	if (ApplyRequestedMove(DeltaTime, MaxAccel, MaxSpeed, SkateboardGroundFriction, SkateboardBrakingDeceleration, RequestedAcceleration, RequestedSpeed))
+	if (ApplyRequestedMove(DeltaTime, MaxAccel, MaxSpeed, BrakingFriction, SkateboardGroundDeceleration, RequestedAcceleration, RequestedSpeed))
 	{
 		bZeroRequestedAcceleration = false;
 	}
@@ -241,9 +240,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	if ((bZeroAcceleration && bZeroRequestedAcceleration) || bVelocityOverMax)
 	{
 		const FVector OldVelocity = Velocity;
-
-		const float ActualBrakingFriction = (bUseSeparateBrakingFriction ? BrakingFriction : SkateboardGroundFriction);
-		ApplyVelocityBraking(DeltaTime, ActualBrakingFriction, SkateboardBrakingDeceleration);
+		ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardGroundDeceleration);
 
 		// Don't allow braking to lower us below max speed if we started above it.
 		if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
@@ -251,13 +248,13 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 			Velocity = OldVelocity.GetSafeNormal() * MaxSpeed;
 		}
 	}
-	else if (!bZeroAcceleration)
-	{
-		// Friction affects our ability to change direction. This is only done for input acceleration, not path following.
-		const FVector AccelDir = Acceleration.GetSafeNormal();
-		const float VelSize = Velocity.Size();
-		Velocity = Velocity - (Velocity - AccelDir * VelSize) * FMath::Min(DeltaTime * SkateboardGroundFriction, 1.f);
-	}
+	//else if (!bZeroAcceleration)
+	//{
+	//	// Friction affects our ability to change direction. This is only done for input acceleration, not path following.
+	//	const FVector AccelDir = Acceleration.GetSafeNormal();
+	//	const float VelSize = Velocity.Size();
+	//	Velocity = Velocity - (Velocity - AccelDir * VelSize) * FMath::Min(DeltaTime * SkateboardGroundFriction, 1.f);
+	//}
 
 	// Apply input acceleration
 	if (!bZeroAcceleration)
@@ -279,4 +276,10 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	{
 		CalcAvoidanceVelocity(DeltaTime);
 	}
+}
+
+inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
+{
+	auto input = GetForwardInput();
+	return input * ((input.X >= 0) ? GetMaxAcceleration() : SkateboardBreakingDeceleration);
 }

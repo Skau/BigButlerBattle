@@ -33,11 +33,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement")
 	float StandstillThreshold = 50.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Ground Friction"))
-	float SkateboardGroundFriction = 0.1f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Ground deceleration"))
+	float SkateboardGroundDeceleration = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Braking Deceleration"))
-	float SkateboardBrakingDeceleration = 100.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterMovement: Custom Movement", meta = (DisplayName = "Braking Deceleration"))
+	float SkateboardBreakingDeceleration = 1024.f;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -66,5 +66,7 @@ private:
 
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 	FORCEINLINE FVector GetForwardInput() const { return FVector{InputDir.X, 0, 0}; }
-	FORCEINLINE FVector CalcAcceleration() const { return GetForwardInput() * GetMaxAcceleration(); }
+	FORCEINLINE FVector CalcAcceleration() const;
+
+	FVector ClampForwardVelocity()
 };
