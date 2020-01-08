@@ -70,8 +70,12 @@ private:
 	void CalcSkateboardVelocity(float DeltaTime);
 
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
-	FORCEINLINE FVector GetForwardInput() const { return FVector{InputDir.X, 0, 0}; }
-	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.X, 0 }; }
+	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
+	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	/** Calculates the forward/backwards acceleration in world space.
+	 * @brief Calculates the forward/backwards acceleration in world space.
+	 * @return Forward / backwards acceleration vector in world space.
+	 */
 	FORCEINLINE FVector CalcAcceleration() const;
 	FORCEINLINE float CalcRotation() const;
 
