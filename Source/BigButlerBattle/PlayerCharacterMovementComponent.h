@@ -30,17 +30,17 @@ protected:
 
 	bool bStandstill = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
 	float StandstillThreshold = 50.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Ground deceleration"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardGroundDeceleration = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterMovement: Custom Movement", meta = (DisplayName = "Braking Deceleration"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardBreakingDeceleration = 1024.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterMovement: Custom Movement", meta = (DisplayName = "Rotation Speed"))
-	float SkateboardRotationSpeed = 2.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Rotation Speed", ClampMin = "0", UIMin = "0"))
+	float SkateboardRotationSpeed = 200.f;
 
 
 
