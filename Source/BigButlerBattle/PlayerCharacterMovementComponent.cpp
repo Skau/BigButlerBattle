@@ -57,6 +57,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		return;
 	}
 
+	bJustTeleported = false;
 	bool bCheckedFall = false;
 	bool bTriedLedgeMove = false;
 	float remainingTime = deltaTime;
@@ -65,6 +66,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)))
 	{
 		Iterations++;
+		bJustTeleported = false;
 		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 		remainingTime -= timeTick;
 
@@ -106,8 +108,6 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 
 			if (IsFalling())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("I be falling!"));
-
 				// pawn decided to jump up
 				const float DesiredDist = Delta.Size();
 				if (DesiredDist > KINDA_SMALL_NUMBER)
@@ -141,7 +141,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		{
 				// see if it is OK to jump
 				// @todo collision : only thing that can be problem is that oldbase has world collision on
-				bool bMustJump = bZeroDelta || (OldBase == NULL || (!OldBase->IsQueryCollisionEnabled() && MovementBaseUtility::IsDynamicBase(OldBase)));
+				bool bMustJump = bJustTeleported || bZeroDelta || (OldBase == NULL || (!OldBase->IsQueryCollisionEnabled() && MovementBaseUtility::IsDynamicBase(OldBase)));
 				if ((bMustJump || !bCheckedFall) && CheckFall(OldFloor, CurrentFloor.HitResult, Delta, OldLocation, remainingTime, timeTick, Iterations, bMustJump))
 				{
 					return;
@@ -154,17 +154,17 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 				break;
 		}
 
-
-		// Allow overlap events and such to change physics state and velocity
-		if (IsMovingOnGround())
-		{
-			// Make velocity reflect actual move
-			if (timeTick >= MIN_TICK_TIME)
-			{
-				// TODO-RootMotionSource: Allow this to happen during partial override Velocity, but only set allowed axes?
-				Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / timeTick;
-			}
-		}
+		// Note: Commented out because it cancels velocity if teleported, but teleportation bool didn't change anyway. Meaning it's useless.
+		//// Allow overlap events and such to change physics state and velocity
+		//if (IsMovingOnGround())
+		//{
+		//	// Make velocity reflect actual move
+		//	if (!bJustTeleported && timeTick >= MIN_TICK_TIME)
+		//	{
+		//		// TODO-RootMotionSource: Allow this to happen during partial override Velocity, but only set allowed axes?
+		//		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / timeTick;
+		//	}
+		//}
 
 		// If we didn't move at all this iteration then abort (since future iterations will also be stuck).
 		if (UpdatedComponent->GetComponentLocation() == OldLocation)
@@ -184,7 +184,7 @@ void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode Prev
 {
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 
-	if (MovementMode == MOVE_Custom && CustomMovementMode == static_cast<int>(ECustomMovementType::MOVE_None))
+	if (MovementMode == MOVE_Custom && CustomMovementMode == static_cast<int>(ECustomMovementType::MOVE_None) && CurrentCustomMovementMode != ECustomMovementType::MOVE_None)
 		SetMovementMode(MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
 
