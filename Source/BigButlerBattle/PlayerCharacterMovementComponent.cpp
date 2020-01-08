@@ -4,6 +4,7 @@
 #include "PlayerCharacterMovementComponent.h"
 #include "PlayerCharacter.h"
 #include "Components/PrimitiveComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 {
@@ -264,6 +265,12 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		Velocity = Velocity.GetClampedToMaxSize(NewMaxInputSpeed);
 	}
 
+	// Apply rotation based on input
+	Velocity = Velocity.RotateAngleAxis(CalcRotation() * DeltaTime, FVector(0, 0, 1));
+	UpdatedComponent->SetWorldRotation(Velocity.Rotation());
+
+	ClampForwardVelocity();
+
 	// Apply additional requested acceleration
 	if (!bZeroRequestedAcceleration)
 	{
@@ -282,4 +289,14 @@ inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
 {
 	auto input = GetForwardInput();
 	return input * ((input.X >= 0) ? GetMaxAcceleration() : SkateboardBreakingDeceleration);
+}
+
+float UPlayerCharacterMovementComponent::CalcRotation() const
+{
+	return SkateboardRotationSpeed * GetRotationInput();
+}
+
+FVector UPlayerCharacterMovementComponent::ClampForwardVelocity()
+{
+	return FVector();
 }

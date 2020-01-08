@@ -39,6 +39,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterMovement: Custom Movement", meta = (DisplayName = "Braking Deceleration"))
 	float SkateboardBreakingDeceleration = 1024.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterMovement: Custom Movement", meta = (DisplayName = "Rotation Speed"))
+	float SkateboardRotationSpeed = 2.f;
+
+
+
 public:
 	UPlayerCharacterMovementComponent();
 
@@ -66,7 +71,9 @@ private:
 
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 	FORCEINLINE FVector GetForwardInput() const { return FVector{InputDir.X, 0, 0}; }
+	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.X, 0 }; }
 	FORCEINLINE FVector CalcAcceleration() const;
+	FORCEINLINE float CalcRotation() const;
 
-	FVector ClampForwardVelocity()
+	FVector ClampForwardVelocity();
 };
