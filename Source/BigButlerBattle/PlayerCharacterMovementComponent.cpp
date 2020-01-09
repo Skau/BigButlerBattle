@@ -331,12 +331,21 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	//	Velocity = Velocity - (Velocity - AccelDir * VelSize) * FMath::Min(DeltaTime * SkateboardGroundFriction, 1.f);
 	//}
 
-	// Apply acceleration if there is any, but only if not trying to reverse
+	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
 	if(!bZeroAcceleration)
 	{
-		float Dot = FVector::DotProduct(Acceleration, GetOwner()->GetActorForwardVector());
+		bool bNegativeAcceleration = FMath::IsNegativeFloat(FVector::DotProduct(Acceleration, GetOwner()->GetActorForwardVector()));
+		const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
+		
+		// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
+		if (bNegativeAcceleration && bMovingBackwards)
+		{
+			Acceleration = -Acceleration;
+			bNegativeAcceleration = !bNegativeAcceleration;
+		}
+
 		const float BrakeThreshold = 10.f;
-		const bool bShouldStopCompletely = FMath::IsNegativeFloat(Dot) && Velocity.Size() < BrakeThreshold;
+		const bool bShouldStopCompletely = bNegativeAcceleration && Velocity.Size() < BrakeThreshold;
 				
 		if (bShouldStopCompletely)
 		{
@@ -344,14 +353,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		}
 		else
 		{
-			const float Dot2 = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector());
-
-			// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
-			if(FMath::IsNegativeFloat(Dot2))
-			{
-				Acceleration = -Acceleration;
-			}
-			
 			const float NewMaxInputSpeed = IsExceedingMaxSpeed(MaxInputSpeed) ? Velocity.Size() : MaxInputSpeed;
 			Velocity += Acceleration * DeltaTime;
 			Velocity = Velocity.GetClampedToMaxSize(NewMaxInputSpeed);
@@ -366,8 +367,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	// Set velocity to be facing same direction as forward dir.
 	if (!Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
-
-	// ClampForwardVelocity();
 
 	// Apply additional requested acceleration
 	if (!bZeroRequestedAcceleration)
