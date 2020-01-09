@@ -53,24 +53,28 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		return;
 	}
 
-	if (Velocity.ContainsNaN())
-		UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN before Iteration (%s)\n%s"), *GetPathNameSafe(this))
+	if (HasAnimRootMotion() || (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy) || CurrentRootMotion.HasOverrideVelocity())
+	{
+		UE_LOG(LogTemp, Error, TEXT("We don't know how to handle root motion or simulated proxies. :s"));
+		return;
+	}
 
-	bStandstill = Velocity.Size() < StandstillThreshold;
+	check(!Velocity.ContainsNaN());
 
-	if (!CharacterOwner || (!CharacterOwner->GetController() && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy)))
+	if (!CharacterOwner || (!CharacterOwner->GetController() && !bRunPhysicsWithNoController && !HasAnimRootMotion()))
 	{
 		Acceleration = FVector::ZeroVector;
 		Velocity = FVector::ZeroVector;
 		return;
 	}
 
+	bStandstill = Velocity.Size() < StandstillThreshold;
 	bJustTeleported = false;
 	bool bCheckedFall = false;
 	float RemainingTime = deltaTime;
 
 	// Perform the move
-	while ((RemainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)))
+	while ((RemainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && (CharacterOwner->Controller || bRunPhysicsWithNoController))
 	{
 		Iterations++;
 		bJustTeleported = false;
