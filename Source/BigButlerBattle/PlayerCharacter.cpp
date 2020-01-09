@@ -14,6 +14,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("SkateboardMesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
 
+	bUseControllerRotationYaw = false;
 }
 
 void APlayerCharacter::BeginPlay()

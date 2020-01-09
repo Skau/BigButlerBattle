@@ -40,10 +40,10 @@ protected:
 	float SkateboardSidewaysGroundDeceleration = 4096.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardBreakingDeceleration = 1024.f;
+	float SkateboardBreakingDeceleration = 1200.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Rotation Speed", ClampMin = "0", UIMin = "0"))
-	float SkateboardRotationSpeed = 200.f;
+	float SkateboardRotationSpeed = 100.f;
 
 
 
