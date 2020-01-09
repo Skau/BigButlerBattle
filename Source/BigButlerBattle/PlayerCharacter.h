@@ -22,12 +22,24 @@ public:
 	void ToggleHoldingHandbrake(bool Value) { bCurrentlyHoldingHandbrake = Value; }
 	void SetRightAxisValue(float Value) { RightAxis = Value; }
 
+	void EnableRagdoll();
+
+	bool HasEnabledRagdoll() { return bEnabledRagdoll; }
+	bool CanFall() { return bCanFall; }
+	float GetSidewaysForceFallOffThreshold() { return SidewaysForceFallOffThreshold; }
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
 	float HandbrakeRotationFactor = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbreake Velocity Threshold"))
 	float HandbreakeVelocityThreshold = 70.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Can Fall Off"))
+	bool bCanFall = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
+	float SidewaysForceFallOffThreshold = 4000.f;
 
 	virtual void BeginPlay() override;
 
@@ -46,4 +58,6 @@ private:
 
 	bool bCurrentlyHoldingHandbrake = false;
 	float RightAxis = 0.0f;
+
+	bool bEnabledRagdoll = false;
 };

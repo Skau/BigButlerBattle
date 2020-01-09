@@ -6,6 +6,8 @@
 #include "Components/PrimitiveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "PlayerCharacter.h"
+
 UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 {
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
@@ -26,6 +28,7 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
 
@@ -91,6 +94,12 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		CalcSkateboardVelocity(TimeTick);
 		if (Velocity.ContainsNaN())
 			UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN after CalcVelocity (%s)\n%s"), *GetPathNameSafe(this))
+
+
+		if (PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
+		{
+			PlayerCharacter->EnableRagdoll();
+		}
 
 		ApplyRootMotionToVelocity(TimeTick);
 		if (Velocity.ContainsNaN())
@@ -239,6 +248,8 @@ void UPlayerCharacterMovementComponent::ApplyVelocityBraking(float DeltaTime, fl
 	const float SidewaysFactor = FVector::DotProduct(GetOwner()->GetActorRightVector(), Velocity.GetSafeNormal());
 	const FVector RevForwardAcceleration = (bZeroForwardBraking ? FVector::ZeroVector : (-BreakingForwardDeceleration * (GetOwner()->GetActorForwardVector() * ForwardFactor)));
 	const FVector RevSidewaysAcceleration = (bZeroSidewaysBraking ? FVector::ZeroVector : (-BreakingSidewaysDeceleration * (GetOwner()->GetActorRightVector() * SidewaysFactor)));
+	SidewaysForce = RevSidewaysAcceleration.Size2D();
+	
 	while (RemainingTime >= MIN_TICK_TIME)
 	{
 		// Zero friction uses constant deceleration, so no need for iteration.

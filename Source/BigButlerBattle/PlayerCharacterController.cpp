@@ -40,6 +40,9 @@ void APlayerCharacterController::SetupInputComponent()
 
 void APlayerCharacterController::MoveForward(float Value)
 {
+	if (ControlledPlayer->HasEnabledRagdoll())
+		return;
+
 	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bHoldingHandbrake && Value != 0))
 	{
 		ControlledPlayer->AddMovementInput(FVector::ForwardVector * Value);
@@ -48,6 +51,9 @@ void APlayerCharacterController::MoveForward(float Value)
 
 void APlayerCharacterController::MoveRight(float Value)
 {
+	if (ControlledPlayer->HasEnabledRagdoll())
+		return;
+
 	if (bHoldingHandbrake)
 	{
 		ControlledPlayer->SetRightAxisValue(Value);
@@ -61,6 +67,9 @@ void APlayerCharacterController::MoveRight(float Value)
 
 void APlayerCharacterController::Jump()
 {
+	if (ControlledPlayer->HasEnabledRagdoll())
+		return;
+
 	if (IsValid(ControlledPlayer) && !bHoldingHandbrake)
 		ControlledPlayer->Jump();
 }

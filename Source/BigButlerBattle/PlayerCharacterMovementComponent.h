@@ -46,9 +46,8 @@ protected:
 	float SkateboardRotationSpeed = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement",
-		meta = (DisplayName = "Stanstill Rotation Factor", ClampMin = "0", UIMin = "0"))
+		meta = (DisplayName = "Standtill Rotation Factor", ClampMin = "0", UIMin = "0"))
 	float SkateboardStandstillRotationSpeed = 1.5f;
-
 
 
 public:
@@ -76,8 +75,12 @@ protected:
 
 	void ApplyVelocityBraking(float DeltaTime, float Friction, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
+	UPROPERTY(BlueprintReadOnly)
+	APlayerCharacter* PlayerCharacter = nullptr;
+
 private:
 	FVector InputDir;
+	float SidewaysForce = 0.0f;
 
 	void CalcSkateboardVelocity(float DeltaTime);
 
