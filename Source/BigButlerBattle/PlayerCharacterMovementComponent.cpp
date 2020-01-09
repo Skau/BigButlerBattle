@@ -56,7 +56,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		return;
 	}
 
-	if (HasAnimRootMotion() || (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy) || CurrentRootMotion.HasOverrideVelocity())
+	if (HasAnimRootMotion() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy) || CurrentRootMotion.HasOverrideVelocity())
 	{
 		UE_LOG(LogTemp, Error, TEXT("We don't know how to handle root motion or simulated proxies. :s"));
 		return;
@@ -90,24 +90,14 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 		const FFindFloorResult OldFloor = CurrentFloor;
 
-		RestorePreAdditiveRootMotionVelocity();
-
 		// Ensure velocity is horizontal.
 		MaintainHorizontalGroundVelocity();
 
 		CalcSkateboardVelocity(TimeTick);
-		if (Velocity.ContainsNaN())
-			UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN after CalcVelocity (%s)\n%s"), *GetPathNameSafe(this))
-
+		check(!Velocity.ContainsNaN());
 
 		if (PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
-		{
 			PlayerCharacter->EnableRagdoll();
-		}
-
-		ApplyRootMotionToVelocity(TimeTick);
-		if (Velocity.ContainsNaN())
-			UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN after Root Motion application (%s)\n%s"), *GetPathNameSafe(this))
 
 		// Compute move parameters
 		const FVector MoveVelocity = Velocity;
@@ -287,41 +277,11 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		return;
 	}
 
-	const float MaxAcceleration = GetMaxAcceleration();
 	float MaxSpeed = GetMaxSpeed();
-
 	Acceleration = CalcAcceleration();
 
-	// Check if path following requested movement
-	bool bZeroRequestedAcceleration = true;
-	FVector RequestedAcceleration = FVector::ZeroVector;
-	float RequestedSpeed = 0.0f;
-	if (ApplyRequestedMove(DeltaTime, MaxAcceleration, MaxSpeed, BrakingFriction, SkateboardForwardGroundDeceleration, RequestedAcceleration, RequestedSpeed))
-	{
-		bZeroRequestedAcceleration = false;
-	}
-
-	if (bForceMaxAccel)
-	{
-		
-		// Force acceleration at full speed.
-		// In consideration order for direction: Acceleration, then Velocity, then Pawn's rotation.
-		if (Acceleration.SizeSquared() > SMALL_NUMBER)
-		{
-			Acceleration = Acceleration.GetSafeNormal() * MaxAcceleration;
-		}
-		else
-		{
-			Acceleration = MaxAcceleration * (Velocity.SizeSquared() < SMALL_NUMBER ? UpdatedComponent->GetForwardVector() : Velocity.GetSafeNormal());
-		}
-
-		AnalogInputModifier = 1.f;
-	}
-
-	// Path following above didn't care about the analog modifier, but we do for everything else below, so get the fully modified value.
-	// Use max of requested speed and max speed if we modified the speed in ApplyRequestedMove above.
-	const float MaxInputSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
-	MaxSpeed = FMath::Max(RequestedSpeed, MaxInputSpeed);
+	// Get the fully modified analog input value.
+	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
 
 	// Apply braking or deceleration
 	const bool bZeroAcceleration = Acceleration.IsZero();
@@ -334,14 +294,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	{
 		Velocity = OldVelocity.GetSafeNormal() * MaxSpeed;
 	}
-	
-	//else if (!bZeroAcceleration)
-	//{
-	//	// Friction affects our ability to change direction. This is only done for input acceleration, not path following.
-	//	const FVector AccelDir = Acceleration.GetSafeNormal();
-	//	const float VelSize = Velocity.Size();
-	//	Velocity = Velocity - (Velocity - AccelDir * VelSize) * FMath::Min(DeltaTime * SkateboardGroundFriction, 1.f);
-	//}
 
 	const bool bIsStandstill = Velocity.Size() < StandstillThreshold;
 
@@ -366,9 +318,9 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		}
 		else
 		{
-			const float NewMaxInputSpeed = IsExceedingMaxSpeed(MaxInputSpeed) ? Velocity.Size() : MaxInputSpeed;
+			const float NewMaxSpeed = IsExceedingMaxSpeed(MaxSpeed) ? Velocity.Size() : MaxSpeed;
 			Velocity += Acceleration * DeltaTime;
-			Velocity = Velocity.GetClampedToMaxSize(NewMaxInputSpeed);
+			Velocity = Velocity.GetClampedToMaxSize(NewMaxSpeed);
 		}
 	}
 
@@ -380,19 +332,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	// Set velocity to be facing same direction as forward dir.
 	if (!Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
-
-	// Apply additional requested acceleration
-	if (!bZeroRequestedAcceleration)
-	{
-		const float NewMaxRequestedSpeed = IsExceedingMaxSpeed(RequestedSpeed) ? Velocity.Size() : RequestedSpeed;
-		Velocity += RequestedAcceleration * DeltaTime;
-		Velocity = Velocity.GetClampedToMaxSize(NewMaxRequestedSpeed);
-	}
-
-	if (bUseRVOAvoidance)
-	{
-		CalcAvoidanceVelocity(DeltaTime);
-	}
 }
 
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const
@@ -410,9 +349,4 @@ inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	return SkateboardRotationSpeed * GetRotationInput();
-}
-
-FVector UPlayerCharacterMovementComponent::ClampForwardVelocity()
-{
-	return FVector();
 }
