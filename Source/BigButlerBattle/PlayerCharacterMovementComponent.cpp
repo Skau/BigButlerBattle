@@ -190,6 +190,63 @@ void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode Prev
 		SetMovementMode(MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
 
+void UPlayerCharacterMovementComponent::ApplyVelocityBraking(float DeltaTime, float Friction, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
+{
+	if (Velocity.IsZero() || !HasValidData() || HasAnimRootMotion() || DeltaTime < MIN_TICK_TIME)
+	{
+		return;
+	}
+
+	const float FrictionFactor = FMath::Max(0.f, BrakingFrictionFactor);
+	Friction = FMath::Max(0.f, Friction * FrictionFactor);
+	BreakingForwardDeceleration = FMath::Max(0.f, BreakingForwardDeceleration);
+	BreakingSidewaysDeceleration = FMath::Max(0.f, BreakingSidewaysDeceleration);
+	const bool bZeroFriction = FMath::IsNearlyZero(Friction);
+	const bool bZeroForwardBraking = FMath::IsNearlyZero(BreakingForwardDeceleration);
+	const bool bZeroSidewaysBraking = FMath::IsNearlyZero(BreakingSidewaysDeceleration);
+
+	if (bZeroFriction && bZeroForwardBraking && bZeroSidewaysBraking)
+	{
+		return;
+	}
+
+	const FVector OldVel = Velocity;
+
+	// subdivide braking to get reasonably consistent results at lower frame rates
+	// (important for packet loss situations w/ networking)
+	float RemainingTime = DeltaTime;
+	const float MaxTimeStep = FMath::Clamp(BrakingSubStepTime, 1.0f / 75.0f, 1.0f / 20.0f);
+
+	// Decelerate to brake to a stop
+	float forwardFactor = FVector::DotProduct(GetOwner()->GetActorForwardVector(), Velocity.GetSafeNormal());
+	float sidewaysFactor = FVector::DotProduct(GetOwner()->GetActorRightVector(), Velocity.GetSafeNormal());
+	const FVector RevForwardAccel = (bZeroForwardBraking ? FVector::ZeroVector : (-BreakingForwardDeceleration * (GetOwner()->GetActorForwardVector() * forwardFactor)));
+	const FVector RevSidewaysAccel = (bZeroSidewaysBraking ? FVector::ZeroVector : (-BreakingSidewaysDeceleration * (GetOwner()->GetActorRightVector() * sidewaysFactor)));
+	while (RemainingTime >= MIN_TICK_TIME)
+	{
+		// Zero friction uses constant deceleration, so no need for iteration.
+		const float dt = ((RemainingTime > MaxTimeStep && !bZeroFriction) ? FMath::Min(MaxTimeStep, RemainingTime * 0.5f) : RemainingTime);
+		RemainingTime -= dt;
+
+		// apply friction and braking
+		Velocity = Velocity + (-Friction * Velocity + RevForwardAccel + RevSidewaysAccel) * dt;
+
+		// Don't reverse direction
+		if ((Velocity | OldVel) <= 0.f)
+		{
+			Velocity = FVector::ZeroVector;
+			return;
+		}
+	}
+
+	// Clamp to zero if nearly zero, or if below min threshold and braking.
+	const float VSizeSq = Velocity.SizeSquared();
+	if (VSizeSq <= KINDA_SMALL_NUMBER || (!(bZeroForwardBraking && bZeroSidewaysBraking) && VSizeSq <= FMath::Square(BRAKE_TO_STOP_VELOCITY)))
+	{
+		Velocity = FVector::ZeroVector;
+	}
+}
+
 void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 {
 	// Do not update velocity when using root motion or when SimulatedProxy and not simulating root motion - SimulatedProxy are repped their Velocity
@@ -241,7 +298,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	if ((bZeroAcceleration && bZeroRequestedAcceleration) || bVelocityOverMax)
 	{
 		const FVector OldVelocity = Velocity;
-		ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration);
+		ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 		// Don't allow braking to lower us below max speed if we started above it.
 		if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
@@ -288,6 +345,11 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	{
 		CalcAvoidanceVelocity(DeltaTime);
 	}
+}
+
+inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const
+{
+	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
 inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const

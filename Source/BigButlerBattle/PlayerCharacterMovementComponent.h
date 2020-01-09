@@ -36,8 +36,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardForwardGroundDeceleration = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Right Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardRightRollingGroundDeceleration = 4096.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
+	float SkateboardSidewaysGroundDeceleration = 4096.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardBreakingDeceleration = 1024.f;
@@ -67,6 +67,8 @@ protected:
 
 	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
+	void ApplyVelocityBraking(float DeltaTime, float Friction, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
+
 private:
 	FVector InputDir;
 
@@ -75,6 +77,7 @@ private:
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
 	/** Calculates the forward/backwards acceleration in world space.
 	 * @brief Calculates the forward/backwards acceleration in world space.
 	 * @return Forward / backwards acceleration vector in world space.
