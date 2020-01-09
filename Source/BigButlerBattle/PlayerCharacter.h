@@ -10,6 +10,8 @@
 
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
+class UCameraComponent;
+class USpringArmComponent;
 
 UCLASS()
 class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
@@ -33,7 +35,7 @@ protected:
 	float HandbrakeRotationFactor = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbreake Velocity Threshold"))
-	float HandbreakeVelocityThreshold = 70.f;
+	float HandbreakeVelocityThreshold = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Can Fall Off"))
 	bool bCanFall = false;
@@ -52,6 +54,11 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* SkateboardMesh;
 
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* Camera;
+
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* SpringArm;
 	FTimerHandle HandbrakeHandle;
 	FTimerDelegate HandbrakeTimerCallback;
 	bool bCurrentlyHandbraking = false;

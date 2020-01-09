@@ -7,7 +7,7 @@
 #include "PlayerCharacterController.generated.h"
 
 class APlayerCharacter;
-
+class UPlayerWidget;
 /**
  * 
  */
@@ -30,6 +30,12 @@ protected:
 	APlayerCharacter* ControlledPlayer = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPlayerWidget> PlayerWidgetType;
+
+	UPROPERTY(BlueprintReadOnly)
+	UPlayerWidget* PlayerWidget;
+
+private:
 	bool bAllowBrakingWhileHandbraking = false;
 
 private:

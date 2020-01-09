@@ -4,6 +4,8 @@
 #include "PlayerCharacter.h"
 #include "PlayerCharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 
 
@@ -15,6 +17,13 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("SkateboardMesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
 
+
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
+	SpringArm->SetupAttachment(RootComponent);
+
+	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+
 	bUseControllerRotationYaw = false;
 }
 
@@ -25,8 +34,7 @@ void APlayerCharacter::EnableRagdoll()
 
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
-	
-	bEnabledRagdoll = true;
+	//bEnabledRagdoll = true;
 }
 
 void APlayerCharacter::BeginPlay()
