@@ -328,6 +328,8 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	//	Velocity = Velocity - (Velocity - AccelDir * VelSize) * FMath::Min(DeltaTime * SkateboardGroundFriction, 1.f);
 	//}
 
+	const bool bIsStandstill = Velocity.Size() < StandstillThreshold;
+
 	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
 	if(!bZeroAcceleration)
 	{
@@ -341,8 +343,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 			bNegativeAcceleration = !bNegativeAcceleration;
 		}
 
-		const float BrakeThreshold = 10.f;
-		const bool bShouldStopCompletely = bNegativeAcceleration && Velocity.Size() < BrakeThreshold;
+		const bool bShouldStopCompletely = bNegativeAcceleration && bIsStandstill;
 				
 		if (bShouldStopCompletely)
 		{
@@ -358,7 +359,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 
 	// Apply rotation based on input
 	auto forwardDir = GetOwner()->GetActorForwardVector();
-	const auto rotAmount = CalcRotation() * DeltaTime;
+	const auto rotAmount = CalcRotation() * ((bIsStandstill) ? SkateboardStandstillRotationSpeed : 1.f) * DeltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{ 0.f, rotAmount, 0.f});
 
 	// Set velocity to be facing same direction as forward dir.
