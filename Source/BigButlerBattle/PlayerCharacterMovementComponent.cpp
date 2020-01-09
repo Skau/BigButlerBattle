@@ -179,6 +179,20 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 	}
 }
 
+void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Iterations)
+{
+	Super::PhysFalling(deltaTime, Iterations);
+
+	// Apply rotation based on input
+	auto forwardDir = GetOwner()->GetActorForwardVector();
+	const auto rotAmount = CalcRotation() * deltaTime;
+	GetOwner()->AddActorWorldRotation(FRotator{ 0.f, rotAmount, 0.f });
+
+	// Set velocity to be facing same direction as forward dir.
+	if (!Velocity.IsNearlyZero())
+		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+}
+
 void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);

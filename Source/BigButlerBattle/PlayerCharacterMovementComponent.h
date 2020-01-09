@@ -65,6 +65,9 @@ protected:
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
 
+	/** Handle falling movement. */
+	void PhysFalling(float deltaTime, int32 Iterations) override;
+
 	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
 	void ApplyVelocityBraking(float DeltaTime, float Friction, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
