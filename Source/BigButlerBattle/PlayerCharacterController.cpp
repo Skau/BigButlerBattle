@@ -14,13 +14,12 @@ void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetInputMode(FInputModeUIOnly());
-
-	if (PlayerWidgetType)
-	{
-		PlayerWidget = Cast<UPlayerWidget>(CreateWidget(this, PlayerWidgetType));
-		PlayerWidget->AddToViewport(0);
-	}
+	//SetInputMode(FInputModeUIOnly());
+	//if (PlayerWidgetType)
+	//{
+	//	PlayerWidget = Cast<UPlayerWidget>(CreateWidget(this, PlayerWidgetType));
+	//	PlayerWidget->AddToViewport(0);
+	//}
 
 	ControlledPlayer = Cast<APlayerCharacter>(GetPawn());
 	check(ControlledPlayer != nullptr);

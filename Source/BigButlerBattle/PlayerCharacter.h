@@ -35,7 +35,7 @@ protected:
 	float HandbrakeRotationFactor = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbreake Velocity Threshold"))
-	float HandbreakeVelocityThreshold = 70.f;
+	float HandbreakeVelocityThreshold = 150.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Can Fall Off"))
 	bool bCanFall = false;

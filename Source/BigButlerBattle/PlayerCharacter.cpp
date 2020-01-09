@@ -34,7 +34,7 @@ void APlayerCharacter::EnableRagdoll()
 
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
-	
+	//bEnabledRagdoll = true;
 }
 
 void APlayerCharacter::BeginPlay()
