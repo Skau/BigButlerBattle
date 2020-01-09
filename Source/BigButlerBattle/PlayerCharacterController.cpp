@@ -4,6 +4,7 @@
 #include "PlayerCharacterController.h"
 #include "PlayerCharacter.h"
 #include "PlayerWidget.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 APlayerCharacterController::APlayerCharacterController()
 {
@@ -62,15 +63,14 @@ void APlayerCharacterController::MoveRight(float Value)
 	if (ControlledPlayer->HasEnabledRagdoll())
 		return;
 
-	if (bHoldingHandbrake)
+	const bool bCanMoveHorizontally = !bHoldingHandbrake || ControlledPlayer->GetMovementComponent()->IsFalling();
+	
+	if (bCanMoveHorizontally)
 	{
-		ControlledPlayer->SetRightAxisValue(Value);
-	}
-	if (!bHoldingHandbrake)
-	{
-		ControlledPlayer->SetRightAxisValue(0);
 		ControlledPlayer->AddMovementInput(FVector::RightVector * Value);
 	}
+
+	ControlledPlayer->SetRightAxisValue(Value);
 }
 
 void APlayerCharacterController::Jump()
@@ -78,8 +78,7 @@ void APlayerCharacterController::Jump()
 	if (ControlledPlayer->HasEnabledRagdoll())
 		return;
 
-	if (IsValid(ControlledPlayer) && !bHoldingHandbrake)
-		ControlledPlayer->Jump();
+	ControlledPlayer->Jump();
 }
 
 void APlayerCharacterController::Handbrake()
