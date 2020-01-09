@@ -95,7 +95,9 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		// Ensure velocity is horizontal.
 		MaintainHorizontalGroundVelocity();
 
+		AdjustSlopeVelocity(OldFloor.HitResult, deltaTime);
 		CalcSkateboardVelocity(TimeTick);
+
 		if (Velocity.ContainsNaN())
 			UE_LOG(LogTemp, Error, TEXT("PhysSkateboard: Velocity contains NaN after CalcVelocity (%s)\n%s"), *GetPathNameSafe(this))
 
@@ -328,6 +330,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
 	
 	ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
+
 	const FVector OldVelocity = Velocity;
 	// Don't allow braking to lower us below max speed if we started above it.
 	if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
@@ -376,7 +379,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	auto forwardDir = GetOwner()->GetActorForwardVector();
 	const auto rotAmount = CalcRotation() * ((bIsStandstill) ? SkateboardStandstillRotationSpeed : 1.f) * DeltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{ 0.f, rotAmount, 0.f});
-
 	// Set velocity to be facing same direction as forward dir.
 	if (!Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
@@ -395,6 +397,18 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	}
 }
 
+void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime)
+{
+	if (!FloorHitResult.bBlockingHit)
+		return;
+
+	auto Normal = FloorHitResult.Normal;
+	auto PlayerForwardVector = GetOwner()->GetActorForwardVector();
+
+	auto dot = FVector::DotProduct(Normal, PlayerForwardVector);
+	UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), dot);
+}
+
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const
 {
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
@@ -410,9 +424,4 @@ inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	return SkateboardRotationSpeed * GetRotationInput();
-}
-
-FVector UPlayerCharacterMovementComponent::ClampForwardVelocity()
-{
-	return FVector();
 }

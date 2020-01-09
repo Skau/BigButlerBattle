@@ -84,6 +84,8 @@ private:
 
 	void CalcSkateboardVelocity(float DeltaTime);
 
+	void AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime);
+
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
@@ -95,5 +97,5 @@ private:
 	FORCEINLINE FVector CalcAcceleration() const;
 	FORCEINLINE float CalcRotation() const;
 
-	FVector ClampForwardVelocity();
+	
 };
