@@ -340,11 +340,13 @@ void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitR
 	if (!FloorHitResult.bBlockingHit)
 		return;
 
-	auto Normal = FloorHitResult.Normal;
+	auto SlopeNormal = FloorHitResult.Normal;
 	auto PlayerForwardVector = GetOwner()->GetActorForwardVector();
 
-	auto dot = FVector::DotProduct(Normal, PlayerForwardVector);
-	UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), dot);
+	float dot = FVector::DotProduct(SlopeNormal, PlayerForwardVector);
+	
+	FVector Gravity = FVector(0, 0, GetWorld()->GetGravityZ());
+	
 }
 
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const
