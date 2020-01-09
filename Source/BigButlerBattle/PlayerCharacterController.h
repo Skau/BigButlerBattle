@@ -27,11 +27,16 @@ protected:
 	void SetupInputComponent() override;
 	
 	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* ControlledPlayer;
+	APlayerCharacter* ControlledPlayer = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool bAllowBrakingWhileHandbraking = false;
 
 private:
-
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Jump();
+	void Handbrake();
+	void LetGoHandBrake();
+	bool bHoldingHandbrake = false;
 };

@@ -312,17 +312,14 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	const bool bZeroAcceleration = Acceleration.IsZero();
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
 	
-	// Only apply braking if there is no acceleration, or we are over our max speed and need to slow down to it.
-	if ((bZeroAcceleration && bZeroRequestedAcceleration) || bVelocityOverMax)
+	ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
+	const FVector OldVelocity = Velocity;
+	// Don't allow braking to lower us below max speed if we started above it.
+	if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
 	{
-		ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
-		const FVector OldVelocity = Velocity;
-		// Don't allow braking to lower us below max speed if we started above it.
-		if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
-		{
-			Velocity = OldVelocity.GetSafeNormal() * MaxSpeed;
-		}
+		Velocity = OldVelocity.GetSafeNormal() * MaxSpeed;
 	}
+	
 	//else if (!bZeroAcceleration)
 	//{
 	//	// Friction affects our ability to change direction. This is only done for input acceleration, not path following.
@@ -380,8 +377,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	{
 		CalcAvoidanceVelocity(DeltaTime);
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Velocity: %f"), Velocity.Size());
 }
 
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const

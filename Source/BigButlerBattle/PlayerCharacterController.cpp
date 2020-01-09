@@ -4,7 +4,6 @@
 #include "PlayerCharacterController.h"
 #include "PlayerCharacter.h"
 
-
 APlayerCharacterController::APlayerCharacterController()
 {
 
@@ -30,6 +29,8 @@ void APlayerCharacterController::SetupInputComponent()
 
 	// Action Mappings
 	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacterController::Jump);
+	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacterController::Handbrake);
+	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacterController::LetGoHandBrake);
 
 	// Axis Mappings
 	InputComponent->BindAxis("Forward", this, &APlayerCharacterController::MoveForward);
@@ -39,7 +40,7 @@ void APlayerCharacterController::SetupInputComponent()
 
 void APlayerCharacterController::MoveForward(float Value)
 {
-	if (Value != 0)
+	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bHoldingHandbrake && Value != 0))
 	{
 		ControlledPlayer->AddMovementInput(FVector::ForwardVector * Value);
 	}
@@ -47,14 +48,31 @@ void APlayerCharacterController::MoveForward(float Value)
 
 void APlayerCharacterController::MoveRight(float Value)
 {
-	if (Value != 0)
+	if (bHoldingHandbrake)
 	{
+		ControlledPlayer->SetRightAxisValue(Value);
+	}
+	if (!bHoldingHandbrake)
+	{
+		ControlledPlayer->SetRightAxisValue(0);
 		ControlledPlayer->AddMovementInput(FVector::RightVector * Value);
 	}
 }
 
 void APlayerCharacterController::Jump()
 {
-	if (IsValid(ControlledPlayer))
+	if (IsValid(ControlledPlayer) && !bHoldingHandbrake)
 		ControlledPlayer->Jump();
+}
+
+void APlayerCharacterController::Handbrake()
+{
+	bHoldingHandbrake = true;
+	ControlledPlayer->ToggleHoldingHandbrake(true);
+}
+
+void APlayerCharacterController::LetGoHandBrake()
+{
+	bHoldingHandbrake = false;
+	ControlledPlayer->ToggleHoldingHandbrake(false);
 }
