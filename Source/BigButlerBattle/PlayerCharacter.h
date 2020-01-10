@@ -59,6 +59,16 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* LinetraceFront;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* LinetraceBack;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* TempSkateboardMesh;
+
 	FTimerHandle HandbrakeHandle;
 	FTimerDelegate HandbrakeTimerCallback;
 	bool bCurrentlyHandbraking = false;
@@ -67,4 +77,8 @@ private:
 	float RightAxis = 0.0f;
 
 	bool bEnabledRagdoll = false;
+
+	void UpdateSkateboardRotation(float DeltaTime);
+
+	FQuat GetDesiredRotation(FVector DestinationNormal) const;
 };

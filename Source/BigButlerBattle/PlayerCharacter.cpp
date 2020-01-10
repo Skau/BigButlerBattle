@@ -7,22 +7,33 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "BigButlerBattleGameModeBase.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("SkateboardMesh");
+	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Skateboard Mesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
 
+	LinetraceFront = CreateDefaultSubobject<USceneComponent>("Linetrace Front");
+	LinetraceFront->SetupAttachment(SkateboardMesh);
 
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
+	LinetraceBack = CreateDefaultSubobject<USceneComponent>("Linetrace Back");
+	LinetraceBack->SetupAttachment(SkateboardMesh);
+
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+
+	TempSkateboardMesh = CreateDefaultSubobject<UStaticMeshComponent>("Temp Skateboard Mesh");
+	TempSkateboardMesh->SetupAttachment(RootComponent);
+
 
 	bUseControllerRotationYaw = false;
 }
@@ -53,5 +64,66 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		AddActorLocalRotation({ 0, RightAxis * DeltaTime * HandbrakeRotationFactor, 0 });
 	}
+
+	UpdateSkateboardRotation(DeltaTime);
 }
 
+void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
+{
+	// Case 1: In air
+	if (GetMovementComponent()->IsFalling())
+	{
+		FVector Start = LinetraceFront->GetComponentLocation() + (LinetraceBack->GetComponentLocation() - LinetraceFront->GetComponentLocation()) * 0.5f;
+
+		FPredictProjectilePathParams Params;
+		Params.ActorsToIgnore.Add(this);
+		Params.LaunchVelocity = GetMovementComponent()->Velocity;
+		Params.MaxSimTime = 1.f;
+		Params.StartLocation = Start;
+		Params.TraceChannel = ECollisionChannel::ECC_GameTraceChannel1;
+		Params.bTraceWithChannel = true;
+		Params.bTraceWithCollision = true;
+		Params.DrawDebugTime = 0.5f;
+		Params.DrawDebugType = EDrawDebugTrace::ForOneFrame;
+		
+		FPredictProjectilePathResult Result;
+		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
+		{
+			FVector LandNormal = Result.HitResult.ImpactNormal;
+			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, TempSkateboardMesh->GetUpVector());
+			UE_LOG(LogTemp, Warning, TEXT("Normal: %s"), *LandNormal.ToString());
+
+			if(Angle < Movement->GetWalkableFloorAngle())
+			{
+				FQuat DesiredRotation = GetDesiredRotation(LandNormal);
+				TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), DesiredRotation, 31.f * DeltaTime));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Too steep"));
+			}
+		}
+	}
+	// Case 2/3: On Ground
+	else
+	{
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		FHitResult FrontResult;
+		FVector Start = LinetraceFront->GetComponentLocation();
+		FVector End = Start + FVector(0, 0, -100.f);
+		GetWorld()->LineTraceSingleByChannel(FrontResult, Start, End, ECollisionChannel::ECC_Camera);
+
+		FHitResult BackResult;
+		Start = LinetraceBack->GetComponentLocation();
+		End = Start + FVector(0, 0, -100.f);
+		GetWorld()->LineTraceSingleByChannel(BackResult, Start, End, ECollisionChannel::ECC_Camera);
+	}
+}
+
+
+FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
+{
+
+}

@@ -13,5 +13,9 @@ UCLASS()
 class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	static float GetAngleBetween(FVector Vector1, FVector Vector2);
+	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2);
 	
 };
