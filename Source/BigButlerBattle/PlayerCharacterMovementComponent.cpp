@@ -340,11 +340,24 @@ void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitR
 	if (!FloorHitResult.bBlockingHit)
 		return;
 
-	auto Normal = FloorHitResult.Normal;
-	auto PlayerForwardVector = GetOwner()->GetActorForwardVector();
+	auto n = FloorHitResult.Normal;
+	FVector u = FVector(0, 0, 1);
 
-	auto dot = FVector::DotProduct(Normal, PlayerForwardVector);
-	UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), dot);
+	float alpha = FMath::Acos(FVector::DotProduct(n, u));
+	float cosAlpha = FMath::Cos(alpha);
+
+	// If it's zero, then there is no acceleration in the horizontal plane, because the slope is vertical.
+	if (!cosAlpha)
+		return;
+
+	float N = SlopeGravityMultiplier / cosAlpha;
+	float Nx = N * FMath::Cos((PI / 2) - alpha);
+
+	FVector d = FVector::CrossProduct(FVector::CrossProduct(u, n), u).GetSafeNormal();
+
+	FVector a = d * Nx;
+
+	Velocity += a * DeltaTime;
 }
 
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const
