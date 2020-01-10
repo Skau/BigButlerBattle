@@ -56,7 +56,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		return;
 	}
 
-	if (HasAnimRootMotion() || (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy) || CurrentRootMotion.HasOverrideVelocity())
+	if (HasAnimRootMotion() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy) || CurrentRootMotion.HasOverrideVelocity())
 	{
 		UE_LOG(LogTemp, Error, TEXT("We don't know how to handle root motion or simulated proxies. :s"));
 		return;
