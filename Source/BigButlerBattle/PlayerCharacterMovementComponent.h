@@ -49,6 +49,8 @@ protected:
 		meta = (DisplayName = "Standtill Rotation Factor", ClampMin = "0", UIMin = "0"))
 	float SkateboardStandstillRotationSpeed = 1.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
+	float SlopeGravityMultiplier = 2048.f;
 
 public:
 	UPlayerCharacterMovementComponent();
