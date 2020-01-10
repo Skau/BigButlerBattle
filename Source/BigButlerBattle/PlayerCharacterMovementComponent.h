@@ -40,7 +40,7 @@ protected:
 	float SkateboardSidewaysGroundDeceleration = 4096.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardBreakingDeceleration = 1200.f;
+	float SkateboardBreakingDeceleration = 2600.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Rotation Speed", ClampMin = "0", UIMin = "0"))
 	float SkateboardRotationSpeed = 100.f;
@@ -49,6 +49,8 @@ protected:
 		meta = (DisplayName = "Standtill Rotation Factor", ClampMin = "0", UIMin = "0"))
 	float SkateboardStandstillRotationSpeed = 1.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
+	float SlopeGravityMultiplier = 2048.f;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -84,6 +86,8 @@ private:
 
 	void CalcSkateboardVelocity(float DeltaTime);
 
+	void AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime);
+
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
@@ -95,5 +99,5 @@ private:
 	FORCEINLINE FVector CalcAcceleration() const;
 	FORCEINLINE float CalcRotation() const;
 
-	FVector ClampForwardVelocity();
+	
 };
