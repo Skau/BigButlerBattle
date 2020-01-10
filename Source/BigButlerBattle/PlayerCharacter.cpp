@@ -125,8 +125,8 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 
 FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 {
-	FVector Right =		FVector::CrossProduct(GetActorForwardVector(),	DestinationNormal);
-	FVector Forward =	FVector::CrossProduct(GetActorRightVector(),	DestinationNormal);
+	FVector Right =		FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
+	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
 
 	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
 
