@@ -80,7 +80,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		Params.LaunchVelocity = GetMovementComponent()->Velocity;
 		Params.MaxSimTime = 1.f;
 		Params.StartLocation = Start;
-		Params.TraceChannel = ECollisionChannel::ECC_GameTraceChannel1;
+		Params.TraceChannel = ECollisionChannel::ECC_WorldStatic;
 		Params.bTraceWithChannel = true;
 		Params.bTraceWithCollision = true;
 		Params.DrawDebugTime = 0.5f;
@@ -121,7 +121,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 {
 	FVector Right = FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
-	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
+	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal); 
 
 	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
 
