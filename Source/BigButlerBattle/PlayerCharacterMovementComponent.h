@@ -60,6 +60,9 @@ public:
 
 	bool IsMovingOnGround() const override;
 
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
+
 protected:
 	void BeginPlay() override;
 
@@ -88,7 +91,6 @@ private:
 
 	void AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime);
 
-	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
