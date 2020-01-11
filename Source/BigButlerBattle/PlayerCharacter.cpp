@@ -91,16 +91,11 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		{
 			FVector LandNormal = Result.HitResult.ImpactNormal;
 			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, TempSkateboardMesh->GetUpVector());
-			//UE_LOG(LogTemp, Warning, TEXT("Normal: %s"), *LandNormal.ToString());
 
 			if(Angle < Movement->GetWalkableFloorAngle())
 			{
-				FQuat DesiredRotation = GetDesiredRotation(LandNormal);
-				TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), DesiredRotation, 31.f * DeltaTime));
-			}
-			else
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("Too steep"));
+				auto DesiredRotation = GetDesiredRotation(LandNormal);
+				TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
 			}
 		}
 	}
@@ -125,12 +120,10 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 
 FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 {
-	FVector Right =		FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
+	FVector Right = FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
 	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
 
 	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
-
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Rot.ToString())
 
 	return Rot.Quaternion();
 }
