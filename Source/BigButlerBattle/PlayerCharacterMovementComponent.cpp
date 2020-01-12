@@ -5,6 +5,7 @@
 #include "PlayerCharacter.h"
 #include "Components/PrimitiveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SplineComponent.h"
 
 #include "PlayerCharacter.h"
 
@@ -217,13 +218,73 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			return;
 		}
 
+		if (!IsValid(SkateboardSplineReference))
+		{
+			return;
+		}
+		
+
+		// Find start pos
+		if (SplinePos < 0.f)
+		{
+			SplinePos = SkateboardSplineReference->FindInputKeyClosestToWorldLocation(CharacterOwner->GetActorLocation());
+			if (!Velocity.IsNearlyZero())
+			{
+				auto splineDir = SkateboardSplineReference->GetDirectionAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World);
+				SplineDir = (FVector::DotProduct(splineDir, Velocity) > 0) ? 1 : -1;
+			}
+			else
+				SplineDir = 1;
+		}
+
 		// 1. Find acceleration
 
 		// 2. Find velocity
+		FVector SplineWorldPos = SkateboardSplineReference->GetLocationAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World);
+		float NextSplinePos = SplinePos + timeTick * SplineDir;
+		FVector SplineNextWorldPos;
+		// If inside curve, use curve point.
+		if (NextSplinePos <= 1.f)
+		{
+			SplineNextWorldPos = SkateboardSplineReference->GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World);
+		}
+		// If not inside curve, calculate a curve point using the curvedirection.
+		else
+		{
+			auto dir = SkateboardSplineReference->GetDirectionAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World) * SplineDir;
+			SplineNextWorldPos = SplineWorldPos + dir * timeTick;
+		}
 
-		// 3. Move
-		FHitResult Hit(1.f);
-		// auto moveResult = SafeMoveUpdatedComponent( Adjusted, PawnRotation, true, Hit);
+
+		FVector newVelocity = SplineNextWorldPos - SplineWorldPos;
+		// Set new velocity
+		Velocity = newVelocity / timeTick;
+		if (Velocity.ContainsNaN())
+			Velocity = FVector::ZeroVector;
+
+		if (newVelocity.IsNearlyZero())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Calculated velocity is too small!"));
+		}
+		else
+		{
+			// 3. Move
+			FHitResult Hit(1.f);
+			auto moveResult = SafeMoveUpdatedComponent(newVelocity, FQuat::Identity, true, Hit);
+		}
+
+
+		// 4. Check if outside curve.
+		SplinePos += timeTick * SplineDir;
+		if (SplinePos > 1.f || SplinePos < 0.f)
+		{
+			SplinePos = -1.f;
+
+			// SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
+			SetMovementMode(EMovementMode::MOVE_Falling);
+			StartNewPhysics(remainingTime, Iterations);
+		}
+
 
 		if (!HasValidData())
 		{

@@ -8,6 +8,7 @@
 
 // Forward declarations
 class APlayerCharacter;
+class USplineComponent;
 
 UENUM(BlueprintType)
 enum class ECustomMovementType : uint8
@@ -52,6 +53,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
 	float SlopeGravityMultiplier = 2048.f;
+
+	/// Grinding movement:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
+	USplineComponent* SkateboardSplineReference;
+
+	float SplinePos = -1.f;
+	int SplineDir = 1;
 
 public:
 	UPlayerCharacterMovementComponent();
