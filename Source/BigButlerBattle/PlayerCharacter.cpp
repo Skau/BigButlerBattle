@@ -106,14 +106,42 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		Params.AddIgnoredActor(this);
 
 		FHitResult FrontResult;
+		float traceDistance = 100.f;
 		FVector Start = LinetraceFront->GetComponentLocation();
-		FVector End = Start + FVector(0, 0, -100.f);
+		FVector End = Start - TempSkateboardMesh->GetUpVector() * traceDistance;
 		GetWorld()->LineTraceSingleByChannel(FrontResult, Start, End, ECollisionChannel::ECC_Camera);
 
 		FHitResult BackResult;
 		Start = LinetraceBack->GetComponentLocation();
-		End = Start + FVector(0, 0, -100.f);
+		End = Start - TempSkateboardMesh->GetUpVector() * traceDistance;
 		GetWorld()->LineTraceSingleByChannel(BackResult, Start, End, ECollisionChannel::ECC_Camera);
+
+		/// Fint normals:
+		// Both hits:
+		if (FrontResult.bBlockingHit && BackResult.bBlockingHit)
+		{
+			auto tangentDot = FVector::DotProduct(FVector::CrossProduct(FrontResult.Normal, BackResult.Normal), GetActorRightVector());
+			// Case 2: Concave planes 
+			if (tangentDot > 0)
+			{
+
+			}
+			// Case 3: Convex planes
+			else
+			{
+
+			}
+		}
+		// One hit:
+		else if (FrontResult.bBlockingHit || BackResult.bBlockingHit)
+		{
+			auto &result = FrontResult.bBlockingHit ? FrontResult : BackResult;
+		}
+		// No hits:
+		else
+		{
+			// No hits. Default normal.
+		}
 	}
 }
 
