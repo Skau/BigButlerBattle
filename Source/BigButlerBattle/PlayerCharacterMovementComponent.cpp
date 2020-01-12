@@ -43,9 +43,16 @@ void UPlayerCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterat
 {
 	Super::PhysCustom(deltaTime, Iterations);
 
-	if (CustomMovementMode)
+	switch (CustomMovementMode)
 	{
-		PhysSkateboard(deltaTime, Iterations);
+		case ECustomMovementType::MOVE_Skateboard:
+			PhysSkateboard(deltaTime, Iterations);
+			break;
+		case ECustomMovementType::MOVE_Grinding:
+			PhysGrinding(deltaTime, Iterations);
+			break;
+		default:
+			break;
 	}
 }
 
@@ -189,6 +196,42 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 	}
 }
 
+void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iterations)
+{
+	if (deltaTime < MIN_TICK_TIME)
+	{
+		return;
+	}
+
+	float remainingTime = deltaTime;
+	while( (remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) )
+	{
+		Iterations++;
+		float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
+
+
+		if (HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Grinding motion doesn't know how to manage root motion!"));
+			return;
+		}
+
+		// 1. Find acceleration
+
+		// 2. Find velocity
+
+		// 3. Move
+		FHitResult Hit(1.f);
+		// auto moveResult = SafeMoveUpdatedComponent( Adjusted, PawnRotation, true, Hit);
+
+		if (!HasValidData())
+		{
+			return;
+		}
+	}
+}
+
 void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Iterations)
 {
 	Super::PhysFalling(deltaTime, Iterations);
@@ -196,7 +239,7 @@ void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Itera
 	// Apply rotation based on input
 	auto forwardDir = GetOwner()->GetActorForwardVector();
 	const auto rotAmount = CalcRotation() * deltaTime;
-	GetOwner()->AddActorWorldRotation(FRotator{ 0.f, rotAmount, 0.f });
+	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 
 	// Set velocity to be facing same direction as forward dir.
 	if (!Velocity.IsNearlyZero())
@@ -243,7 +286,7 @@ void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float Del
 	const FVector RevForwardAcceleration = (bZeroForwardBraking ? FVector::ZeroVector : (-BreakingForwardDeceleration * (GetOwner()->GetActorForwardVector() * ForwardFactor)));
 	const FVector RevSidewaysAcceleration = (bZeroSidewaysBraking ? FVector::ZeroVector : (-BreakingSidewaysDeceleration * (GetOwner()->GetActorRightVector() * SidewaysFactor)));
 	SidewaysForce = RevSidewaysAcceleration.Size2D();
-	
+
 	while (RemainingTime >= MIN_TICK_TIME)
 	{
 		// Zero friction uses constant deceleration, so no need for iteration.
@@ -286,7 +329,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	// Apply braking or deceleration
 	const bool bZeroAcceleration = Acceleration.IsZero();
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
-	
+
 	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	const FVector OldVelocity = Velocity;
@@ -299,11 +342,11 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	const bool bIsStandstill = Velocity.Size() < StandstillThreshold;
 
 	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
-	if(!bZeroAcceleration)
+	if (!bZeroAcceleration)
 	{
 		bool bNegativeAcceleration = FMath::IsNegativeFloat(FVector::DotProduct(Acceleration, GetOwner()->GetActorForwardVector()));
 		const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
-		
+
 		// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
 		if (bNegativeAcceleration && bMovingBackwards)
 		{
@@ -312,7 +355,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		}
 
 		const bool bShouldStopCompletely = bNegativeAcceleration && bIsStandstill;
-				
+
 		if (bShouldStopCompletely)
 		{
 			Velocity = FVector::ZeroVector;
@@ -328,7 +371,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	// Apply rotation based on input
 	auto forwardDir = GetOwner()->GetActorForwardVector();
 	const auto rotAmount = CalcRotation() * ((bIsStandstill) ? SkateboardStandstillRotationSpeed : 1.f) * DeltaTime;
-	GetOwner()->AddActorWorldRotation(FRotator{ 0.f, rotAmount, 0.f});
+	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 	// Set velocity to be facing same direction as forward dir.
 	if (!Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
@@ -359,7 +402,7 @@ void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitR
 	Velocity += a * DeltaTime;
 }
 
-inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector& forward) const
+inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector &forward) const
 {
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }

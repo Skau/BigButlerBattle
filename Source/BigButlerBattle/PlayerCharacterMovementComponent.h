@@ -13,7 +13,8 @@ UENUM(BlueprintType)
 enum class ECustomMovementType : uint8
 {
 	MOVE_None			UMETA(DisplayName = "None"),
-	MOVE_Skateboard		UMETA(DisplayName = "Skateboard")
+	MOVE_Skateboard		UMETA(DisplayName = "Skateboard"),
+	MOVE_Grinding		UMETA(DisplayName = "Grinding")
 };
 
 /** Custom override of movement component
@@ -69,6 +70,7 @@ protected:
 	void PhysCustom(float deltaTime, int32 Iterations) override;
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
+	void PhysGrinding(float deltaTime, int32 Iterations);
 
 	/** Handle falling movement. */
 	void PhysFalling(float deltaTime, int32 Iterations) override;
