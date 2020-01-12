@@ -211,15 +211,14 @@ void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode Prev
 		SetMovementMode(MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
 
-void UPlayerCharacterMovementComponent::ApplyVelocityBraking(float DeltaTime, float Friction, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
+void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
 {
 	if (Velocity.IsZero() || !HasValidData() || HasAnimRootMotion() || DeltaTime < MIN_TICK_TIME)
 	{
 		return;
 	}
 
-	const float FrictionFactor = FMath::Max(0.f, BrakingFrictionFactor);
-	Friction = FMath::Max(0.f, Friction * FrictionFactor);
+	const float Friction = FMath::Max(0.f, BrakingFriction * BrakingFrictionFactor);
 	BreakingForwardDeceleration = FMath::Max(0.f, BreakingForwardDeceleration);
 	BreakingSidewaysDeceleration = FMath::Max(0.f, BreakingSidewaysDeceleration);
 	const bool bZeroFriction = FMath::IsNearlyZero(Friction);
@@ -288,7 +287,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	const bool bZeroAcceleration = Acceleration.IsZero();
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
 	
-	ApplyVelocityBraking(DeltaTime, BrakingFriction, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
+	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	const FVector OldVelocity = Velocity;
 	// Don't allow braking to lower us below max speed if we started above it.
