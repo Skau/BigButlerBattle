@@ -136,11 +136,15 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		else if (FrontResult.bBlockingHit || BackResult.bBlockingHit)
 		{
 			auto &result = FrontResult.bBlockingHit ? FrontResult : BackResult;
+
+			auto DesiredRotation = GetDesiredRotation(result.Normal);
+			TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
 		}
 		// No hits:
 		else
 		{
 			// No hits. Default normal.
+			TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), FQuat::Identity, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
 		}
 	}
 }
