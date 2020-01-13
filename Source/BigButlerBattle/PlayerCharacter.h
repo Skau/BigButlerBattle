@@ -44,8 +44,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
 	float SidewaysForceFallOffThreshold = 4000.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationSpeed = 0.08f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationGroundSpeed = 0.16f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationAirSpeed = 0.08f;
 
 	virtual void BeginPlay() override;
 

@@ -11,6 +11,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "DrawDebugHelpers.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -87,13 +88,11 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		FPredictProjectilePathParams Params;
 		Params.ActorsToIgnore.Add(this);
 		Params.LaunchVelocity = GetMovementComponent()->Velocity;
-		Params.MaxSimTime = 1.f;
+		Params.MaxSimTime = 2.f;
 		Params.StartLocation = Start;
 		Params.TraceChannel = ECollisionChannel::ECC_WorldStatic;
 		Params.bTraceWithChannel = true;
 		Params.bTraceWithCollision = true;
-		Params.DrawDebugTime = 0.5f;
-		Params.DrawDebugType = EDrawDebugTrace::ForOneFrame;
 		
 		FPredictProjectilePathResult Result;
 		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
@@ -104,41 +103,43 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			if(Angle < Movement->GetWalkableFloorAngle())
 			{
 				auto DesiredRotation = GetDesiredRotation(LandNormal);
-				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
+				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationAirSpeed / 0.017f) * DeltaTime));
 			}
 		}
 	}
 	// Case 2/3: On Ground
 	else
 	{
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
+		FCollisionObjectQueryParams ObjParams;
+		ObjParams.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
 
+		float TraceDistance = 200.f;
 		FHitResult FrontResult;
-		float traceDistance = 100.f;
-		FVector Start = LinetraceFront.GetLocation();
-		FVector End = Start - SkateboardMesh->GetUpVector() * traceDistance;
-		GetWorld()->LineTraceSingleByChannel(FrontResult, Start, End, ECollisionChannel::ECC_Camera);
+		FVector Start = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
+		FVector End = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
+		GetWorld()->LineTraceSingleByObjectType(FrontResult, Start, End, ObjParams);
 
 		FHitResult BackResult;
-		Start = LinetraceBack.GetLocation();
-		End = Start - SkateboardMesh->GetUpVector() * traceDistance;
-		GetWorld()->LineTraceSingleByChannel(BackResult, Start, End, ECollisionChannel::ECC_Camera);
+		Start = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
+		End = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
+		GetWorld()->LineTraceSingleByObjectType(BackResult, Start, End, ObjParams);
 
 		/// Fint normals:
 		// Both hits:
 		if (FrontResult.bBlockingHit && BackResult.bBlockingHit)
 		{
 			auto tangentDot = FVector::DotProduct(FVector::CrossProduct(FrontResult.Normal, BackResult.Normal), GetActorRightVector());
-			// Case 2: Concave planes 
-			if (tangentDot > 0)
-			{
 
-			}
-			// Case 3: Convex planes
-			else
-			{
+			// 1. Get new normals
+			// 2. Do dot product
+			// 3. The bigger the angle the faster the interpolation
 
+			auto dot = FVector::DotProduct(FrontResult.Normal, BackResult.Normal);
+			if (dot != 0)
+			{
+				auto newNormal = (FrontResult.Normal + BackResult.Normal).GetSafeNormal();
+				auto DesiredRotation = GetDesiredRotation(newNormal);
+				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * dot));
 			}
 		}
 		// One hit:
@@ -147,13 +148,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			auto &result = FrontResult.bBlockingHit ? FrontResult : BackResult;
 
 			auto DesiredRotation = GetDesiredRotation(result.Normal);
-			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
+			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 		}
 		// No hits:
 		else
 		{
 			// No hits. Default normal.
-			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), FQuat::Identity, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
+			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), FQuat::Identity, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 		}
 	}
 }
