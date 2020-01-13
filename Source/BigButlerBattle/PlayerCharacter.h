@@ -50,6 +50,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
 	float SkateboardRotationAirSpeed = 0.08f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	bool bDebugMovement = false;
+
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;

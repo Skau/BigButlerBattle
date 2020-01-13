@@ -88,17 +88,25 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		FPredictProjectilePathParams Params;
 		Params.ActorsToIgnore.Add(this);
 		Params.LaunchVelocity = GetMovementComponent()->Velocity;
-		Params.MaxSimTime = 2.f;
+		Params.MaxSimTime = 1.f;
 		Params.StartLocation = Start;
 		Params.TraceChannel = ECollisionChannel::ECC_WorldStatic;
 		Params.bTraceWithChannel = true;
 		Params.bTraceWithCollision = true;
+		if (bDebugMovement)
+		{
+			Params.DrawDebugTime = 0.1f;
+			Params.DrawDebugType = EDrawDebugTrace::ForDuration;
+		}
 		
 		FPredictProjectilePathResult Result;
 		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
 		{
 			FVector LandNormal = Result.HitResult.ImpactNormal;
 			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
+
+			if (bDebugMovement)
+				DrawDebugSphere(GetWorld(), Result.HitResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
 
 			if(Angle < Movement->GetWalkableFloorAngle())
 			{
@@ -113,48 +121,63 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		FCollisionObjectQueryParams ObjParams;
 		ObjParams.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
 
-		float TraceDistance = 200.f;
+		// Making the trace distance really short makes it happen more often over inclines that only 1 or 0 hits are recorded.
+		// This directly affects the rate of which we change to the falling movement mode. This definitely needs more tweaking.
+		// Use the bDebugMovement bool in the editor to visualize this (and the projectile prediction above).
+		float TraceDistance = 20.f;
+
 		FHitResult FrontResult;
 		FVector Start = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
 		FVector End = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
+
 		GetWorld()->LineTraceSingleByObjectType(FrontResult, Start, End, ObjParams);
+
+		if (bDebugMovement)
+			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
 
 		FHitResult BackResult;
 		Start = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
 		End = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
 		GetWorld()->LineTraceSingleByObjectType(BackResult, Start, End, ObjParams);
+		
+		if (bDebugMovement)
+			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
 
-		/// Fint normals:
+		if (bDebugMovement && FrontResult.bBlockingHit)
+			DrawDebugSphere(GetWorld(), FrontResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
+
+		if (bDebugMovement && BackResult.bBlockingHit)
+			DrawDebugSphere(GetWorld(), BackResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
+
 		// Both hits:
 		if (FrontResult.bBlockingHit && BackResult.bBlockingHit)
 		{
-			auto tangentDot = FVector::DotProduct(FVector::CrossProduct(FrontResult.Normal, BackResult.Normal), GetActorRightVector());
-
-			// 1. Get new normals
-			// 2. Do dot product
-			// 3. The bigger the angle the faster the interpolation
-
-			auto dot = FVector::DotProduct(FrontResult.Normal, BackResult.Normal);
+			auto dot = FVector::DotProduct(FrontResult.ImpactNormal, BackResult.ImpactNormal);
 			if (dot != 0)
 			{
-				auto newNormal = (FrontResult.Normal + BackResult.Normal).GetSafeNormal();
+				auto newNormal = (FrontResult.ImpactNormal + BackResult.ImpactNormal).GetSafeNormal();
 				auto DesiredRotation = GetDesiredRotation(newNormal);
 				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * dot));
 			}
+			
+			// There is a case here where we should fall, because if the player handbrakes over an edge it is still glued to the slope and it looks weird.
+			// If some combination of normals changing here is true, we need to switch movement mode to falling.
 		}
 		// One hit:
 		else if (FrontResult.bBlockingHit || BackResult.bBlockingHit)
-		{
+		{	
 			auto &result = FrontResult.bBlockingHit ? FrontResult : BackResult;
-
-			auto DesiredRotation = GetDesiredRotation(result.Normal);
+			auto DesiredRotation = GetDesiredRotation(result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
+
+			// Turn on falling just in case we are at an edge/incline and the velocity is great enough to get some air
+			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
-		// No hits:
+		// No hits: 
 		else
 		{
-			// No hits. Default normal.
-			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), FQuat::Identity, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
+			// Turn on falling, because we have no idea where the ground is and we are definitely in the air.
+			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 	}
 }
