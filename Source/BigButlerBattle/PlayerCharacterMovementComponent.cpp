@@ -210,6 +210,8 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		Iterations++;
 		float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 		remainingTime -= timeTick;
+		// Extra velocity for extra adjustments.
+		FVector extraVelocity = FVector::ZeroVector;
 
 
 		if (HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity())
@@ -218,16 +220,17 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			return;
 		}
 
-		if (!IsValid(SkateboardSplineReference))
+		if (!IsValid(SkateboardSplineReference) || !IsValid(CharacterOwner))
 		{
 			return;
 		}
 		
 
-		// Find start pos
+		// If just entering the spline, do a setup.
 		if (SplinePos < 0.f)
 		{
 			SplinePos = SkateboardSplineReference->FindInputKeyClosestToWorldLocation(CharacterOwner->GetActorLocation());
+			extraVelocity = SkateboardSplineReference->GetLocationAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World) - CharacterOwner->GetActorLocation();
 			if (!Velocity.IsNearlyZero())
 			{
 				auto splineDir = SkateboardSplineReference->GetDirectionAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World);
@@ -256,13 +259,14 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		}
 
 
-		FVector newVelocity = SplineNextWorldPos - SplineWorldPos;
 		// Set new velocity
-		Velocity = newVelocity / timeTick;
+		Velocity = (SplineNextWorldPos - SplineWorldPos + extraVelocity) / timeTick;
 		if (Velocity.ContainsNaN())
 			Velocity = FVector::ZeroVector;
 
-		if (newVelocity.IsNearlyZero())
+		auto newRot = UKismetMathLibrary::MakeRotFromZX(FVector::UpVector, Velocity.IsNearlyZero() ? FVector::ForwardVector : Velocity);
+
+		if (Velocity.IsNearlyZero())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Calculated velocity is too small!"));
 		}
@@ -270,7 +274,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		{
 			// 3. Move
 			FHitResult Hit(1.f);
-			auto moveResult = SafeMoveUpdatedComponent(newVelocity, FQuat::Identity, true, Hit);
+			auto moveResult = SafeMoveUpdatedComponent(Velocity * timeTick, newRot, true, Hit);
 		}
 
 
