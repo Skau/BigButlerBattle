@@ -12,6 +12,7 @@ class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
 class USpringArmComponent;
+class USkeletalMeshSocket;
 
 UCLASS()
 class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
@@ -63,14 +64,9 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
 
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* LinetraceFront;
+	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
 
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* LinetraceBack;
-
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* TempSkateboardMesh;
+	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
 
 	FTimerHandle HandbrakeHandle;
 	FTimerDelegate HandbrakeTimerCallback;

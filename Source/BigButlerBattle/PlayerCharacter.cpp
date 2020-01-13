@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BigButlerBattleGameModeBase.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -19,21 +20,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Skateboard Mesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
 
-	LinetraceFront = CreateDefaultSubobject<USceneComponent>("Linetrace Front");
-	LinetraceFront->SetupAttachment(SkateboardMesh);
-
-	LinetraceBack = CreateDefaultSubobject<USceneComponent>("Linetrace Back");
-	LinetraceBack->SetupAttachment(SkateboardMesh);
-
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-
-	TempSkateboardMesh = CreateDefaultSubobject<UStaticMeshComponent>("Temp Skateboard Mesh");
-	TempSkateboardMesh->SetupAttachment(RootComponent);
-
 
 	bUseControllerRotationYaw = false;
 }
@@ -51,6 +42,15 @@ void APlayerCharacter::EnableRagdoll()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!SkateboardMesh || !IsValid(SkateboardMesh))
+	{
+		UE_LOG(LogTemp, Error, TEXT("SkateboardMesh is not valid!"));
+		return;
+	}
+
+	LinetraceSocketFront = SkateboardMesh->GetSocketByName("LinetraceFront");
+	LinetraceSocketBack = SkateboardMesh->GetSocketByName("LinetraceBack");
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
 	check(Movement != nullptr);
@@ -70,10 +70,19 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 {
+	if (!LinetraceSocketFront || !IsValid(LinetraceSocketFront) || !LinetraceSocketBack ||!IsValid(LinetraceSocketBack))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Linetrace sockets not good"));
+		return;
+	}
+
+	FTransform LinetraceFront = LinetraceSocketFront->GetSocketTransform(SkateboardMesh);
+	FTransform LinetraceBack = LinetraceSocketBack->GetSocketTransform(SkateboardMesh);
+
 	// Case 1: In air
 	if (GetMovementComponent()->IsFalling())
 	{
-		FVector Start = LinetraceFront->GetComponentLocation() + (LinetraceBack->GetComponentLocation() - LinetraceFront->GetComponentLocation()) * 0.5f;
+		FVector Start = LinetraceFront.GetLocation() + (LinetraceBack.GetLocation() - LinetraceFront.GetLocation()) * 0.5f;
 
 		FPredictProjectilePathParams Params;
 		Params.ActorsToIgnore.Add(this);
@@ -90,12 +99,12 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
 		{
 			FVector LandNormal = Result.HitResult.ImpactNormal;
-			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, TempSkateboardMesh->GetUpVector());
+			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
 
 			if(Angle < Movement->GetWalkableFloorAngle())
 			{
 				auto DesiredRotation = GetDesiredRotation(LandNormal);
-				TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
+				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
 			}
 		}
 	}
@@ -107,13 +116,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 
 		FHitResult FrontResult;
 		float traceDistance = 100.f;
-		FVector Start = LinetraceFront->GetComponentLocation();
-		FVector End = Start - TempSkateboardMesh->GetUpVector() * traceDistance;
+		FVector Start = LinetraceFront.GetLocation();
+		FVector End = Start - SkateboardMesh->GetUpVector() * traceDistance;
 		GetWorld()->LineTraceSingleByChannel(FrontResult, Start, End, ECollisionChannel::ECC_Camera);
 
 		FHitResult BackResult;
-		Start = LinetraceBack->GetComponentLocation();
-		End = Start - TempSkateboardMesh->GetUpVector() * traceDistance;
+		Start = LinetraceBack.GetLocation();
+		End = Start - SkateboardMesh->GetUpVector() * traceDistance;
 		GetWorld()->LineTraceSingleByChannel(BackResult, Start, End, ECollisionChannel::ECC_Camera);
 
 		/// Fint normals:
@@ -138,13 +147,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			auto &result = FrontResult.bBlockingHit ? FrontResult : BackResult;
 
 			auto DesiredRotation = GetDesiredRotation(result.Normal);
-			TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
+			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
 		}
 		// No hits:
 		else
 		{
 			// No hits. Default normal.
-			TempSkateboardMesh->SetWorldRotation(FQuat::Slerp(TempSkateboardMesh->GetComponentQuat(), FQuat::Identity, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
+			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), FQuat::Identity, (SkateboardRotationSpeed / 0.017f) * DeltaTime));
 		}
 	}
 }
