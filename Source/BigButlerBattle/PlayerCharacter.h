@@ -21,7 +21,7 @@ class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
 
 public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer);
-
+	
 	void ToggleHoldingHandbrake(bool Value) { bCurrentlyHoldingHandbrake = Value; }
 	void SetRightAxisValue(float Value) { RightAxis = Value; }
 
@@ -31,6 +31,10 @@ public:
 	bool CanFall() { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() { return SidewaysForceFallOffThreshold; }
 
+
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE USkeletalMeshComponent* GetSkateboardMesh() { return SkateboardMesh; }
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
 	float HandbrakeRotationFactor = 300.f;
@@ -43,15 +47,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
 	float SidewaysForceFallOffThreshold = 4000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationGroundSpeed = 0.16f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationAirSpeed = 0.08f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	bool bDebugMovement = false;
 
 	virtual void BeginPlay() override;
 
@@ -70,10 +65,6 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
 
-	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
-
-	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
-
 	FTimerHandle HandbrakeHandle;
 	FTimerDelegate HandbrakeTimerCallback;
 	bool bCurrentlyHandbraking = false;
@@ -82,8 +73,4 @@ private:
 	float RightAxis = 0.0f;
 
 	bool bEnabledRagdoll = false;
-
-	void UpdateSkateboardRotation(float DeltaTime);
-
-	FQuat GetDesiredRotation(FVector DestinationNormal) const;
 };
