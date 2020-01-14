@@ -22,10 +22,12 @@ public:
 protected:
 	void BeginPlay() override;
 
+	void OnPossess(APawn* InPawn) override;
+
 	void Tick(float DeltaTime) override;
 
 	void SetupInputComponent() override;
-	
+
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* ControlledPlayer = nullptr;
 

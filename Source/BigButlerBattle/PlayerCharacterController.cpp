@@ -21,8 +21,13 @@ void APlayerCharacterController::BeginPlay()
 	//	PlayerWidget = Cast<UPlayerWidget>(CreateWidget(this, PlayerWidgetType));
 	//	PlayerWidget->AddToViewport(0);
 	//}
+}
 
-	ControlledPlayer = Cast<APlayerCharacter>(GetPawn());
+void APlayerCharacterController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	ControlledPlayer = Cast<APlayerCharacter>(InPawn);
 	check(ControlledPlayer != nullptr);
 }
 

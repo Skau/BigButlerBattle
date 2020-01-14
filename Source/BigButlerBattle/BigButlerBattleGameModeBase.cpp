@@ -2,6 +2,9 @@
 
 
 #include "BigButlerBattleGameModeBase.h"
+#include "ButlerGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
@@ -11,4 +14,21 @@ float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vec
 float ABigButlerBattleGameModeBase::GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
 {
 	return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
+}
+
+void ABigButlerBattleGameModeBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Spawn the needed players
+	auto Instance = Cast<UButlerGameInstance>(GetGameInstance());
+	if (Instance)
+	{
+		auto NumPlayers = Instance->NumberOfPlayers;
+		for (int i = 0; i < NumPlayers - 1; ++i)
+		{
+			UGameplayStatics::CreatePlayer(GetWorld());
+
+		}
+	}
 }

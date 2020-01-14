@@ -17,5 +17,8 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 public:
 	static float GetAngleBetween(FVector Vector1, FVector Vector2);
 	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2);
+
+protected:
+	void BeginPlay() override;
 	
 };
