@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "PlayerCharacter.generated.h"
 
 class UPlayerCharacterMovementComponent;
@@ -13,6 +14,21 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
+
+USTRUCT(BlueprintType)
+struct FSkateboardTraceResult
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FHitResult Front;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FHitResult Back;
+
+	FSkateboardTraceResult()
+	{}
+};
 
 UCLASS()
 class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
@@ -30,6 +46,14 @@ public:
 	bool HasEnabledRagdoll() { return bEnabledRagdoll; }
 	bool CanFall() { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() { return SidewaysForceFallOffThreshold; }
+
+	UFUNCTION(BlueprintPure)
+	FSkateboardTraceResult GetSkateboardTraceResults() const { return LastTraceResult;  }
+
+	UFUNCTION(BlueprintCallable)
+	bool TraceSkateboard();
+
+	bool IsSocketsValid() const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -82,6 +106,8 @@ private:
 	float RightAxis = 0.0f;
 
 	bool bEnabledRagdoll = false;
+
+	FSkateboardTraceResult LastTraceResult;
 
 	void UpdateSkateboardRotation(float DeltaTime);
 

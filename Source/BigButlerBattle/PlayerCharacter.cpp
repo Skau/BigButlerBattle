@@ -40,6 +40,57 @@ void APlayerCharacter::EnableRagdoll()
 	//bEnabledRagdoll = true;
 }
 
+bool APlayerCharacter::TraceSkateboard()
+{
+	if (!IsSocketsValid())
+		return false;
+
+	FTransform LinetraceFront = LinetraceSocketFront->GetSocketTransform(SkateboardMesh);
+	FTransform LinetraceBack = LinetraceSocketBack->GetSocketTransform(SkateboardMesh);
+
+	FCollisionObjectQueryParams ObjParams;
+	ObjParams.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
+
+	// Making the trace distance really short makes it happen more often over inclines that only 1 or 0 hits are recorded.
+	// This directly affects the rate of which we change to the falling movement mode. This definitely needs more tweaking.
+	// Use the bDebugMovement bool in the editor to visualize this (and the projectile prediction above).
+	float TraceDistance = 20.f;
+
+	FVector Start = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
+	FVector End = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
+
+	GetWorld()->LineTraceSingleByObjectType(LastTraceResult.Front, Start, End, ObjParams);
+
+	if (bDebugMovement)
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
+
+	Start = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
+	End = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
+	GetWorld()->LineTraceSingleByObjectType(LastTraceResult.Back, Start, End, ObjParams);
+
+	if (bDebugMovement)
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
+
+	if (bDebugMovement && LastTraceResult.Front.bBlockingHit)
+		DrawDebugSphere(GetWorld(), LastTraceResult.Front.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
+
+	if (bDebugMovement && LastTraceResult.Back.bBlockingHit)
+		DrawDebugSphere(GetWorld(), LastTraceResult.Back.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
+
+
+	return true;
+}
+
+bool APlayerCharacter::IsSocketsValid() const
+{
+	if (!LinetraceSocketFront || !IsValid(LinetraceSocketFront) || !LinetraceSocketBack || !IsValid(LinetraceSocketBack))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Linetrace sockets not good"));
+		return false;
+	}
+	return true;
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -71,18 +122,15 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 {
-	if (!LinetraceSocketFront || !IsValid(LinetraceSocketFront) || !LinetraceSocketBack ||!IsValid(LinetraceSocketBack))
-	{
-		UE_LOG(LogTemp, Error, TEXT("Linetrace sockets not good"));
+	if (!IsSocketsValid())
 		return;
-	}
-
-	FTransform LinetraceFront = LinetraceSocketFront->GetSocketTransform(SkateboardMesh);
-	FTransform LinetraceBack = LinetraceSocketBack->GetSocketTransform(SkateboardMesh);
 
 	// Case 1: In air
 	if (GetMovementComponent()->IsFalling())
 	{
+		FTransform LinetraceFront = LinetraceSocketFront->GetSocketTransform(SkateboardMesh);
+		FTransform LinetraceBack = LinetraceSocketBack->GetSocketTransform(SkateboardMesh);
+
 		FVector Start = LinetraceFront.GetLocation() + (LinetraceBack.GetLocation() - LinetraceFront.GetLocation()) * 0.5f;
 
 		FPredictProjectilePathParams Params;
@@ -118,44 +166,19 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 	// Case 2/3: On Ground
 	else
 	{
-		FCollisionObjectQueryParams ObjParams;
-		ObjParams.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
+		// Perform tracing
+		if (!TraceSkateboard())
+			return;
 
-		// Making the trace distance really short makes it happen more often over inclines that only 1 or 0 hits are recorded.
-		// This directly affects the rate of which we change to the falling movement mode. This definitely needs more tweaking.
-		// Use the bDebugMovement bool in the editor to visualize this (and the projectile prediction above).
-		float TraceDistance = 20.f;
-
-		FHitResult FrontResult;
-		FVector Start = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
-		FVector End = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
-
-		GetWorld()->LineTraceSingleByObjectType(FrontResult, Start, End, ObjParams);
-
-		if (bDebugMovement)
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
-
-		FHitResult BackResult;
-		Start = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
-		End = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
-		GetWorld()->LineTraceSingleByObjectType(BackResult, Start, End, ObjParams);
-		
-		if (bDebugMovement)
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
-
-		if (bDebugMovement && FrontResult.bBlockingHit)
-			DrawDebugSphere(GetWorld(), FrontResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
-
-		if (bDebugMovement && BackResult.bBlockingHit)
-			DrawDebugSphere(GetWorld(), BackResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
+		auto traceResults = GetSkateboardTraceResults();
 
 		// Both hits:
-		if (FrontResult.bBlockingHit && BackResult.bBlockingHit)
+		if (traceResults.Front.bBlockingHit && traceResults.Back.bBlockingHit)
 		{
-			auto dot = FVector::DotProduct(FrontResult.ImpactNormal, BackResult.ImpactNormal);
+			auto dot = FVector::DotProduct(traceResults.Front.ImpactNormal, traceResults.Back.ImpactNormal);
 			if (dot != 0)
 			{
-				auto newNormal = (FrontResult.ImpactNormal + BackResult.ImpactNormal).GetSafeNormal();
+				auto newNormal = (traceResults.Front.ImpactNormal + traceResults.Back.ImpactNormal).GetSafeNormal();
 				auto DesiredRotation = GetDesiredRotation(newNormal);
 				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * dot));
 			}
@@ -164,9 +187,9 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			// If some combination of normals changing here is true, we need to switch movement mode to falling.
 		}
 		// One hit:
-		else if (FrontResult.bBlockingHit || BackResult.bBlockingHit)
+		else if (traceResults.Front.bBlockingHit || traceResults.Back.bBlockingHit)
 		{	
-			auto &result = FrontResult.bBlockingHit ? FrontResult : BackResult;
+			auto &result = traceResults.Front.bBlockingHit ? traceResults.Front : traceResults.Back;
 			auto DesiredRotation = GetDesiredRotation(result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 
