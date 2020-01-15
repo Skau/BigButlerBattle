@@ -7,6 +7,7 @@
 #include "BigButlerBattleGameModeBase.generated.h"
 
 class APlayerCharacter;
+class APlayerCharacterController;
 
 /**
  * 
@@ -25,5 +26,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
+
+private:
+	void OnPlayerPaused(APlayerCharacterController* Controller);
 	
 };

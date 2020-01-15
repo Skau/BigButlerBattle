@@ -120,6 +120,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent
 	// Axis Mappings
 	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
 	InputComponent->BindAxis("Right", this, &APlayerCharacter::MoveRight);
+	InputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
+	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -131,6 +133,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		AddActorLocalRotation({ 0, RightAxis * DeltaTime * HandbrakeRotationFactor, 0 });
 	}
 
+	UpdateCameraRotation(DeltaTime);
 	UpdateSkateboardRotation(DeltaTime);
 }
 
@@ -160,6 +163,41 @@ void APlayerCharacter::MoveRight(float Value)
 	RightAxis = Value;
 }
 
+void APlayerCharacter::LookUp(float Value)
+{
+	if (Value != 0)
+	{
+		auto Forward = GetActorForwardVector();
+		auto ArmForward = SpringArm->GetForwardVector();
+
+		auto angle = FVector::DotProduct(Forward, ArmForward);
+		if (angle < MaxCameraRotationOffset)
+		{
+			auto value = CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
+			UE_LOG(LogTemp, Warning, TEXT("Loopk up value: %f"), value);
+			SpringArm->AddWorldRotation(FRotator(value, 0, 0));
+		}
+	}
+
+}
+
+void APlayerCharacter::LookRight(float Value)
+{
+	if (Value != 0)
+	{
+		auto Forward = GetActorForwardVector();
+		auto ArmForward = SpringArm->GetForwardVector();
+
+		auto angle = FVector::DotProduct(Forward, ArmForward);
+		if (angle < MaxCameraRotationOffset)
+		{
+			auto value = CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
+			UE_LOG(LogTemp, Warning, TEXT("Loopk right value: %f"), value);
+			SpringArm->AddWorldRotation(FRotator(0, value, 0));
+		}
+	}
+}
+
 void APlayerCharacter::Handbrake()
 {
 	bCurrentlyHoldingHandbrake = true;
@@ -168,6 +206,11 @@ void APlayerCharacter::Handbrake()
 void APlayerCharacter::LetGoHandBrake()
 {
 	bCurrentlyHoldingHandbrake = false;
+}
+
+void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
+{
+
 }
 
 void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)

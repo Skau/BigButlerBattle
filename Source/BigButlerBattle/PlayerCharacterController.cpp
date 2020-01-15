@@ -41,5 +41,10 @@ void APlayerCharacterController::SetupInputComponent()
 	Super::SetupInputComponent();
 	check(InputComponent != nullptr);
 
-	
+	InputComponent->BindAction("PauseGame", EInputEvent::IE_Pressed, this, &APlayerCharacterController::PauseGamePressed);
+}
+
+void APlayerCharacterController::PauseGamePressed()
+{
+	PauseGame.ExecuteIfBound(this);
 }

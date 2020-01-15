@@ -6,6 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
+
+DECLARE_DELEGATE_OneParam(PauseGameSignature, APlayerCharacterController*);
+
 class APlayerCharacter;
 class UPlayerWidget;
 /**
@@ -18,6 +21,8 @@ class BIGBUTLERBATTLE_API APlayerCharacterController : public APlayerController
 
 public:
 	APlayerCharacterController();
+
+	PauseGameSignature PauseGame;
 
 protected:
 	void BeginPlay() override;
@@ -36,4 +41,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UPlayerWidget* PlayerWidget;
+
+private:
+	void PauseGamePressed();
 };
