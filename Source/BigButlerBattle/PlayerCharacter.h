@@ -38,9 +38,6 @@ class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
 public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer);
 
-	void ToggleHoldingHandbrake(bool Value) { bCurrentlyHoldingHandbrake = Value; }
-	void SetRightAxisValue(float Value) { RightAxis = Value; }
-
 	void EnableRagdoll();
 
 	bool HasEnabledRagdoll() { return bEnabledRagdoll; }
@@ -79,9 +76,21 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+
 	virtual void Tick(float DeltaTime) override;
 
-private:
+
+	bool bAllowBrakingWhileHandbraking = false;
+
+	void MoveForward(float Value);
+
+	void MoveRight(float Value);
+
+	void Handbrake();
+
+	void LetGoHandBrake();
+
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent* Movement;
 

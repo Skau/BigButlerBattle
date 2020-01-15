@@ -108,6 +108,20 @@ void APlayerCharacter::BeginPlay()
 	check(Movement != nullptr);
 }
 
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
+{
+	Super::SetupPlayerInputComponent(InputComponent);
+
+	// Action Mappings
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
+	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::Handbrake);
+	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::LetGoHandBrake);
+
+	// Axis Mappings
+	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
+	InputComponent->BindAxis("Right", this, &APlayerCharacter::MoveRight);
+}
+
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -118,6 +132,42 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 
 	UpdateSkateboardRotation(DeltaTime);
+}
+
+void APlayerCharacter::MoveForward(float Value)
+{
+	if (HasEnabledRagdoll())
+		return;
+
+	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bCurrentlyHoldingHandbrake && Value != 0))
+	{
+		AddMovementInput(FVector::ForwardVector * Value);
+	}
+}
+
+void APlayerCharacter::MoveRight(float Value)
+{
+	if (HasEnabledRagdoll())
+		return;
+
+	const bool bCanMoveHorizontally = !bCurrentlyHoldingHandbrake || Movement->IsFalling();
+
+	if (bCanMoveHorizontally)
+	{
+		AddMovementInput(FVector::RightVector * Value);
+	}
+
+	RightAxis = Value;
+}
+
+void APlayerCharacter::Handbrake()
+{
+	bCurrentlyHoldingHandbrake = true;
+}
+
+void APlayerCharacter::LetGoHandBrake()
+{
+	bCurrentlyHoldingHandbrake = false;
 }
 
 void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)

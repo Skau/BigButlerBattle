@@ -15,6 +15,5 @@ class BIGBUTLERBATTLE_API UButlerGameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
-	int NumberOfPlayers = 1;
-
+	TArray<int> PlayerIDs = {};
 };

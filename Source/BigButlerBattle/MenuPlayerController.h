@@ -7,8 +7,8 @@
 #include "MenuPlayerController.generated.h"
 
 
-DECLARE_DELEGATE_OneParam(ToggleJoinGameSignature, bool);
-DECLARE_DELEGATE_OneParam(ToggleReadyGameSignature, bool);
+DECLARE_DELEGATE_TwoParams(ToggleJoinGameSignature, bool, int);
+DECLARE_DELEGATE_TwoParams(ToggleReadyGameSignature, bool, int);
 
 class UWidgetSwitcher;
 class UMainMenuPlayerWidget;
@@ -26,6 +26,8 @@ public:
 
 	ToggleJoinGameSignature OnToggleJoinedGame;
 	ToggleReadyGameSignature OnToggleReadyGame;
+
+	int ID = -1;
 
 	void SetPlayerWidgets(UWidgetSwitcher* WidgetSwitcherIn, UMainMenuPlayerWidget* PlayerWidgetIn);
 

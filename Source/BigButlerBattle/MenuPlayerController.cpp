@@ -34,19 +34,19 @@ void AMenuPlayerController::Activate()
 		if (WidgetSwitcher->ActiveWidgetIndex == 0)
 		{
 			WidgetSwitcher->SetActiveWidgetIndex(1);
-			OnToggleJoinedGame.ExecuteIfBound(true);
+			OnToggleJoinedGame.ExecuteIfBound(true, ID);
 		}
 		else
 		{
 			if (PlayerWidget->GetPlayerReadyState() == ECheckBoxState::Checked)
 			{
 				PlayerWidget->SetPlayerReadyState(ECheckBoxState::Unchecked);
-				OnToggleReadyGame.ExecuteIfBound(false);
+				OnToggleReadyGame.ExecuteIfBound(false, ID);
 			}
 			else
 			{
 				PlayerWidget->SetPlayerReadyState(ECheckBoxState::Checked);
-				OnToggleReadyGame.ExecuteIfBound(true);
+				OnToggleReadyGame.ExecuteIfBound(true, ID);
 			}
 		}
 	}
@@ -61,12 +61,12 @@ void AMenuPlayerController::Deactivate()
 			if (PlayerWidget->GetPlayerReadyState() == ECheckBoxState::Checked)
 			{
 				PlayerWidget->SetPlayerReadyState(ECheckBoxState::Unchecked);
-				OnToggleReadyGame.ExecuteIfBound(false);
+				OnToggleReadyGame.ExecuteIfBound(false, ID);
 			}
 			else
 			{
 				WidgetSwitcher->SetActiveWidgetIndex(0);
-				OnToggleJoinedGame.ExecuteIfBound(false);
+				OnToggleJoinedGame.ExecuteIfBound(false, ID);
 			}
 		}
 	}

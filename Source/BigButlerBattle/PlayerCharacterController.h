@@ -36,15 +36,4 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UPlayerWidget* PlayerWidget;
-
-private:
-	bool bAllowBrakingWhileHandbraking = false;
-
-private:
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void Jump();
-	void Handbrake();
-	void LetGoHandBrake();
-	bool bHoldingHandbrake = false;
 };

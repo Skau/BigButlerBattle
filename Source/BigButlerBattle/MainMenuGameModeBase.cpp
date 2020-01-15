@@ -22,6 +22,8 @@ void AMainMenuGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Instance = Cast<UButlerGameInstance>(GetGameInstance());
+
 	auto Controller0 = Cast<AMenuPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	Controller0->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(true);
 	Controllers.Add(Controller0);
@@ -29,7 +31,9 @@ void AMainMenuGameModeBase::BeginPlay()
 	int i = 0;
 	while (i < 3)
 	{
-		Controllers.Add(Cast<AMenuPlayerController>(UGameplayStatics::CreatePlayer(GetWorld())));
+		auto Controller = Cast<AMenuPlayerController>(UGameplayStatics::CreatePlayer(GetWorld()));
+		Controller->ID = i + 1;
+		Controllers.Add(Controller);
 		++i;
 	}
 
@@ -46,12 +50,20 @@ void AMainMenuGameModeBase::BeginPlay()
 		Controllers[i]->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
 		Controllers[i]->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
 	}
-
 }
 
-void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value)
+void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
 {
-	Value ? NumJoinedPlayers++ : NumJoinedPlayers--;
+	if (Value)
+	{
+		NumJoinedPlayers++;
+		Instance->PlayerIDs.Add(ID);
+	}
+	else
+	{
+		NumJoinedPlayers--;
+		Instance->PlayerIDs.Remove(ID);
+	}
 
 	if (MainMenuWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
 	{
@@ -61,7 +73,7 @@ void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value)
 	ElapsedCountdownTime = 0.0f;
 }
 
-void AMainMenuGameModeBase::OnPlayerToggledReady(bool Value)
+void AMainMenuGameModeBase::OnPlayerToggledReady(bool Value, int ID)
 {
 	Value ? NumReadiedPlayers++ : NumReadiedPlayers--;
 
@@ -88,15 +100,7 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	float TimeLeft = TimeUntilGameStart - ElapsedCountdownTime;
 	if (TimeLeft <= 0.f)
 	{
-		auto Instance = Cast<UButlerGameInstance>(GetGameInstance());
-
 		Controllers[0]->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(false);
-
-		// Remove all the dummy controllers
-		for (int i = 0; i < Controllers.Num() - 1; ++i)
-			UGameplayStatics::RemovePlayer(Controllers[i + 1], true);
-
-		Instance->NumberOfPlayers = NumJoinedPlayers;
 		UGameplayStatics::OpenLevel(GetWorld(), LevelToPlay);
 	}
 	else

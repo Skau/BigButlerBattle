@@ -41,59 +41,5 @@ void APlayerCharacterController::SetupInputComponent()
 	Super::SetupInputComponent();
 	check(InputComponent != nullptr);
 
-	// Action Mappings
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacterController::Jump);
-	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacterController::Handbrake);
-	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacterController::LetGoHandBrake);
-
-	// Axis Mappings
-	InputComponent->BindAxis("Forward", this, &APlayerCharacterController::MoveForward);
-	InputComponent->BindAxis("Right", this, &APlayerCharacterController::MoveRight);
-
-}
-
-void APlayerCharacterController::MoveForward(float Value)
-{
-	if (ControlledPlayer->HasEnabledRagdoll())
-		return;
-
-	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bHoldingHandbrake && Value != 0))
-	{
-		ControlledPlayer->AddMovementInput(FVector::ForwardVector * Value);
-	}
-}
-
-void APlayerCharacterController::MoveRight(float Value)
-{
-	if (ControlledPlayer->HasEnabledRagdoll())
-		return;
-
-	const bool bCanMoveHorizontally = !bHoldingHandbrake || ControlledPlayer->GetMovementComponent()->IsFalling();
 	
-	if (bCanMoveHorizontally)
-	{
-		ControlledPlayer->AddMovementInput(FVector::RightVector * Value);
-	}
-
-	ControlledPlayer->SetRightAxisValue(Value);
-}
-
-void APlayerCharacterController::Jump()
-{
-	if (ControlledPlayer->HasEnabledRagdoll())
-		return;
-
-	ControlledPlayer->Jump();
-}
-
-void APlayerCharacterController::Handbrake()
-{
-	bHoldingHandbrake = true;
-	ControlledPlayer->ToggleHoldingHandbrake(true);
-}
-
-void APlayerCharacterController::LetGoHandBrake()
-{
-	bHoldingHandbrake = false;
-	ControlledPlayer->ToggleHoldingHandbrake(false);
 }

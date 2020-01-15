@@ -8,9 +8,7 @@
 
 class UMainMenuWidget;
 class AMenuPlayerController;
-
-
-
+class UButlerGameInstance;
 
 /**
  * 
@@ -46,8 +44,8 @@ protected:
 private:
 	TArray<AMenuPlayerController*> Controllers;
 
-	void OnPlayerToggledJoinedGame(bool Value);
-	void OnPlayerToggledReady(bool Value);
+	void OnPlayerToggledJoinedGame(bool Value, int ID);
+	void OnPlayerToggledReady(bool Value, int ID);
 
 	void GameStartCountdown();
 
@@ -57,4 +55,6 @@ private:
 	float ElapsedCountdownTime = 0.0f;
 
 	FTimerHandle HandleStartGame;
+
+	UButlerGameInstance* Instance;
 };

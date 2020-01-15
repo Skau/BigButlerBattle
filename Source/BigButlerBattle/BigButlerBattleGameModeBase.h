@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
+class APlayerCharacter;
+
 /**
  * 
  */
@@ -20,5 +22,8 @@ public:
 
 protected:
 	void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
 	
 };

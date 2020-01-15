@@ -5,6 +5,7 @@
 #include "ButlerGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "PlayerCharacter.h"
 
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
@@ -20,15 +21,30 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Spawn the needed players
 	auto Instance = Cast<UButlerGameInstance>(GetGameInstance());
 	if (Instance)
 	{
-		auto NumPlayers = Instance->NumberOfPlayers;
-		for (int i = 0; i < NumPlayers - 1; ++i)
+		// Spawn and possess
+		auto IDs = Instance->PlayerIDs;
+		for (int i = 0; i < IDs.Num(); ++i)
 		{
-			UGameplayStatics::CreatePlayer(GetWorld());
+			FActorSpawnParameters Params;
+			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
+			UGameplayStatics::GetPlayerControllerFromID(GetWorld(), IDs[i])->Possess(Character);
+		}
 
+		// Remove unecessary controllers
+		for (int i = 0; i < 4; ++i)
+		{
+			if (auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), i))
+			{
+				auto pawn = controller->GetPawn();
+				if (!pawn)
+				{
+					UGameplayStatics::RemovePlayer(controller, false);
+				}
+			}
 		}
 	}
 }
