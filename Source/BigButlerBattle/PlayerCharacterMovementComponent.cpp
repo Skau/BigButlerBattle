@@ -6,13 +6,8 @@
 #include "Components/PrimitiveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SplineComponent.h"
+
 #include "PlayerCharacter.h"
-#include "DrawDebugHelpers.h"
-#include "Engine/SkeletalMeshSocket.h"
-#include "Kismet/GameplayStaticsTypes.h"
-#include "Kismet/GameplayStatics.h"
-#include "BigButlerBattleGameModeBase.h"
-#include "Components/SkeletalMeshComponent.h"
 
 UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 {
@@ -103,20 +98,11 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 		const FFindFloorResult OldFloor = CurrentFloor;
 
-		//bool bShouldFall = UpdateMeshRotation(RemainingTime);
-		//if (bShouldFall)
-		//{
-		//	SetMovementMode(EMovementMode::MOVE_Falling);
-		//	StartNewPhysics(RemainingTime, Iterations);
-		//	break;
-		//}
-
 		// Ensure velocity is horizontal.
 		MaintainHorizontalGroundVelocity();
 
 		AdjustSlopeVelocity(OldFloor.HitResult, deltaTime);
 		CalcSkateboardVelocity(TimeTick);
-
 		check(!Velocity.ContainsNaN());
 
 		if (PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
@@ -496,127 +482,4 @@ inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	return SkateboardRotationSpeed * GetRotationInput();
-}
-
-bool UPlayerCharacterMovementComponent::UpdateMeshRotation(float deltaTime)
-{
-	auto Mesh = PlayerCharacter->GetSkateboardMesh();
-	FTransform LinetraceFront = LinetraceSocketFront->GetSocketTransform(Mesh);
-	FTransform LinetraceBack = LinetraceSocketBack->GetSocketTransform(Mesh);
-
-	bool bShouldChangeToFalling = false;
-	
-	// Case 1: In air
-	if (IsFalling())
-	{
-		FVector Start = LinetraceFront.GetLocation() + (LinetraceBack.GetLocation() - LinetraceFront.GetLocation()) * 0.5f;
-
-		FPredictProjectilePathParams Params;
-		Params.LaunchVelocity = Velocity;
-		Params.MaxSimTime = 1.f;
-		Params.StartLocation = Start;
-		Params.TraceChannel = ECollisionChannel::ECC_WorldStatic;
-		Params.bTraceWithChannel = true;
-		Params.bTraceWithCollision = true;
-		if (bDebugMovement)
-		{
-			Params.DrawDebugTime = 0.1f;
-			Params.DrawDebugType = EDrawDebugTrace::ForDuration;
-		}
-
-		FPredictProjectilePathResult Result;
-		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
-		{
-			auto SkateboardMesh = PlayerCharacter->GetSkateboardMesh();
-			FVector LandNormal = Result.HitResult.ImpactNormal;
-			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
-
-			if (bDebugMovement)
-				DrawDebugSphere(GetWorld(), Result.HitResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
-
-			if (Angle < GetWalkableFloorAngle())
-			{
-				auto DesiredRotation = GetDesiredRotation(LandNormal);
-				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardSlopeRotationAirSpeed / 0.017f) * deltaTime));
-			}
-		}
-	}
-	// Case 2/3: On Ground
-	else
-	{
-		FCollisionObjectQueryParams ObjParams;
-		ObjParams.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
-
-		// Making the trace distance really short makes it happen more often over inclines that only 1 or 0 hits are recorded.
-		// This directly affects the rate of which we change to the falling movement mode. This definitely needs more tweaking.
-		// Use the bDebugMovement bool in the editor to visualize this (and the projectile prediction above).
-		float TraceDistance = 20.f;
-
-		FHitResult FrontResult;
-		FVector Start = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
-		FVector End = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
-
-		GetWorld()->LineTraceSingleByObjectType(FrontResult, Start, End, ObjParams);
-
-		if (bDebugMovement)
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
-
-		FHitResult BackResult;
-		Start = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
-		End = LinetraceBack.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
-		GetWorld()->LineTraceSingleByObjectType(BackResult, Start, End, ObjParams);
-
-		if (bDebugMovement)
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.1f);
-
-		if (bDebugMovement && FrontResult.bBlockingHit)
-			DrawDebugSphere(GetWorld(), FrontResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
-
-		if (bDebugMovement && BackResult.bBlockingHit)
-			DrawDebugSphere(GetWorld(), BackResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
-
-		// Both hits:
-		if (FrontResult.bBlockingHit && BackResult.bBlockingHit)
-		{
-			auto dot = FVector::DotProduct(FrontResult.ImpactNormal, BackResult.ImpactNormal);
-			if (dot != 0)
-			{
-				auto SkateboardMesh = PlayerCharacter->GetSkateboardMesh();
-				auto newNormal = (FrontResult.ImpactNormal + BackResult.ImpactNormal).GetSafeNormal();
-				auto DesiredRotation = GetDesiredRotation(newNormal);
-				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSlopeGroundSpeed / 0.017f) * deltaTime * dot));
-			}
-
-			// There is a case here where we should fall, because if the player handbrakes over an edge it is still glued to the slope and it looks weird.
-			// If some combination of normals changing here is true, we need to switch movement mode to falling.
-		}
-		// One hit:
-		else if (FrontResult.bBlockingHit || BackResult.bBlockingHit)
-		{
-			auto SkateboardMesh = PlayerCharacter->GetSkateboardMesh();
-			auto& result = FrontResult.bBlockingHit ? FrontResult : BackResult;
-			auto DesiredRotation = GetDesiredRotation(result.ImpactNormal);
-			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationSlopeGroundSpeed / 0.017f) * deltaTime));
-
-			// Turn on falling just in case we are at an edge/incline and the velocity is great enough to get some air
-			bShouldChangeToFalling = true;
-		}
-		// No hits: 
-		else
-		{
-			// Turn on falling, because we have no idea where the ground is and we are definitely in the air.
-			bShouldChangeToFalling = true;
-		}
-	}
-	return bShouldChangeToFalling;
-}
-
-FQuat UPlayerCharacterMovementComponent::GetDesiredRotation(FVector DestinationNormal) const
-{
-	FVector Right = FVector::CrossProduct(DestinationNormal, PlayerCharacter->GetActorForwardVector());
-	FVector Forward = FVector::CrossProduct(PlayerCharacter->GetActorRightVector(), DestinationNormal);
-
-	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
-
-	return Rot.Quaternion();
 }

@@ -9,7 +9,6 @@
 // Forward declarations
 class APlayerCharacter;
 class USplineComponent;
-class USkeletalMeshSocket;
 
 UENUM(BlueprintType)
 enum class ECustomMovementType : uint8
@@ -31,8 +30,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
-	bool bDebugMovement = false;
+	bool bStandstill = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
 	float StandstillThreshold = 10.f;
@@ -56,20 +54,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
 	float SlopeGravityMultiplier = 2048.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationSlopeGroundSpeed = 0.16f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Air Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardSlopeRotationAirSpeed = 0.08f;
-
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference;
 
-	bool bStandstill = false;
-	
 	float SplinePos = -1.f;
-	
 	int SplineDir = 1;
 
 public:
@@ -82,9 +71,6 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
-
-	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
-	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
 
 protected:
 	void BeginPlay() override;
@@ -125,6 +111,5 @@ private:
 	FORCEINLINE FVector CalcAcceleration() const;
 	FORCEINLINE float CalcRotation() const;
 
-	bool UpdateMeshRotation(float deltaTime);
-	FQuat GetDesiredRotation(FVector DestinationNormal) const;
+	
 };
