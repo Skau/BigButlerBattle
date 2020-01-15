@@ -167,34 +167,29 @@ void APlayerCharacter::LookUp(float Value)
 {
 	if (Value != 0)
 	{
-		auto Forward = GetActorForwardVector();
-		auto ArmForward = SpringArm->GetForwardVector();
-
-		auto angle = FVector::DotProduct(Forward, ArmForward);
-		if (angle < MaxCameraRotationOffset)
-		{
-			auto value = CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
-			UE_LOG(LogTemp, Warning, TEXT("Loopk up value: %f"), value);
-			SpringArm->AddWorldRotation(FRotator(value, 0, 0));
-		}
+		CameraPitch += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
 	}
-
+	else
+	{
+		if (FMath::Abs(CameraPitch) <= .1f)
+			CameraPitch -= FMath::Sign(CameraPitch) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
+		else
+			CameraPitch = 0;
+	}
 }
 
 void APlayerCharacter::LookRight(float Value)
 {
 	if (Value != 0)
 	{
-		auto Forward = GetActorForwardVector();
-		auto ArmForward = SpringArm->GetForwardVector();
-
-		auto angle = FVector::DotProduct(Forward, ArmForward);
-		if (angle < MaxCameraRotationOffset)
-		{
-			auto value = CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
-			UE_LOG(LogTemp, Warning, TEXT("Loopk right value: %f"), value);
-			SpringArm->AddWorldRotation(FRotator(0, value, 0));
-		}
+		CameraYaw += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
+	}
+	else
+	{
+		if (FMath::Abs(CameraYaw) <= .1f)
+			CameraYaw -= FMath::Sign(CameraYaw) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
+		else
+			CameraYaw = 0;
 	}
 }
 
@@ -210,7 +205,14 @@ void APlayerCharacter::LetGoHandBrake()
 
 void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 {
+	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
+	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
+	
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch);
+	FVector Direction = FVector(0, 0, 0) - point;
+	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
+	SpringArm->SetRelativeRotation(NewLocalRot);
 }
 
 void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)

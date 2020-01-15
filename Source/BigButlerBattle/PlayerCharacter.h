@@ -74,19 +74,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	bool bDebugMovement = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Camera Rotation Speed"))
-	float CameraRotationSpeed = 200.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
+	float CameraRotationSpeed = 400.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Max CameraRotationOffset", ShortTooltip = "In angles"))
-	float MaxCameraRotationOffset = 90.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Snapback Speed"))
+	float CameraSnapbackSpeed = 200.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Max Rotation Offset", ShortTooltip = "In angles"))
+	float MaxCameraRotationOffset = 89.f;
 
 	virtual void BeginPlay() override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
 	virtual void Tick(float DeltaTime) override;
-
 
 	bool bAllowBrakingWhileHandbraking = false;
 
@@ -126,6 +127,9 @@ protected:
 	float RightAxis = 0.0f;
 
 	bool bEnabledRagdoll = false;
+
+	float CameraYaw = 0.f;
+	float CameraPitch = 0.f;
 
 	FSkateboardTraceResult LastTraceResult;
 
