@@ -12,6 +12,7 @@
 #include "BigButlerBattleGameModeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
+#include "btd.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -103,7 +104,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
 		{
 			FVector LandNormal = Result.HitResult.ImpactNormal;
-			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
+			float Angle = btd::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
 
 			if (bDebugMovement)
 				DrawDebugSphere(GetWorld(), Result.HitResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);

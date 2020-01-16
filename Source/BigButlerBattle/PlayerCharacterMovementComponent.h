@@ -21,7 +21,7 @@ enum class ECustomMovementType : uint8
 /** Custom override of movement component
  * 
  */
-UCLASS()
+UCLASS(hideCategories=("Character Movement: Walking", "Character Movement: Swimming", "Character Movement (Networking)"))
 class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
