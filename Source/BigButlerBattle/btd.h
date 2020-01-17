@@ -14,6 +14,11 @@ namespace btd
         return FVector{v.Y, v.X, v.Z}; 
     }
 
+    static FVector SwapY(const FVector& v)
+    {
+        return FVector{v.X, -v.Y, v.Z};
+    }
+
     static float GetAngleBetween(FVector Vector1, FVector Vector2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
