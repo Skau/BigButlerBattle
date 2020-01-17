@@ -3,16 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "BaseUserWidget.h"
 #include "MainMenuPlayerWidget.generated.h"
 
+DECLARE_DELEGATE_TwoParams(ToggleJoinGameSignature, bool, int);
+DECLARE_DELEGATE_TwoParams(ToggleReadyGameSignature, bool, int);
+
+class UButton;
+class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
 /**
  * 
  */
 UCLASS()
-class BIGBUTLERBATTLE_API UMainMenuPlayerWidget : public UUserWidget
+class BIGBUTLERBATTLE_API UMainMenuPlayerWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 	
@@ -20,16 +25,16 @@ class BIGBUTLERBATTLE_API UMainMenuPlayerWidget : public UUserWidget
 public:
 	UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer);
 
-	void SetPlayerName(FText Text);
-	void SetPlayerReadyState(ECheckBoxState State);
-	ECheckBoxState GetPlayerReadyState();
-
 	FORCEINLINE bool getHasJoined() { return bHasJoined; }
 
-protected:
-	void NativeConstruct() override;
+	ToggleJoinGameSignature OnToggleJoinedGame;
+	ToggleReadyGameSignature OnToggleReadyGame;
 
-	bool Initialize() override;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Join;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UWidgetSwitcher* Switcher;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTextBlock* PlayerNameText;
@@ -37,6 +42,25 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCheckBox* CheckBox;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Leave;
+
+protected:
+	bool Initialize() override;
+
+	virtual void OnPlayerCharacterControllerSet() override;
+
 private:
+	void UpdatePlayerName();
+
+	UFUNCTION()
+	void OnJoinClicked();
+
+	UFUNCTION()
+	void OnCheckStateChanged(bool NewCheckState);
+
+	UFUNCTION()
+	void OnLeaveClicked();
+
 	bool bHasJoined = false;
 };

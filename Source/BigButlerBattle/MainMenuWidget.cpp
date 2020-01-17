@@ -18,12 +18,6 @@ void UMainMenuWidget::NativeConstruct()
 bool UMainMenuWidget::Initialize()
 {
 	bool initialized = Super::Initialize();
-	
-	PlayerWidget_0->SetPlayerName(FText::FromString("Player 1"));
-	PlayerWidget_1->SetPlayerName(FText::FromString("Player 2"));
-	PlayerWidget_2->SetPlayerName(FText::FromString("Player 3"));
-	PlayerWidget_3->SetPlayerName(FText::FromString("Player 4"));
-
 	return initialized;
 }
 

@@ -23,18 +23,6 @@ public:
 	UMainMenuWidget(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UWidgetSwitcher* SwitcherPlayer_0;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UWidgetSwitcher* SwitcherPlayer_1;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UWidgetSwitcher* SwitcherPlayer_2;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UWidgetSwitcher* SwitcherPlayer_3;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UMainMenuPlayerWidget* PlayerWidget_0;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
