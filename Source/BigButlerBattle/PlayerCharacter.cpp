@@ -310,3 +310,8 @@ FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 
 	return Rot.Quaternion();
 }
+
+TPair<FVector, FVector> APlayerCharacter::GetSkateboardFeetLocations() const
+{
+	return TPair<FVector, FVector>{SkateboardMesh->GetSocketLocation("FootLeft"), SkateboardMesh->GetSocketLocation("FootRight")};
+}

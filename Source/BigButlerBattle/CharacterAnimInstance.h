@@ -31,4 +31,19 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UPlayerCharacterMovementComponent* MovementComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector LeftFootTarget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector RightFootTarget;
+
+	// UFUNCTION(BlueprintPure)
+	// TPair<FVector, FVector> GetFeetLocations() const;
+	
+	UFUNCTION(BlueprintPure)
+	FVector GetFootLeftLocation() const;
+
+	UFUNCTION(BlueprintPure)
+	FVector GetFootRightLocation() const;
 };

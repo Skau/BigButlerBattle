@@ -52,6 +52,8 @@ public:
 
 	bool IsSocketsValid() const;
 
+	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
 	float HandbrakeRotationFactor = 300.f;
