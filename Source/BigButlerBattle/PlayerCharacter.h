@@ -9,6 +9,7 @@
 #include "Engine/EngineTypes.h"
 #include "PlayerCharacter.generated.h"
 
+class ABigButlerBattleGameModeBase;
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -118,6 +119,9 @@ protected:
 	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
 
 	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	ABigButlerBattleGameModeBase* GameMode;
 
 	FTimerHandle HandbrakeHandle;
 	FTimerDelegate HandbrakeTimerCallback;

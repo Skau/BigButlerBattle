@@ -2,33 +2,19 @@
 
 
 #include "PlayerCharacterController.h"
-#include "PlayerCharacter.h"
 #include "PlayerWidget.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "BaseUserWidget.h"
 
-APlayerCharacterController::APlayerCharacterController()
-{
-
-}
+APlayerCharacterController::APlayerCharacterController() {}
 
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//SetInputMode(FInputModeUIOnly());
-	//if (PlayerWidgetType)
-	//{
-	//	PlayerWidget = Cast<UPlayerWidget>(CreateWidget(this, PlayerWidgetType));
-	//	PlayerWidget->AddToViewport(0);
-	//}
 }
 
 void APlayerCharacterController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	ControlledPlayer = Cast<APlayerCharacter>(InPawn);
-	check(ControlledPlayer != nullptr);
 }
 
 void APlayerCharacterController::Tick(float DeltaTime)

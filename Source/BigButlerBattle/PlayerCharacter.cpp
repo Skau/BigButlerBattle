@@ -106,6 +106,9 @@ void APlayerCharacter::BeginPlay()
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
 	check(Movement != nullptr);
+
+	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	check(GameMode != nullptr);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
@@ -113,9 +116,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent
 	Super::SetupPlayerInputComponent(InputComponent);
 
 	// Action Mappings
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
 	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::Handbrake);
 	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::LetGoHandBrake);
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
 
 	// Axis Mappings
 	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);

@@ -6,10 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
-
 DECLARE_DELEGATE_OneParam(PauseGameSignature, APlayerCharacterController*);
 
-class APlayerCharacter;
+class UBaseUserWidget;
 class UPlayerWidget;
 /**
  * 
@@ -33,14 +32,10 @@ protected:
 
 	void SetupInputComponent() override;
 
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* ControlledPlayer = nullptr;
-
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPlayerWidget> PlayerWidgetType;
 
-	UPROPERTY(BlueprintReadOnly)
-	UPlayerWidget* PlayerWidget;
+	UPlayerWidget* PlayerWidget = nullptr;
 
 private:
 	void PauseGamePressed();
