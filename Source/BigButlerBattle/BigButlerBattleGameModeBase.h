@@ -8,6 +8,7 @@
 
 class APlayerCharacter;
 class APlayerCharacterController;
+class UPauseWidget;
 
 /**
  * 
@@ -27,7 +28,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPauseWidget> PauseWidgetClass;
+
+	UPauseWidget* PauseWidget;
 private:
+	UFUNCTION()
 	void OnPlayerPaused(APlayerCharacterController* Controller);
+	UFUNCTION()
+	void OnPlayerContinued(APlayerCharacterController* Controller);
+	UFUNCTION()
+	void OnPlayerQuit();
 	
 };

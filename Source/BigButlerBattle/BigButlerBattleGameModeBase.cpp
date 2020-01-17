@@ -7,6 +7,11 @@
 #include "Engine/World.h"
 #include "PlayerCharacterController.h"
 #include "PlayerCharacter.h"
+#include "PauseWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
+#include "Components/Button.h"
+#include "ButlerGameInstance.h"
 
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
@@ -22,49 +27,76 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto Instance = Cast<UButlerGameInstance>(GetGameInstance());
-	if (Instance)
+	// Spawn and possess
+	const bool bIDsIsEmpty = GetNumPlayers() == 0;
+	int PauseWidgetOwner = 0;
+	if (!bIDsIsEmpty)
 	{
-		// Spawn and possess
-		auto IDs = Instance->PlayerIDs;
-		if (IDs.Num() > 0)
+		TArray<AActor*> Actors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacterController::StaticClass(), Actors);
+		for (auto& Actor : Actors)
 		{
-			for (int i = 0; i < IDs.Num(); ++i)
-			{
-				FActorSpawnParameters Params;
-				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
-				auto PC = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), IDs[i]));
-				PC->Possess(Character);
-				PC->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
-			}
-
-			// Remove unecessary controllers
-			for (int i = 0; i < 4; ++i)
-			{
-				if (auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), i))
-				{
-					auto pawn = controller->GetPawn();
-					if (!pawn)
-					{
-						UGameplayStatics::RemovePlayer(controller, false);
-					}
-				}
-			}
-		}
-		else
-		{
+			auto controller = Cast<APlayerCharacterController>(Actor);
 			FActorSpawnParameters Params;
 			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 			auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
-			auto PC = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0)); 
-			PC->Possess(Character);
-			PC->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+			controller->Possess(Character);
+			controller->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+			controller->SetInputMode(FInputModeGameOnly());
+			PauseWidgetOwner = UGameplayStatics::GetPlayerControllerID(controller);
 		}
 	}
+	// For editor testing
+	else
+	{
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
+		auto PC = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0)); 
+		PC->Possess(Character);
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+	}
+
+	if (!PauseWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Pause Widget Class not setup in Gamemode!"));
+		return;
+	}
+
+	PauseWidget = CreateWidget<UPauseWidget>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), PauseWidgetOwner), PauseWidgetClass);
+	PauseWidget->AddToViewport();
+
+	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
+	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
+	
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(APlayerCharacterController* Controller)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Player paused but it's not possible lmao"));
+	if (!PauseWidget->IsVisible())
+	{
+		PauseWidget->SetVisibility(ESlateVisibility::Visible);
+		PauseWidget->FocusWidget(Controller);
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+	}
+	else
+	{
+		OnPlayerContinued(Controller);
+	}
+}
+
+void ABigButlerBattleGameModeBase::OnPlayerContinued(APlayerCharacterController* Controller)
+{
+	if (PauseWidget->IsVisible())
+	{
+		PauseWidget->SetVisibility(ESlateVisibility::Hidden);
+		Controller->SetInputMode(FInputModeGameOnly());
+		UGameplayStatics::SetGamePaused(GetWorld(), false);
+	}
+}
+
+void ABigButlerBattleGameModeBase::OnPlayerQuit()
+{
+	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }

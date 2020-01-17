@@ -7,7 +7,7 @@
 #include "MainMenuGameModeBase.generated.h"
 
 class UMainMenuWidget;
-class AMenuPlayerController;
+class APlayerCharacterController;
 class UButlerGameInstance;
 
 /**
@@ -21,7 +21,7 @@ class BIGBUTLERBATTLE_API AMainMenuGameModeBase : public AGameModeBase
 public:
 	AMainMenuGameModeBase();
 
-	FORCEINLINE TArray<AMenuPlayerController*> GetControllers() { return Controllers; }
+	FORCEINLINE TArray<APlayerCharacterController*> GetControllers() { return Controllers; }
 
 protected:
 	void BeginPlay() override;
@@ -42,7 +42,7 @@ protected:
 	FName LevelToPlay = "Main";
 
 private:
-	TArray<AMenuPlayerController*> Controllers;
+	TArray<APlayerCharacterController*> Controllers;
 
 	void OnPlayerToggledJoinedGame(bool Value, int ID);
 	void OnPlayerToggledReady(bool Value, int ID);
@@ -57,4 +57,6 @@ private:
 	FTimerHandle HandleStartGame;
 
 	UButlerGameInstance* Instance;
+
+	TArray<int> PlayerNotJoinedIDs = {0, 1, 2, 3};
 };

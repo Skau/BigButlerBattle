@@ -13,7 +13,5 @@ UCLASS()
 class BIGBUTLERBATTLE_API UButlerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
-public:
-	TArray<int> PlayerIDs = {};
+
 };

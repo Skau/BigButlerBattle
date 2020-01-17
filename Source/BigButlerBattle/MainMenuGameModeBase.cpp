@@ -5,10 +5,11 @@
 #include "MainMenuWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "PlayerCharacterController.h"
-#include "Blueprint/UserWidget.h"
+#include "MainMenuWidget.h"
+#include "MainMenuPlayerWidget.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "MenuPlayerController.h"
 #include "TimerManager.h"
+#include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
 #include "ButlerGameInstance.h"
@@ -22,34 +23,45 @@ void AMainMenuGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Instance = Cast<UButlerGameInstance>(GetGameInstance());
+	TArray<int> IDsToCreate = { 0, 1, 2, 3 };
 
-	auto Controller0 = Cast<AMenuPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	Controller0->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(true);
-	Controllers.Add(Controller0);
-
-	int i = 0;
-	while (i < 3)
+	for (auto& Controller : GetGameInstance()->GetLocalPlayers())
 	{
-		auto Controller = Cast<AMenuPlayerController>(UGameplayStatics::CreatePlayer(GetWorld()));
-		Controller->ID = i + 1;
-		Controllers.Add(Controller);
-		++i;
+		auto ID = Controller->GetControllerId();
+		IDsToCreate.Remove(ID);
+		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID)));
 	}
 
-	MainMenuWidgetInstance = Cast<UMainMenuWidget>(CreateWidget(Controller0, MainMenuWidgetClass));
+	for (auto& ID : IDsToCreate)
+	{
+		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::CreatePlayer(GetWorld(), ID)));
+	}
+
+
+	Controllers.Sort([](APlayerCharacterController& p1, APlayerCharacterController& p2)
+	{
+			return UGameplayStatics::GetPlayerControllerID(&p1) < UGameplayStatics::GetPlayerControllerID(&p2);
+	});
+
+	Controllers[0]->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(true);
+	MainMenuWidgetInstance = CreateWidget<UMainMenuWidget>(Controllers[0], MainMenuWidgetClass);
 	MainMenuWidgetInstance->AddToViewport();
 
-	Controllers[0]->SetPlayerWidgets(MainMenuWidgetInstance->SwitcherPlayer_0, MainMenuWidgetInstance->PlayerWidget_0);
-	Controllers[1]->SetPlayerWidgets(MainMenuWidgetInstance->SwitcherPlayer_1, MainMenuWidgetInstance->PlayerWidget_1);
-	Controllers[2]->SetPlayerWidgets(MainMenuWidgetInstance->SwitcherPlayer_2, MainMenuWidgetInstance->PlayerWidget_2);
-	Controllers[3]->SetPlayerWidgets(MainMenuWidgetInstance->SwitcherPlayer_3, MainMenuWidgetInstance->PlayerWidget_3);
+	MainMenuWidgetInstance->PlayerWidget_0->FocusWidget(Controllers[0]);
+	MainMenuWidgetInstance->PlayerWidget_0->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuWidgetInstance->PlayerWidget_0->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
 
-	for (int i = 0; i < Controllers.Num(); ++i)
-	{
-		Controllers[i]->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
-		Controllers[i]->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
-	}
+	MainMenuWidgetInstance->PlayerWidget_1->FocusWidget(Controllers[1]);
+	MainMenuWidgetInstance->PlayerWidget_1->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuWidgetInstance->PlayerWidget_1->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+
+	MainMenuWidgetInstance->PlayerWidget_2->FocusWidget(Controllers[2]);
+	MainMenuWidgetInstance->PlayerWidget_2->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuWidgetInstance->PlayerWidget_2->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+
+	MainMenuWidgetInstance->PlayerWidget_3->FocusWidget(Controllers[3]);
+	MainMenuWidgetInstance->PlayerWidget_3->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuWidgetInstance->PlayerWidget_3->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
 }
 
 void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
@@ -57,12 +69,12 @@ void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
 	if (Value)
 	{
 		NumJoinedPlayers++;
-		Instance->PlayerIDs.Add(ID);
+		PlayerNotJoinedIDs.Remove(ID);
 	}
 	else
 	{
 		NumJoinedPlayers--;
-		Instance->PlayerIDs.Remove(ID);
+		PlayerNotJoinedIDs.Add(ID);
 	}
 
 	if (MainMenuWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
@@ -101,6 +113,15 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	if (TimeLeft <= 0.f)
 	{
 		Controllers[0]->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(false);
+	
+		for(auto& ID : PlayerNotJoinedIDs)
+		{
+			if (auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
+			{
+				UGameplayStatics::RemovePlayer(controller, false);
+			}
+		}
+		
 		UGameplayStatics::OpenLevel(GetWorld(), LevelToPlay);
 	}
 	else
