@@ -11,6 +11,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
@@ -27,6 +28,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
+	ObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
+	ObjectPickupCollision->SetupAttachment(RootComponent);
+
+	ObjectPickupCollision->SetGenerateOverlapEvents(true);
+	
 	bUseControllerRotationYaw = false;
 }
 
@@ -109,6 +115,8 @@ void APlayerCharacter::BeginPlay()
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(GameMode != nullptr);
+
+	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
@@ -312,4 +320,9 @@ FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
 
 	return Rot.Quaternion();
+}
+
+void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Collided with a task object"));
 }

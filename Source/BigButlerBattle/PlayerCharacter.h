@@ -15,6 +15,8 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
+class UBoxComponent;
+class ATaskObject;
 
 USTRUCT(BlueprintType)
 struct FSkateboardTraceResult
@@ -142,4 +144,18 @@ protected:
 	void UpdateSkateboardRotation(float DeltaTime);
 
 	FQuat GetDesiredRotation(FVector DestinationNormal) const;
+
+	/** Task Stuff */
+
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* ObjectPickupCollision;
+
+	UFUNCTION()
+	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	TArray<ATaskObject*> Objects;
+
+	void OnObjectPickedUp(ATaskObject* Object);
+	
+	void OnObjectDopped(ATaskObject* Object);
 };
