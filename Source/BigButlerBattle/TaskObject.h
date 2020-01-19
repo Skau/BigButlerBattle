@@ -16,6 +16,8 @@ class BIGBUTLERBATTLE_API ATaskObject : public AActor
 public:	
 	ATaskObject();
 
+	FString GetObjectName() const { return ObjectName;  }
+
 protected:
 	void BeginPlay() override;
 
@@ -26,4 +28,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* ColliderComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	FString ObjectName;
 };

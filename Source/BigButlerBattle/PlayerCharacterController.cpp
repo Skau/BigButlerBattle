@@ -18,6 +18,10 @@ void APlayerCharacterController::BeginPlay()
 	{
 		PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
 		PlayerWidget->AddToPlayerScreen();
+
+		// Delegates
+
+		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(PlayerWidget, &UPlayerWidget::OnPlayerPickedUpObject);
 	}
 }
 

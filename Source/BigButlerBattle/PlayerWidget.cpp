@@ -2,32 +2,27 @@
 
 
 #include "PlayerWidget.h"
-#include "Components/Button.h"
-
-
-UPlayerWidget::UPlayerWidget(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{}
-
-
-void UPlayerWidget::NativeConstruct()
-{
-	Super::NativeConstruct();
-}
-
+#include "TaskWidget.h"
 
 bool UPlayerWidget::Initialize()
 {
 	if (!Super::Initialize())
 		return false;
 
-
+	TaskWidgets.Add(TaskSlot0);
+	TaskWidgets.Add(TaskSlot1);
+	TaskWidgets.Add(TaskSlot2);
+	TaskWidgets.Add(TaskSlot3);
+	TaskWidgets.Add(TaskSlot4);
+	TaskWidgets.Add(TaskSlot5);
 
 	return true;
 }
 
-
-void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+void UPlayerWidget::OnPlayerPickedUpObject(FString name, int index)
 {
-	Super::NativeTick(MyGeometry, DeltaTime);
+	if (index >= 0 && index < TaskWidgets.Num())
+	{
+		TaskWidgets[index]->SetTaskName(name);
+	}
 }

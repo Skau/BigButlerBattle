@@ -17,6 +17,9 @@ class BIGBUTLERBATTLE_API UTaskWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+    void SetTaskName(FString string);
+
+protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UTextBlock* TaskName;
 };

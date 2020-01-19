@@ -18,6 +18,9 @@ class USkeletalMeshSocket;
 class UBoxComponent;
 class ATaskObject;
 
+DECLARE_DELEGATE_TwoParams(TaskObjectPickedUpSignature, FString, int)
+DECLARE_DELEGATE_TwoParams(TaskObjectDroppedSignature, FString, int)
+
 USTRUCT(BlueprintType)
 struct FSkateboardTraceResult
 {
@@ -54,6 +57,9 @@ public:
 	bool TraceSkateboard();
 
 	bool IsSocketsValid() const;
+
+	TaskObjectPickedUpSignature OnTaskObjectPickedUp;
+	TaskObjectDroppedSignature OnTaskObjectDropped;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -153,7 +159,7 @@ protected:
 	UFUNCTION()
 	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
-	TArray<ATaskObject*> Objects;
+	TArray<ATaskObject*> Inventory;
 
 	void OnObjectPickedUp(ATaskObject* Object);
 	

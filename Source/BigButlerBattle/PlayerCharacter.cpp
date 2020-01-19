@@ -13,6 +13,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
+#include "TaskObject.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -115,6 +116,9 @@ void APlayerCharacter::BeginPlay()
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(GameMode != nullptr);
+
+	Inventory.Reserve(6);
+	Inventory.AddZeroed(6);
 
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 }
@@ -324,5 +328,18 @@ FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Collided with a task object"));
+	if (auto Obj = Cast<ATaskObject>(OtherActor))
+	{
+		for (int i = 0; i < Inventory.Num(); ++i)
+		{
+			if (Inventory[i] == nullptr)
+			{
+				Inventory[i] = Obj;
+				auto Name = Obj->GetObjectName();
+				OnTaskObjectPickedUp.ExecuteIfBound(Name, i);
+				Obj->Destroy();
+				break;
+			}
+		}
+	}
 }
