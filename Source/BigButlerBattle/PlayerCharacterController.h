@@ -10,6 +10,7 @@ DECLARE_DELEGATE_OneParam(PauseGameSignature, APlayerCharacterController*);
 
 class UBaseUserWidget;
 class UPlayerWidget;
+class APlayerCharacter;
 /**
  * 
  */
@@ -36,6 +37,8 @@ protected:
 	TSubclassOf<UPlayerWidget> PlayerWidgetType;
 
 	UPlayerWidget* PlayerWidget = nullptr;
+
+	APlayerCharacter* PlayerCharacter;
 
 private:
 	void PauseGamePressed();

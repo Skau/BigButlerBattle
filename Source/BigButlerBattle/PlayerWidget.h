@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerWidget.generated.h"
 
-class UButton;
+class UTaskWidget;
 
 /**
  * 
@@ -20,17 +20,9 @@ public:
 	UPlayerWidget(const FObjectInitializer& ObjectInitializer);
 
 protected:
-
 	void NativeConstruct() override;
 
 	bool Initialize() override;
 
 	void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* ButtonTest;
-
-private:
-	UFUNCTION()
-	void Test();
 };

@@ -4,12 +4,21 @@
 #include "PlayerCharacterController.h"
 #include "PlayerWidget.h"
 #include "BaseUserWidget.h"
+#include "PlayerCharacter.h"
 
 APlayerCharacterController::APlayerCharacterController() {}
 
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Add in-game UI if we're actually in the game and not main menu
+	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+	if (PlayerCharacter && PlayerWidgetType)
+	{
+		PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
+		PlayerWidget->AddToPlayerScreen();
+	}
 }
 
 void APlayerCharacterController::OnPossess(APawn* InPawn)

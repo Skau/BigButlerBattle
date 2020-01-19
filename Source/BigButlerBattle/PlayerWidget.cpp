@@ -22,8 +22,6 @@ bool UPlayerWidget::Initialize()
 		return false;
 
 
-	ButtonTest->OnClicked.AddDynamic(this, &UPlayerWidget::Test);
-
 
 	return true;
 }
@@ -32,10 +30,4 @@ bool UPlayerWidget::Initialize()
 void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
-}
-
-
-void UPlayerWidget::Test()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Test"))
 }
