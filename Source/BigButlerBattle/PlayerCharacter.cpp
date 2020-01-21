@@ -315,3 +315,15 @@ TPair<FVector, FVector> APlayerCharacter::GetSkateboardFeetLocations() const
 {
 	return TPair<FVector, FVector>{SkateboardMesh->GetSocketLocation("FootLeft"), SkateboardMesh->GetSocketLocation("FootRight")};
 }
+
+FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex) : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex, localToWorld) : FTransform{};
+}

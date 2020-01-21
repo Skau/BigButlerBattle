@@ -54,6 +54,9 @@ public:
 
 	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
 
+	FTransform GetCharacterBoneTransform(FName BoneName) const;
+	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
 	float HandbrakeRotationFactor = 300.f;

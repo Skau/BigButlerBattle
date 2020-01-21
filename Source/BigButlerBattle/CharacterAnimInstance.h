@@ -20,17 +20,7 @@ class BIGBUTLERBATTLE_API UCharacterAnimInstance : public UAnimInstance
 protected:
 	void NativeBeginPlay() override;
 
-	UFUNCTION(BlueprintPure)
-	bool isReady();
-
 	void NativeUpdateAnimation(float DeltaTime) override;
-
-
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* Character;
-
-	UPROPERTY(BlueprintReadOnly)
-	UPlayerCharacterMovementComponent* MovementComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector LeftFootTarget;
@@ -38,12 +28,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector RightFootTarget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector LeftLegJointLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector RightLegJointLocation;
+
 	// UFUNCTION(BlueprintPure)
 	// TPair<FVector, FVector> GetFeetLocations() const;
 	
 	UFUNCTION(BlueprintPure)
-	FVector GetFootLeftLocation() const;
+	FVector GetFootLeftLocation(APlayerCharacter* character) const;
 
 	UFUNCTION(BlueprintPure)
-	FVector GetFootRightLocation() const;
+	FVector GetFootRightLocation(APlayerCharacter* character) const;
+
+	UFUNCTION(BlueprintPure)
+	FVector GetLeftLegJointLocation(APlayerCharacter* character) const;
+
+	UFUNCTION(BlueprintPure)
+	FVector GetRightLegJointLocation(APlayerCharacter* character) const;
+
+private:
+	FQuat PelvisStartRotation;
+	FQuat LeftFootStartRotation;
+	FQuat RightFootStartRotation;
 };
