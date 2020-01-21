@@ -163,42 +163,6 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		}
 	}
 
-	// Add minimum number of tasks
-
-	int Current = 0;
-	for (auto& Data : WorldTaskData)
-	{
-		// If we have already met the maximum amount, finish
-		if (Current == TotalTasks)
-		{
-			OnTasksGenerated.ExecuteIfBound(Tasks);
-			return;
-		}
-
-		// If there are no task objects left of the current type
-		if (!Data.Value.Num())
-			continue;
-
-		const int Min = Ranges[Data.Key].Min;
-
-		if (Min <= 0)
-			continue;
-
-		// Loop until we have added the minimum amount for this task type
-		int TempCurrent = 0;
-		const int NumTaskOfType = Data.Value.Num();
-		for(int i = 0; i < Min; ++i)
-		{
-			auto CurrentTask = Data.Value[i];
-			Tasks.Add(CurrentTask);
-			TempCurrent++;
-		}
-
-		Data.Value.RemoveAt(0, TempCurrent);
-
-		Current += TempCurrent;
-	}
-
 	// Setup map to know how many there are left to add of each type
 	TMap<EObjectType, int> RemainingCounts;
 	TArray<EObjectType> Types;
@@ -230,13 +194,13 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			if (!TaskData.Num())
 				continue;
 
-			int NumberOfPossibleTasksToGet = TaskData.Num();
-			NumberOfPossibleTasksToGet = FMath::Clamp(NumberOfPossibleTasksToGet, 0, FMath::Max(Ranges[Type].Max, NumberOfPossibleTasksToGet));
+			int MaxNumberOfPossibleTasksToGet = TaskData.Num();
+			MaxNumberOfPossibleTasksToGet = FMath::Clamp(MaxNumberOfPossibleTasksToGet, 0, FMath::Min(Ranges[Type].Max, MaxNumberOfPossibleTasksToGet));
 			
-			if (NumberOfPossibleTasksToGet == 0)
+			if (MaxNumberOfPossibleTasksToGet == 0)
 				continue;
 
-			int ActualNumberOfTasksToGet = FMath::RandRange(1, NumberOfPossibleTasksToGet);
+			int ActualNumberOfTasksToGet = FMath::RandRange(Ranges[Type].Min, MaxNumberOfPossibleTasksToGet);
 
 			for (int i = 0; i < ActualNumberOfTasksToGet; ++i)
 			{
