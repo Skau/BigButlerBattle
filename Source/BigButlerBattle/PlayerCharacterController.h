@@ -11,6 +11,9 @@ DECLARE_DELEGATE_OneParam(PauseGameSignature, APlayerCharacterController*);
 class UBaseUserWidget;
 class UPlayerWidget;
 class APlayerCharacter;
+class ABigButlerBattleGameModeBase;
+struct FTask;
+
 /**
  * 
  */
@@ -38,8 +41,12 @@ protected:
 
 	UPlayerWidget* PlayerWidget = nullptr;
 
-	APlayerCharacter* PlayerCharacter;
+	APlayerCharacter* PlayerCharacter = nullptr;
+
+	ABigButlerBattleGameModeBase* ButlerGameMode = nullptr;
 
 private:
 	void PauseGamePressed();
+
+	void OnTasksGenerated(const TArray<FTask>& Tasks);
 };

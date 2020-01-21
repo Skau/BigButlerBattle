@@ -30,8 +30,6 @@ ATaskObject::ATaskObject()
 	{
 		FoodDataTable = FoodDataObject;
 	}
-
-
 }
 
 
@@ -134,7 +132,6 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 	}
 	case EObjectType::Food:
 	{
-
 		if (!FoodDataTable)
 			return false;
 

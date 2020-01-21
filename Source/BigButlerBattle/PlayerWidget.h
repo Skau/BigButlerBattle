@@ -17,7 +17,7 @@ class BIGBUTLERBATTLE_API UPlayerWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void OnPlayerPickedUpObject(FString name, int index);
+	void UpdateTaskSlotName(FString name, int index);
 
 protected:
 	bool Initialize() override;

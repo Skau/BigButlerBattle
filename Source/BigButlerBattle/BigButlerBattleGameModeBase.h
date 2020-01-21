@@ -7,6 +7,8 @@
 #include "DataTables.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
+DECLARE_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<FTask>&);
+
 class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
@@ -69,6 +71,9 @@ public:
 	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2);
 
 	FORCEINLINE const TArray<FTask> GetGeneratedTasks() const { return Tasks; }
+
+	TasksGeneratedSignature OnTasksGenerated;
+
 protected:
 	void BeginPlay() override;
 
@@ -101,5 +106,8 @@ private:
 	void OnPlayerContinued(APlayerCharacterController* Controller);
 	UFUNCTION()
 	void OnPlayerQuit();
+
+	UFUNCTION()
+	void GenerateTasks();
 	
 };

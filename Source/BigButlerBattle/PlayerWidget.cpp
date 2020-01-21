@@ -19,7 +19,7 @@ bool UPlayerWidget::Initialize()
 	return true;
 }
 
-void UPlayerWidget::OnPlayerPickedUpObject(FString name, int index)
+void UPlayerWidget::UpdateTaskSlotName(FString name, int index)
 {
 	if (index >= 0 && index < TaskWidgets.Num())
 	{
