@@ -32,6 +32,7 @@ protected:
 	TSubclassOf<UPauseWidget> PauseWidgetClass;
 
 	UPauseWidget* PauseWidget;
+
 private:
 	UFUNCTION()
 	void OnPlayerPaused(APlayerCharacterController* Controller);

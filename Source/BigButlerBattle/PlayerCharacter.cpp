@@ -335,9 +335,13 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 			if (Inventory[i] == nullptr)
 			{
 				Inventory[i] = Obj;
+
 				auto Name = Obj->GetObjectName();
+				if (Name.IsEmpty())
+					Name = Obj->GetName();
+
 				OnTaskObjectPickedUp.ExecuteIfBound(Name, i);
-				Obj->Destroy();
+
 				break;
 			}
 		}

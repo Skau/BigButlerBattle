@@ -13,6 +13,7 @@
 #include "Components/Button.h"
 #include "ButlerGameInstance.h"
 
+
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
 	return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
@@ -69,7 +70,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
 	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
-	
+
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(APlayerCharacterController* Controller)
