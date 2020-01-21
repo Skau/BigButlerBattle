@@ -12,6 +12,7 @@
 #include "TimerManager.h"
 #include "TaskObject.h"
 #include "EngineUtils.h"
+#include "Math/RandomStream.h"
 
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
@@ -69,7 +70,10 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
 	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
-	
+
+
+	// Wait a bit for task objects to finish
+
 	FTimerDelegate TimerCallback;
 	TimerCallback.BindLambda([&]
 	{
@@ -143,6 +147,13 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	if (!WorldTaskData.Num())
 		return;
 
+	// Setup random generator
+
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FRandomStream Stream;
+	Stream.Initialize(Instance->GetCurrentRandomSeed());
+
+	UE_LOG(LogTemp, Warning, TEXT("Seed: %i"), Stream.GetCurrentSeed());
 
 	// Shuffle the arrays
 
@@ -155,7 +166,7 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		int LastIndex = TaskArray.Num() - 1;
 		for (int i = 0; i < LastIndex; ++i)
 		{
-			int Index = FMath::RandRange(0, LastIndex);
+			int Index = Stream.RandRange(0, LastIndex);
 			if (i != Index)
 			{
 				TaskArray.Swap(i, Index);
@@ -179,7 +190,7 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	int Remaining = TotalTasks - Tasks.Num();
 
 	// Start index so it's random
-	int Index = FMath::RandRange(0, Types.Num() - 1);
+	int Index = Stream.RandRange(0, Types.Num() - 1);
 
 	// Loop until there are no more tasks to add
 	while (Remaining > 0)
@@ -200,7 +211,7 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			if (MaxNumberOfPossibleTasksToGet == 0)
 				continue;
 
-			int ActualNumberOfTasksToGet = FMath::RandRange(Ranges[Type].Min, MaxNumberOfPossibleTasksToGet);
+			int ActualNumberOfTasksToGet = Stream.RandRange(Ranges[Type].Min, MaxNumberOfPossibleTasksToGet);
 
 			for (int i = 0; i < ActualNumberOfTasksToGet; ++i)
 			{

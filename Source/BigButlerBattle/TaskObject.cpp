@@ -6,6 +6,9 @@
 #include "Components/BoxComponent.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "Math/RandomStream.h"
+#include "ButlerGameInstance.h"
 
 ATaskObject::ATaskObject()
 {
@@ -101,6 +104,19 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 
 bool ATaskObject::SetDataFromTable(EObjectType Type)
 {
+	FRandomStream Stream;
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (Instance)
+	{
+		Stream.Initialize(Instance->GetCurrentRandomSeed() + (GetActorLocation().X * 1234.25f) + (GetActorLocation().Y * 5678.98f) + 1.75f + GetActorLocation().Z * 3456);
+	}
+	else
+	{
+		Stream.GenerateNewSeed();
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Seed: %i"), Stream.GetCurrentSeed());
+	
 	switch (ObjectType)
 	{
 	case EObjectType::Wine:
@@ -113,7 +129,7 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 		if (!RowNum)
 			return false;
 
-		auto RowName = WineDataTable->GetRowNames()[FMath::RandRange(0, RowNum - 1)];
+		auto RowName = WineDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
 		
 		auto Row = (FWineTableData*)Rows[RowName];
 
@@ -140,7 +156,7 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 		if (!RowNum)
 			return false;
 
-		auto RowName = FoodDataTable->GetRowNames()[FMath::RandRange(0, RowNum - 1)];
+		auto RowName = FoodDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
 
 		auto Row = (FFoodTableData*)Rows[RowName];
 

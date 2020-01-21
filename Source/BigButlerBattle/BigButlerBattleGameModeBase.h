@@ -13,7 +13,6 @@ class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
 
-
 USTRUCT(BlueprintType)
 struct FIntRange
 {
@@ -74,7 +73,6 @@ public:
 
 	TasksGeneratedSignature OnTasksGenerated;
 
-protected:
 	void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -98,6 +96,7 @@ protected:
 	FIntRange CutleryRange;
 
 private:
+
 	TArray<FTask> Tasks;
 
 	UFUNCTION()
