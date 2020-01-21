@@ -9,10 +9,9 @@
 #include "PlayerCharacter.h"
 #include "PauseWidget.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/TextBlock.h"
-#include "Components/Button.h"
-#include "ButlerGameInstance.h"
-
+#include "TimerManager.h"
+#include "TaskObject.h"
+#include "EngineUtils.h"
 
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
@@ -70,7 +69,6 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
 	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
-
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(APlayerCharacterController* Controller)

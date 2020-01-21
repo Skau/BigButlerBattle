@@ -4,11 +4,57 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "DataTables.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
 class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
+
+
+USTRUCT(BlueprintType)
+struct FIntRange
+{
+	GENERATED_BODY()
+
+	FIntRange()
+	: Min(0)
+	, Max(0)
+	{}
+
+	UPROPERTY(EditAnywhere)
+	int Min;
+
+	UPROPERTY(EditAnywhere)
+	int Max;
+};
+
+USTRUCT(BlueprintType)
+struct FTask
+{
+	GENERATED_BODY()
+
+	FTask()
+	: ObjectName("")
+	, Data()
+	{}
+
+	FTask(FString Name, FBaseTableData TableData)
+	: ObjectName(Name)
+	, Data(TableData)
+	{}
+
+	bool IsEqual(FTask Other)
+	{
+		return ObjectName == Other.ObjectName && Data.IsEqual(&Other.Data);
+	}
+
+	UPROPERTY(BlueprintReadWrite)
+	FString ObjectName;
+
+	UPROPERTY(BlueprintReadWrite)
+	FBaseTableData Data;
+};
 
 /**
  * 
@@ -22,6 +68,7 @@ public:
 	static float GetAngleBetween(FVector Vector1, FVector Vector2);
 	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2);
 
+	FORCEINLINE const TArray<FTask> GetGeneratedTasks() const { return Tasks; }
 protected:
 	void BeginPlay() override;
 
@@ -33,7 +80,21 @@ protected:
 
 	UPauseWidget* PauseWidget;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
+	int TotalTasks = 6;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
+	FIntRange FoodRange;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
+	FIntRange WineRange;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
+	FIntRange CutleryRange;
+
 private:
+	TArray<FTask> Tasks;
+
 	UFUNCTION()
 	void OnPlayerPaused(APlayerCharacterController* Controller);
 	UFUNCTION()
