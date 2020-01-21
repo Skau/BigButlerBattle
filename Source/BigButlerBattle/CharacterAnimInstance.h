@@ -53,4 +53,10 @@ private:
 	FQuat PelvisStartRotation;
 	FQuat LeftFootStartRotation;
 	FQuat RightFootStartRotation;
+
+	float PelvisStartYawOffset;
+	float LeftFootStartYawOffset;
+	float RightFootStartYawOffset;
+	float LeftKneeStartYawOffset;
+	float RightKneeStartYawOffset;
 };

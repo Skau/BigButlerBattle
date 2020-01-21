@@ -56,6 +56,8 @@ public:
 
 	FTransform GetCharacterBoneTransform(FName BoneName) const;
 	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
+	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
+	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform& localToWorld) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))

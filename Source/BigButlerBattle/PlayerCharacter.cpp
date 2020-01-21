@@ -327,3 +327,14 @@ FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTr
 	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
 	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex, localToWorld) : FTransform{};
 }
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetReferenceSkeleton() (boneIndex) : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, const FTransform& localToWorld) const
+{
+	
+}
