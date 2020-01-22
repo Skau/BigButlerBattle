@@ -3,17 +3,32 @@
 
 #include "SkateboardAnimInstance.h"
 #include "PlayerCharacterMovementComponent.h"
+#include "PlayerCharacter.h"
 
 void USkateboardAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-    auto owner = TryGetPawnOwner();
+    auto owner = Cast<APlayerCharacter>(TryGetPawnOwner());
     if (owner)
     {
         auto moveComp = owner->GetMovementComponent();
         movementComponent = Cast<UPlayerCharacterMovementComponent>(moveComp);
+
+        owner->OnJumpEvent.AddUObject(this, &USkateboardAnimInstance::JumpAnim);
     }
+}
+
+void USkateboardAnimInstance::JumpAnim()
+{
+    if (IsValid(JumpMontage))
+        Montage_Play(JumpMontage);
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Jumping montage not valid!"));
+    }   
+    
+    UE_LOG(LogTemp, Warning, TEXT("Jumping anim!"));
 }
 
 void USkateboardAnimInstance::NativeUpdateAnimation(float DeltaTime)

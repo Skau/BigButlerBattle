@@ -29,10 +29,13 @@ protected:
 	FVector RightFootTarget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector LeftLegJointLocation;
+	FVector LeftLegJointLocation = FVector{50.f, 100.f, 0.f};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector RightLegJointLocation;
+	FVector RightLegJointLocation = FVector{-50.f, 100.f, 0.f};
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
+	UAnimMontage* JumpMontage;
 
 	// UFUNCTION(BlueprintPure)
 	// TPair<FVector, FVector> GetFeetLocations() const;
@@ -43,11 +46,8 @@ protected:
 	UFUNCTION(BlueprintPure)
 	FVector GetFootRightLocation(APlayerCharacter* character) const;
 
-	UFUNCTION(BlueprintPure)
-	FVector GetLeftLegJointLocation(APlayerCharacter* character) const;
-
-	UFUNCTION(BlueprintPure)
-	FVector GetRightLegJointLocation(APlayerCharacter* character) const;
+	UFUNCTION()
+	void JumpAnim();
 
 private:
 	FQuat PelvisStartRotation;

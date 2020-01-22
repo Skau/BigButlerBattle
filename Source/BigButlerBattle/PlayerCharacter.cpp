@@ -12,6 +12,8 @@
 #include "BigButlerBattleGameModeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
+#include "CharacterAnimInstance.h"
+#include "SkateboardAnimInstance.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -89,6 +91,13 @@ bool APlayerCharacter::IsSocketsValid() const
 		return false;
 	}
 	return true;
+}
+
+void APlayerCharacter::Jump()
+{
+	Super::Jump();
+
+	OnJumpEvent.Broadcast();
 }
 
 void APlayerCharacter::BeginPlay()

@@ -15,6 +15,8 @@ class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
 
+DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
+
 USTRUCT(BlueprintType)
 struct FSkateboardTraceResult
 {
@@ -51,6 +53,9 @@ public:
 	bool TraceSkateboard();
 
 	bool IsSocketsValid() const;
+
+	JumpEventSignature OnJumpEvent;
+	void Jump() override;
 
 	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
 

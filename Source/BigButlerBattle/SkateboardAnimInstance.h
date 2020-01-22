@@ -8,6 +8,7 @@
 
 // Forward declarations
 class UPlayerCharacterMovementComponent;
+class UAnimMontage;
 
 /**
  * 
@@ -35,9 +36,15 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	UPlayerCharacterMovementComponent* movementComponent = nullptr;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
+	UAnimMontage* JumpMontage;
+
 	void NativeBeginPlay() override;
 
 	void NativeUpdateAnimation(float DeltaTime) override;
+
+	UFUNCTION()
+	void JumpAnim();
 
 	UFUNCTION(BlueprintPure)
 	float GetWheelPlaybackRate() const;
