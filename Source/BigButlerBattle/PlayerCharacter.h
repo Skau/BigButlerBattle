@@ -113,7 +113,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent* Movement;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	USkeletalMeshComponent* SkateboardMesh;
 
 	UPROPERTY(VisibleAnywhere)

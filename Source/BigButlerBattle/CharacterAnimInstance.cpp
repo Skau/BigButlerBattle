@@ -14,8 +14,6 @@ void UCharacterAnimInstance::NativeBeginPlay()
 	if (!IsValid(character))
 		return;
 
-	character->GetMesh()->GetRefPosePosition
-
 	PelvisStartRotation = character->GetCharacterBoneTransform("pelvis").GetRotation();
 	LeftFootStartRotation = character->GetCharacterBoneTransform("foot_l").GetRotation();
 	RightFootStartRotation = character->GetCharacterBoneTransform("foot_r").GetRotation();
