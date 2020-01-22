@@ -115,8 +115,6 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 		Stream.GenerateNewSeed();
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Seed: %i"), Stream.GetCurrentSeed());
-	
 	switch (ObjectType)
 	{
 	case EObjectType::Wine:

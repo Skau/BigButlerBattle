@@ -153,14 +153,12 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	FRandomStream Stream;
 	Stream.Initialize(Instance->GetCurrentRandomSeed());
 
-	UE_LOG(LogTemp, Warning, TEXT("Seed: %i"), Stream.GetCurrentSeed());
-
 	// Shuffle the arrays
 
 	for (auto& TaskData : WorldTaskData)
 	{
 		auto TaskArray = TaskData.Value;
-		if (TaskArray.Num())
+		if (!TaskArray.Num())
 			continue;
 
 		int LastIndex = TaskArray.Num() - 1;
@@ -174,19 +172,15 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		}
 	}
 
-	// Setup map to know how many there are left to add of each type
-	TMap<EObjectType, int> RemainingCounts;
+
+	// Get all types
 	TArray<EObjectType> Types;
 	WorldTaskData.GetKeys(Types);
-
 	if (!Types.Num())
 		return;
 
-	for (auto& Data : WorldTaskData)
-	{
-		RemainingCounts.Add(Data.Key, Data.Value.Num());
-	}
 
+	// Used for the outside while loop to keep track of when reach max possible tasks
 	int Remaining = TotalTasks - Tasks.Num();
 
 	// Start index so it's random
@@ -199,37 +193,44 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		// Index will loop back to 0 if reach end of types
 		for (int Iterations = 0; Iterations < WorldTaskData.Num() && Remaining > 0; ++Iterations, Index = ++Index % WorldTaskData.Num())
 		{
+			// Get the type
 			auto Type = Types[Index];
+
+			// Get the tasks available
 			auto& TaskData = WorldTaskData[Type];
 
 			if (!TaskData.Num())
 				continue;
 
-			int MaxNumberOfPossibleTasksToGet = TaskData.Num();
-			MaxNumberOfPossibleTasksToGet = FMath::Clamp(MaxNumberOfPossibleTasksToGet, 0, FMath::Min(Ranges[Type].Max, MaxNumberOfPossibleTasksToGet));
-			
-			if (MaxNumberOfPossibleTasksToGet == 0)
+			int TasksAvailable = TaskData.Num();
+
+			if (TasksAvailable == 0)
 				continue;
 
+			// The max number of possible tasks to get is the lowest between how many there are available and the custom max range
+			int MaxNumberOfPossibleTasksToGet = FMath::Min(TasksAvailable, Ranges[Type].Max);
+
+			// The random part, how many to actually get is somewhere between custom min range and the calculated max
 			int ActualNumberOfTasksToGet = Stream.RandRange(Ranges[Type].Min, MaxNumberOfPossibleTasksToGet);
 
+
+			// Add the tasks
 			for (int i = 0; i < ActualNumberOfTasksToGet; ++i)
 			{
 				auto Task = TaskData[i];
 				Tasks.Add(Task);
-				++i;
 
 				Remaining = TotalTasks - Tasks.Num();
 				if (Remaining <= 0)
 					break;
 			}
+
 			TaskData.RemoveAt(0, ActualNumberOfTasksToGet);
-			RemainingCounts[Type] = FMath::Max(0, TaskData.Num());
 		}
 
 		int Sum = 0;
-		for (auto& Count : RemainingCounts)
-			Sum += Count.Value;
+		for (auto& TaskData : WorldTaskData)
+			Sum += TaskData.Value.Num();
 
 		if (Sum <= 0)
 			break;
