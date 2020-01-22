@@ -12,7 +12,7 @@ class UBaseUserWidget;
 class UPlayerWidget;
 class APlayerCharacter;
 class ABigButlerBattleGameModeBase;
-struct FTask;
+class UBaseTask;
 
 /**
  * 
@@ -48,5 +48,5 @@ protected:
 private:
 	void PauseGamePressed();
 
-	void OnTasksGenerated(const TArray<FTask>& Tasks);
+	void OnTasksGenerated(const TArray<UBaseTask*>& Tasks);
 };

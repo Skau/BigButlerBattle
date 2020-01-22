@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/DataTable.h"
 #include "DataTables.h"
 #include "TaskObject.generated.h"
 
 class UBoxComponent;
+class UDataTable;
+class UBaseTask;
 
 UCLASS()
 class BIGBUTLERBATTLE_API ATaskObject : public AActor
@@ -18,9 +19,7 @@ class BIGBUTLERBATTLE_API ATaskObject : public AActor
 public:	
 	ATaskObject();
 
-	FString GetObjectName() { return ObjectName; }
-	EObjectType GetObjectType() { return ObjectType; }
-	FBaseTableData* GetObjectData() { return AssetData; }
+	UBaseTask* GetTaskData() { return TaskData; }
 
 protected:
 	void BeginPlay() override;
@@ -33,9 +32,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	EObjectType ObjectType = EObjectType::None;
 
-	UPROPERTY()
-	FString ObjectName = "";
-
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMesh* DefaultMesh = nullptr;
 
@@ -46,11 +42,13 @@ protected:
 
 private:
 	bool SetDataFromTable(EObjectType Type);
+	bool SetDataFromAssetData();
 
 	UDataTable* WineDataTable = nullptr;
 	UDataTable* FoodDataTable = nullptr;
 
-	FBaseTableData* AssetData = nullptr;
+	UPROPERTY(VisibleAnywhere)
+	UBaseTask* TaskData = nullptr;
 
 	void SetDefault();
 };

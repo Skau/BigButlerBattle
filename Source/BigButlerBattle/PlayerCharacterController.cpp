@@ -7,7 +7,7 @@
 #include "PlayerCharacter.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "DataTables.h"
+#include "BaseTask.h"
 
 APlayerCharacterController::APlayerCharacterController() {}
 
@@ -56,15 +56,13 @@ void APlayerCharacterController::PauseGamePressed()
 	PauseGame.ExecuteIfBound(this);
 }
 
-void APlayerCharacterController::OnTasksGenerated(const TArray<FTask>& Tasks)
+void APlayerCharacterController::OnTasksGenerated(const TArray<UBaseTask*>& Tasks)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Total tasks: %i"), Tasks.Num());
-
 	if (!PlayerWidget)
 		return;
 
 	for (int i = 0; i < Tasks.Num(); ++i)
 	{
-		PlayerWidget->UpdateTaskSlotName(Tasks[i].ObjectName, i);
+		PlayerWidget->UpdateTaskSlotName(Tasks[i]->GetName(), i);
 	}
 }

@@ -14,6 +14,7 @@
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "TaskObject.h"
+#include "BaseTask.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -336,12 +337,10 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 			{
 				Inventory[i] = Obj;
 
-				auto Name = Obj->GetObjectName();
-				if (Name.IsEmpty())
-					Name = Obj->GetName();
-
-				OnTaskObjectPickedUp.ExecuteIfBound(Name, i);
-
+				if (auto Task = Obj->GetTaskData())
+				{
+					OnTaskObjectPickedUp.ExecuteIfBound(Task->GetName(), i);
+				}
 				break;
 			}
 		}

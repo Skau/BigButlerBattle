@@ -9,6 +9,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Math/RandomStream.h"
 #include "ButlerGameInstance.h"
+#include "WineTask.h"
+#include "FoodTask.h"
 
 ATaskObject::ATaskObject()
 {
@@ -40,7 +42,19 @@ void ATaskObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!SetDataFromTable(ObjectType))
+	bool Success = false;
+
+	//if (TaskData)
+	//{
+	//	if(TaskData->Data.Type != EObjectType::None)
+			Success = SetDataFromTable(ObjectType);
+	//}
+	//else
+	//{
+	//	Success = SetDataFromAssetData();
+	//}
+
+	if (!Success)
 	{
 		SetDefault();
 	}
@@ -128,20 +142,11 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 			return false;
 
 		auto RowName = WineDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
-		
-		auto Row = (FWineTableData*)Rows[RowName];
+		TaskData = NewObject<UWineTask>(this, RowName);
 
-		if (Row)
-		{
-			ObjectName = RowName.ToString();
-			AssetData = Row;
-		}
-		else
-		{
-			ObjectName = "";
-			AssetData = nullptr;
-		}
-	
+		if (!TaskData->InitTaskData(Rows[RowName]))
+			return false;
+
 		break;
 	}
 	case EObjectType::Food:
@@ -155,24 +160,20 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 			return false;
 
 		auto RowName = FoodDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
+		TaskData = NewObject<UFoodTask>(this, RowName);
 
-		auto Row = (FFoodTableData*)Rows[RowName];
+		if (!TaskData->InitTaskData(Rows[RowName]))
+			return false;
 
-		if (Row)
-		{
-			ObjectName = RowName.ToString();
-			AssetData = Row;
-		}
-		
 		break;
 	}
 	default:
 		return false;
 	}
 
-	if (AssetData)
+	if (TaskData && TaskData->Type != EObjectType::None)
 	{
-		if (auto Mesh = AssetData->Mesh)
+		if (auto Mesh = TaskData->Mesh)
 		{
 			MeshComponent->SetStaticMesh(Mesh);
 		}
@@ -181,7 +182,7 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 			MeshComponent->SetStaticMesh((DefaultMesh) ? DefaultMesh : nullptr);
 		}
 
-		if (auto Material = AssetData->Material)
+		if (auto Material = TaskData->Material)
 		{
 			MeshComponent->SetMaterial(0, Material);
 		}
@@ -198,6 +199,36 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 
 }
 
+bool ATaskObject::SetDataFromAssetData()
+{
+	if (TaskData && TaskData->Type != EObjectType::None)
+	{
+		if (auto Mesh = TaskData->Mesh)
+		{
+			MeshComponent->SetStaticMesh(Mesh);
+		}
+		else
+		{
+			MeshComponent->SetStaticMesh((DefaultMesh) ? DefaultMesh : nullptr);
+		}
+
+		if (auto Material = TaskData->Material)
+		{
+			MeshComponent->SetMaterial(0, Material);
+		}
+		else
+		{
+			MeshComponent->SetMaterial(0, (DefaultMaterial) ? DefaultMaterial : nullptr);
+		}
+		return true;
+		
+	}
+	else
+	{
+		return false;
+	}
+}
+
 void ATaskObject::SetDefault()
 {
 	if (DefaultMesh)
@@ -210,7 +241,5 @@ void ATaskObject::SetDefault()
 		MeshComponent->SetMaterial(0, DefaultMaterial);
 	}
 
-	ObjectType = EObjectType::None;
-	AssetData = nullptr;
-	ObjectName = "";
+	TaskData = NewObject<UBaseTask>(this, "DefaultTask");
 }

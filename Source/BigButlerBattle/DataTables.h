@@ -25,8 +25,6 @@ struct FBaseTableData : public FTableRowBase
     , Material(nullptr)
     {}
 
-    virtual bool IsEqual(FBaseTableData* Other) { return false; }
-
     UPROPERTY(EditAnywhere)
     EObjectType Type;
 
@@ -46,20 +44,6 @@ struct FWineTableData : public FBaseTableData
     : Year(0)
     {}
 
-    virtual bool IsEqual(FBaseTableData* Other) override
-    {
-        auto OtherData = (FWineTableData*)(Other);
-        if (OtherData)
-        {
-            if (OtherData == this)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     UPROPERTY(EditAnywhere)
     int Year;
 };
@@ -73,20 +57,6 @@ struct FFoodTableData : public FBaseTableData
     FFoodTableData()
     : Temperature(0)
     {}
-
-    virtual bool IsEqual(FBaseTableData* Other) override
-    {
-        auto OtherData = (FFoodTableData*)(Other);
-        if (OtherData)
-        {
-            if (OtherData == this)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     UPROPERTY(EditAnywhere)
     int Temperature;

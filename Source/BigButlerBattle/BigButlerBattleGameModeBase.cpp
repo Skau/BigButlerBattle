@@ -13,6 +13,7 @@
 #include "TaskObject.h"
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
+#include "BaseTask.h"
 
 float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
 {
@@ -127,19 +128,21 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 
 	Tasks.Reserve(TotalTasks);
 
-	TMap<EObjectType, TArray<FTask>> WorldTaskData;
+	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
 
 	// Get all actors that are task objects
 	for (TActorIterator<ATaskObject> itr(GetWorld()); itr; ++itr)
 	{
-		if (itr->GetObjectType() != EObjectType::None)
+		if (!itr)
+			continue;
+
+		auto Task = itr->GetTaskData();
+		if (Task && Task->Type != EObjectType::None)
 		{
-			FTask Task(itr->GetObjectName(), *itr->GetObjectData());
+			if (!WorldTaskData.Find(Task->Type))
+				WorldTaskData.Add(Task->Type, TArray<UBaseTask*>());
 
-			if (!WorldTaskData.Find(Task.Data.Type))
-				WorldTaskData.Add(Task.Data.Type, TArray<FTask>());
-
-			WorldTaskData[Task.Data.Type].Add(Task);
+			WorldTaskData[Task->Type].Add(Task);	
 		}
 	}
 

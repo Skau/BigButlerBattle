@@ -4,14 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "DataTables.h"
 #include "BigButlerBattleGameModeBase.generated.h"
-
-DECLARE_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<FTask>&);
 
 class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
+class UBaseTask;
+
+DECLARE_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<UBaseTask*>&);
+
 
 USTRUCT(BlueprintType)
 struct FIntRange
@@ -30,33 +31,6 @@ struct FIntRange
 	int Max;
 };
 
-USTRUCT(BlueprintType)
-struct FTask
-{
-	GENERATED_BODY()
-
-	FTask()
-	: ObjectName("")
-	, Data()
-	{}
-
-	FTask(FString Name, FBaseTableData TableData)
-	: ObjectName(Name)
-	, Data(TableData)
-	{}
-
-	bool IsEqual(FTask Other)
-	{
-		return ObjectName == Other.ObjectName && Data.IsEqual(&Other.Data);
-	}
-
-	UPROPERTY(BlueprintReadWrite)
-	FString ObjectName;
-
-	UPROPERTY(BlueprintReadWrite)
-	FBaseTableData Data;
-};
-
 /**
  * 
  */
@@ -69,7 +43,7 @@ public:
 	static float GetAngleBetween(FVector Vector1, FVector Vector2);
 	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2);
 
-	FORCEINLINE const TArray<FTask> GetGeneratedTasks() const { return Tasks; }
+	FORCEINLINE const TArray<UBaseTask*> GetGeneratedTasks() const { return Tasks; }
 
 	TasksGeneratedSignature OnTasksGenerated;
 
@@ -97,7 +71,7 @@ public:
 
 private:
 
-	TArray<FTask> Tasks;
+	TArray<UBaseTask*> Tasks;
 
 	UFUNCTION()
 	void OnPlayerPaused(APlayerCharacterController* Controller);
