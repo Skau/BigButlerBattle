@@ -126,7 +126,6 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		{EObjectType::Food, FoodRange}
 	};
 
-	Tasks.Reserve(TotalTasks);
 
 	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
 
@@ -136,21 +135,28 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		if (!itr)
 			continue;
 
+		// Get the task
 		auto Task = itr->GetTaskData();
+
+		// If the task is legit
 		if (Task && Task->Type != EObjectType::None)
 		{
+			// [] operator on TMaps don't automatically add, so we do it manually
 			if (!WorldTaskData.Find(Task->Type))
 				WorldTaskData.Add(Task->Type, TArray<UBaseTask*>());
 
+			// Add the task to the types TArray of tasks
 			WorldTaskData[Task->Type].Add(Task);	
 		}
 	}
 
-	// If there are no task objects, just return
+	// If there are no tasks, just return
 	if (!WorldTaskData.Num())
 		return;
 
-	// Setup random generator
+	Tasks.Reserve(TotalTasks);
+
+	// Setup random generator and get seed from game instance
 
 	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	FRandomStream Stream;
@@ -182,6 +188,18 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	if (!Types.Num())
 		return;
 
+	// Remove the custom ranges we don't care about (none in the world)
+	for (auto& Type : Types)
+	{
+		bool Found = false;
+
+		for (auto& Range : Ranges)
+			Found = true;
+
+		if (!Found)
+			Ranges.Remove(Type);
+	}
+
 
 	// Used for the outside while loop to keep track of when reach max possible tasks
 	int Remaining = TotalTasks - Tasks.Num();
@@ -202,38 +220,42 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			// Get the tasks available
 			auto& TaskData = WorldTaskData[Type];
 
-			if (!TaskData.Num())
-				continue;
-
+			// Get the number of tasks available
 			int TasksAvailable = TaskData.Num();
 
-			if (TasksAvailable == 0)
+			// No more tasks or the max number of tasks of the type lef to add is zero - check next type
+			if (TasksAvailable == 0 || Ranges[Type].Max == 0)
 				continue;
 
 			// The max number of possible tasks to get is the lowest between how many there are available and the custom max range
 			int MaxNumberOfPossibleTasksToGet = FMath::Min(TasksAvailable, Ranges[Type].Max);
 
+			// This is the new max number of tasks for this type
+			Ranges[Type].Max = MaxNumberOfPossibleTasksToGet;
+
+			// No more available to add - check next type
 			if (Ranges[Type].Max == 0)
 				continue;
 
-			// The random part, how many to actually get is somewhere between custom min range and the calculated max
-			int ActualNumberOfTasksToGet = Stream.RandRange(Ranges[Type].Min, MaxNumberOfPossibleTasksToGet);
+			// The random part, how many to actually get is a random value between the lowest of available tasks and custom min range and the calculated max
+			int TasksToAdd = Stream.RandRange(FMath::Min(TasksAvailable, Ranges[Type].Min), MaxNumberOfPossibleTasksToGet);
 
-			// Add the tasks
-			for (int i = 0; i < ActualNumberOfTasksToGet; ++i)
+			// Add the tasks - we can loop from 0 because we shuffled the tasks earlier
+			for (int i = 0; i < TasksToAdd; ++i)
 			{
-				auto Task = TaskData[i];
-				Tasks.Add(Task);
+				Tasks.Add(TaskData[i]);
 
+				// Quick check to make sure we don't go over max total tasks
 				Remaining = TotalTasks - Tasks.Num();
 				if (Remaining <= 0)
 					break;
 			}
-			TaskData.RemoveAt(0, ActualNumberOfTasksToGet);
 
-			Ranges[Type].Max -= ActualNumberOfTasksToGet;
+			// Remove the tasks just added
+			TaskData.RemoveAt(0, TasksToAdd);
 		}
 
+		// If all ranges max values are zero we are done
 		bool Done = true;
 		for (auto& Range : Ranges)
 		{

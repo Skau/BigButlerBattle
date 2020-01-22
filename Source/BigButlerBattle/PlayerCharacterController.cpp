@@ -63,6 +63,6 @@ void APlayerCharacterController::OnTasksGenerated(const TArray<UBaseTask*>& Task
 
 	for (int i = 0; i < Tasks.Num(); ++i)
 	{
-		PlayerWidget->UpdateTaskSlotName(Tasks[i]->GetName(), i);
+		PlayerWidget->UpdateTaskSlotName(Tasks[i]->Name, i);
 	}
 }

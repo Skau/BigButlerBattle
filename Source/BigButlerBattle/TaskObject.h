@@ -30,7 +30,7 @@ protected:
 	UStaticMeshComponent* MeshComponent = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	EObjectType ObjectType = EObjectType::None;
+	EObjectType TaskType = EObjectType::None;
 
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMesh* DefaultMesh = nullptr;
@@ -41,13 +41,13 @@ protected:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
 
 private:
-	bool SetDataFromTable(EObjectType Type);
+	bool SetDataFromTable();
 	bool SetDataFromAssetData();
 
 	UDataTable* WineDataTable = nullptr;
 	UDataTable* FoodDataTable = nullptr;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditInstanceOnly)
 	UBaseTask* TaskData = nullptr;
 
 	void SetDefault();

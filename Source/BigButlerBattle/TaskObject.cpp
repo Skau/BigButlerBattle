@@ -44,15 +44,15 @@ void ATaskObject::BeginPlay()
 
 	bool Success = false;
 
-	//if (TaskData)
-	//{
-	//	if(TaskData->Data.Type != EObjectType::None)
-			Success = SetDataFromTable(ObjectType);
-	//}
-	//else
-	//{
-	//	Success = SetDataFromAssetData();
-	//}
+	if (TaskData && TaskData->Type != EObjectType::None)
+	{
+		Success = SetDataFromAssetData();
+	}
+	else
+	{
+		if(TaskType != EObjectType::None)
+			Success = SetDataFromTable();
+	}
 
 	if (!Success)
 	{
@@ -77,18 +77,18 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 	if (PropertyName == NAME_None)
 		return;
 
-	if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, ObjectType)))
+	if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, TaskType)))
 	{
-		if (!SetDataFromTable(ObjectType))
+		if (!SetDataFromTable())
 		{
 			SetDefault();
 		}
 	}
 	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, FoodDataTable)))
 	{
-		if (ObjectType == EObjectType::Food && FoodDataTable)
+		if (TaskType == EObjectType::Food && FoodDataTable)
 		{
-			if (!SetDataFromTable(EObjectType::Food))
+			if (!SetDataFromTable())
 			{
 				SetDefault();
 			}
@@ -100,9 +100,23 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 	}
 	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, WineDataTable)))
 	{
-		if (ObjectType == EObjectType::Wine && WineDataTable)
+		if (TaskType == EObjectType::Wine && WineDataTable)
 		{
-			if (!SetDataFromTable(EObjectType::Wine))
+			if (!SetDataFromTable())
+			{
+				SetDefault();
+			}
+		}
+		else
+		{
+			SetDefault();
+		}
+	}
+	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, TaskData)))
+	{
+		if (TaskData && TaskData->Type != EObjectType::None)
+		{
+			if (!SetDataFromAssetData())
 			{
 				SetDefault();
 			}
@@ -116,7 +130,7 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 #endif
 
 
-bool ATaskObject::SetDataFromTable(EObjectType Type)
+bool ATaskObject::SetDataFromTable()
 {
 	FRandomStream Stream;
 	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
@@ -129,7 +143,7 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 		Stream.GenerateNewSeed();
 	}
 
-	switch (ObjectType)
+	switch (TaskType)
 	{
 	case EObjectType::Wine:
 	{
@@ -143,6 +157,7 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 
 		auto RowName = WineDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
 		TaskData = NewObject<UWineTask>(this, RowName);
+		TaskData->Name = RowName.ToString();
 
 		if (!TaskData->InitTaskData(Rows[RowName]))
 			return false;
@@ -161,6 +176,7 @@ bool ATaskObject::SetDataFromTable(EObjectType Type)
 
 		auto RowName = FoodDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
 		TaskData = NewObject<UFoodTask>(this, RowName);
+		TaskData->Name = RowName.ToString();
 
 		if (!TaskData->InitTaskData(Rows[RowName]))
 			return false;
@@ -203,6 +219,8 @@ bool ATaskObject::SetDataFromAssetData()
 {
 	if (TaskData && TaskData->Type != EObjectType::None)
 	{
+		TaskType = TaskData->Type;
+
 		if (auto Mesh = TaskData->Mesh)
 		{
 			MeshComponent->SetStaticMesh(Mesh);
@@ -242,4 +260,5 @@ void ATaskObject::SetDefault()
 	}
 
 	TaskData = NewObject<UBaseTask>(this, "DefaultTask");
+	TaskData->Name = "DefaultTask";
 }

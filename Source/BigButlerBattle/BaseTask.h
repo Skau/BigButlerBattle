@@ -23,6 +23,9 @@ public:
     virtual bool IsEqual(const UBaseTask* Other) const { UE_LOG(LogTemp, Warning, TEXT("Base IsEqual Called")); return false; }
 
     UPROPERTY(EditAnywhere)
+    FString Name;
+
+    UPROPERTY(EditAnywhere)
     EObjectType Type;
 
     UPROPERTY(EditAnywhere)
