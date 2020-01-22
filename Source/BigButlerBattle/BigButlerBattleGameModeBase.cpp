@@ -119,7 +119,7 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		Tasks.Empty();
 	}
 
-	const TMap<EObjectType, FIntRange> Ranges
+	TMap<EObjectType, FIntRange> Ranges
 	{
 		{EObjectType::Wine, WineRange},
 		{EObjectType::Food, FoodRange}
@@ -210,9 +210,11 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			// The max number of possible tasks to get is the lowest between how many there are available and the custom max range
 			int MaxNumberOfPossibleTasksToGet = FMath::Min(TasksAvailable, Ranges[Type].Max);
 
+			if (Ranges[Type].Max == 0)
+				continue;
+
 			// The random part, how many to actually get is somewhere between custom min range and the calculated max
 			int ActualNumberOfTasksToGet = Stream.RandRange(Ranges[Type].Min, MaxNumberOfPossibleTasksToGet);
-
 
 			// Add the tasks
 			for (int i = 0; i < ActualNumberOfTasksToGet; ++i)
@@ -224,15 +226,22 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 				if (Remaining <= 0)
 					break;
 			}
-
 			TaskData.RemoveAt(0, ActualNumberOfTasksToGet);
+
+			Ranges[Type].Max -= ActualNumberOfTasksToGet;
 		}
 
-		int Sum = 0;
-		for (auto& TaskData : WorldTaskData)
-			Sum += TaskData.Value.Num();
-
-		if (Sum <= 0)
+		bool Done = true;
+		for (auto& Range : Ranges)
+		{
+			if (Range.Value.Max > 0)
+			{
+				Done = false;
+				break;
+			}
+		}
+		
+		if (Done)
 			break;
 	}
 
