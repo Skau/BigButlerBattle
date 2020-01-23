@@ -11,8 +11,6 @@ ARailing::ARailing()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	BuildSpline();
-
 	RailMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Rail Mesh"));
 	SetRootComponent(RailMesh);
 
@@ -24,6 +22,8 @@ ARailing::ARailing()
 	SplineComp->ScaleVisualizationWidth = 5.f;
 	SplineComp->bShouldVisualizeScale = true;
 #endif
+
+	BuildSpline();
 }
 
 // Called when the game starts or when spawned
