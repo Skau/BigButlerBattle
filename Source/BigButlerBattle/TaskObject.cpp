@@ -8,9 +8,11 @@
 #include "ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Math/RandomStream.h"
+#include "TimerManager.h"
 #include "ButlerGameInstance.h"
 #include "WineTask.h"
 #include "FoodTask.h"
+
 
 ATaskObject::ATaskObject()
 {
@@ -36,7 +38,6 @@ ATaskObject::ATaskObject()
 		FoodDataTable = FoodDataObject;
 	}
 }
-
 
 void ATaskObject::BeginPlay()
 {
@@ -261,4 +262,26 @@ void ATaskObject::SetDefault()
 
 	TaskData = NewObject<UBaseTask>(this, "DefaultTask");
 	TaskData->Name = "DefaultTask";
+}
+
+void ATaskObject::OnPickedUp()
+{
+	if (bRespawn)
+	{
+		FTransform CurrentTransform = GetTransform();
+		FTimerDelegate TimerCallback;
+		TimerCallback.BindLambda([&]
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Respawning.."));
+				FActorSpawnParameters Params;
+				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				auto Obj = GetWorld()->SpawnActor<ATaskObject>(ATaskObject::StaticClass(), CurrentTransform, Params);
+				Obj->TaskType = TaskType;
+				Obj->TaskData = TaskData;
+				Obj->SetDataFromAssetData();
+			});
+
+		FTimerHandle Handle;
+		GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, RespawnTime, false);
+	}
 }

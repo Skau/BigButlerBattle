@@ -339,7 +339,9 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 
 				if (auto Task = Obj->GetTaskData())
 				{
-					OnTaskObjectPickedUp.ExecuteIfBound(Task->GetName(), i);
+					//Obj->OnPickedUp();
+					//Obj->Destroy();
+					//OnTaskObjectPickedUp.ExecuteIfBound(Task->GetName(), i);
 				}
 				break;
 			}

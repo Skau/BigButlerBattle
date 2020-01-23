@@ -21,6 +21,8 @@ public:
 
 	UBaseTask* GetTaskData() { return TaskData; }
 
+	void OnPickedUp();
+
 protected:
 	void BeginPlay() override;
 
@@ -28,15 +30,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent = nullptr;
-
-	UPROPERTY(EditAnywhere)
-	EObjectType TaskType = EObjectType::None;
-
-	UPROPERTY(EditDefaultsOnly)
-	UStaticMesh* DefaultMesh = nullptr;
-
-	UPROPERTY(EditDefaultsOnly)
-	UMaterialInterface* DefaultMaterial = nullptr;
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
 
@@ -47,7 +40,22 @@ private:
 	UDataTable* WineDataTable = nullptr;
 	UDataTable* FoodDataTable = nullptr;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Task")
+	UStaticMesh* DefaultMesh = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Task")
+	UMaterialInterface* DefaultMaterial = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Task")
+	EObjectType TaskType = EObjectType::None;
+
+	UPROPERTY(EditInstanceOnly, Category = "Task")
+	bool bRespawn = false;
+
+	UPROPERTY(EditInstanceOnly, Category = "Task")
+	float RespawnTime = 15.f;
+
+	UPROPERTY(EditInstanceOnly, Category = "Task")
 	UBaseTask* TaskData = nullptr;
 
 	void SetDefault();

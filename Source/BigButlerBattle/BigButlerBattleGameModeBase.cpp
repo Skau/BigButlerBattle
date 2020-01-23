@@ -141,7 +141,7 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		// If the task is legit
 		if (Task && Task->Type != EObjectType::None)
 		{
-			// [] operator on TMaps don't automatically add, so we do it manually
+			// [] operator on TMaps doesn't automatically add, so we do it manually
 			if (!WorldTaskData.Find(Task->Type))
 				WorldTaskData.Add(Task->Type, TArray<UBaseTask*>());
 
@@ -153,8 +153,6 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	// If there are no tasks, just return
 	if (!WorldTaskData.Num())
 		return;
-
-	Tasks.Reserve(TotalTasks);
 
 	// Setup random generator and get seed from game instance
 
@@ -181,30 +179,30 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		}
 	}
 
-
 	// Get all types
 	TArray<EObjectType> Types;
 	WorldTaskData.GetKeys(Types);
 	if (!Types.Num())
 		return;
 
-	// Remove the custom ranges we don't care about (none in the world)
-	for (auto& Type : Types)
+	// Remove Ranges not needed (no tasks of type in world)
+	TArray<EObjectType> TypesToRemove;
+	for (auto& Range : Ranges)
 	{
-		bool Found = false;
-
-		for (auto& Range : Ranges)
-			Found = true;
-
-		if (!Found)
-			Ranges.Remove(Type);
+		if (!Types.FindByKey(Range.Key))
+		{
+			TypesToRemove.Add(Range.Key);
+		}
+	}
+	for (auto& Type : TypesToRemove)
+	{
+		Ranges.Remove(Type);
 	}
 
+	// Used for the outside while loop to keep track of when max possible tasks are reached
+	int Remaining = TotalTasks;
 
-	// Used for the outside while loop to keep track of when reach max possible tasks
-	int Remaining = TotalTasks - Tasks.Num();
-
-	// Start index so it's random
+	// Random start index
 	int Index = Stream.RandRange(0, Types.Num() - 1);
 
 	// Loop until there are no more tasks to add
@@ -223,32 +221,28 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			// Get the number of tasks available
 			int TasksAvailable = TaskData.Num();
 
-			// No more tasks or the max number of tasks of the type lef to add is zero - check next type
-			if (TasksAvailable == 0 || Ranges[Type].Max == 0)
-				continue;
+			// Calculate new min number of tasks for this type
+			Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, TotalTasks);
 
-			// The max number of possible tasks to get is the lowest between how many there are available and the custom max range
-			int MaxNumberOfPossibleTasksToGet = FMath::Min(TasksAvailable, Ranges[Type].Max);
+			// Calculate new max number of tasks for this type
+			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), Ranges[Type].Min, TotalTasks);
 
-			// This is the new max number of tasks for this type
-			Ranges[Type].Max = MaxNumberOfPossibleTasksToGet;
-
-			// No more available to add - check next type
 			if (Ranges[Type].Max == 0)
 				continue;
 
-			// The random part, how many to actually get is a random value between the lowest of available tasks and custom min range and the calculated max
-			int TasksToAdd = Stream.RandRange(FMath::Min(TasksAvailable, Ranges[Type].Min), MaxNumberOfPossibleTasksToGet);
+			// How many to actually get is a random value between the lowest and highest possible tasks
+			int TasksToAdd = Stream.RandRange(Ranges[Type].Min, Ranges[Type].Max);
+
+			// If no tasks to add, just continue
+			if (TasksToAdd == 0)
+				continue;
 
 			// Add the tasks - we can loop from 0 because we shuffled the tasks earlier
 			for (int i = 0; i < TasksToAdd; ++i)
 			{
 				Tasks.Add(TaskData[i]);
 
-				// Quick check to make sure we don't go over max total tasks
-				Remaining = TotalTasks - Tasks.Num();
-				if (Remaining <= 0)
-					break;
+				Ranges[Type].Max -= 1;
 			}
 
 			// Remove the tasks just added
@@ -256,19 +250,15 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		}
 
 		// If all ranges max values are zero we are done
-		bool Done = true;
+
+		int Sum = 0;
 		for (auto& Range : Ranges)
-		{
-			if (Range.Value.Max > 0)
-			{
-				Done = false;
-				break;
-			}
-		}
-		
-		if (Done)
+			Sum += Range.Value.Max;
+
+		if (Sum == 0)
 			break;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Tasks: %i"), Tasks.Num());	
 	OnTasksGenerated.ExecuteIfBound(Tasks);
 }
