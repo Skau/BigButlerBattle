@@ -2,12 +2,11 @@
 
 
 #include "PlayerCharacterController.h"
-#include "PlayerWidget.h"
-#include "BaseUserWidget.h"
+#include "UI/PlayerWidget.h"
 #include "PlayerCharacter.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "BaseTask.h"
+#include "Tasks/BaseTask.h"
 
 APlayerCharacterController::APlayerCharacterController() {}
 

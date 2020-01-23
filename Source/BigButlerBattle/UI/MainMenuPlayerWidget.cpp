@@ -6,7 +6,7 @@
 #include "Components/CheckBox.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/Button.h"
-#include "PlayerCharacterController.h"
+#include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)

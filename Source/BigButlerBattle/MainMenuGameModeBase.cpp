@@ -2,11 +2,11 @@
 
 
 #include "MainMenuGameModeBase.h"
-#include "MainMenuWidget.h"
+#include "UI/MainMenuWidget.h"
 #include "Kismet/GameplayStatics.h"
-#include "PlayerCharacterController.h"
-#include "MainMenuWidget.h"
-#include "MainMenuPlayerWidget.h"
+#include "Player/PlayerCharacterController.h"
+#include "UI/MainMenuWidget.h"
+#include "UI/MainMenuPlayerWidget.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
 #include "Components/Button.h"

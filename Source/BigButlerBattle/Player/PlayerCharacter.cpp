@@ -15,9 +15,9 @@
 #include "DrawDebugHelpers.h"
 #include "CharacterAnimInstance.h"
 #include "SkateboardAnimInstance.h"
-#include "btd.h"
-#include "TaskObject.h"
-#include "BaseTask.h"
+#include "Utils/btd.h"
+#include "Tasks/TaskObject.h"
+#include "Tasks/BaseTask.h"
 #include "Components/CapsuleComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)

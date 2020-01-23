@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "DataTables.h"
+#include "Utils/DataTables.h"
 #include "TaskObject.generated.h"
 
 class UBoxComponent;
