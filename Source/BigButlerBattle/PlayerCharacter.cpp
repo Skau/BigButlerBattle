@@ -18,6 +18,7 @@
 #include "btd.h"
 #include "TaskObject.h"
 #include "BaseTask.h"
+#include "Components/CapsuleComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -26,6 +27,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Skateboard Mesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
+	SkateboardMesh->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
+
+	GetMesh()->SetRelativeLocation(FVector{0.f, 0.f, -110.f});
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(100.f);
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
