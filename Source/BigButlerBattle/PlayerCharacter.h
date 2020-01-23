@@ -6,12 +6,30 @@
 #include "GameFramework/Character.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "PlayerCharacter.generated.h"
 
+class ABigButlerBattleGameModeBase;
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
 class USpringArmComponent;
+class USkeletalMeshSocket;
+
+USTRUCT(BlueprintType)
+struct FSkateboardTraceResult
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FHitResult Front;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FHitResult Back;
+
+	FSkateboardTraceResult()
+	{}
+};
 
 UCLASS()
 class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
@@ -21,14 +39,19 @@ class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
 public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer);
 
-	void ToggleHoldingHandbrake(bool Value) { bCurrentlyHoldingHandbrake = Value; }
-	void SetRightAxisValue(float Value) { RightAxis = Value; }
-
 	void EnableRagdoll();
 
 	bool HasEnabledRagdoll() { return bEnabledRagdoll; }
 	bool CanFall() { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() { return SidewaysForceFallOffThreshold; }
+
+	UFUNCTION(BlueprintPure)
+	FSkateboardTraceResult GetSkateboardTraceResults() const { return LastTraceResult;  }
+
+	UFUNCTION(BlueprintCallable)
+	bool TraceSkateboard();
+
+	bool IsSocketsValid() const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -43,11 +66,44 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
 	float SidewaysForceFallOffThreshold = 4000.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationGroundSpeed = 0.16f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationAirSpeed = 0.08f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	bool bDebugMovement = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
+	float CameraRotationSpeed = 400.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Snapback Speed"))
+	float CameraSnapbackSpeed = 200.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Max Rotation Offset", ShortTooltip = "In angles"))
+	float MaxCameraRotationOffset = 89.f;
+
 	virtual void BeginPlay() override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
 	virtual void Tick(float DeltaTime) override;
 
-private:
+	bool bAllowBrakingWhileHandbraking = false;
+
+	void MoveForward(float Value);
+
+	void MoveRight(float Value);
+
+	void LookUp(float Value);
+
+	void LookRight(float Value);
+
+	void Handbrake();
+
+	void LetGoHandBrake();
+
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent* Movement;
 
@@ -59,6 +115,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
+
+	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
+
+	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	ABigButlerBattleGameModeBase* GameMode;
+
 	FTimerHandle HandbrakeHandle;
 	FTimerDelegate HandbrakeTimerCallback;
 	bool bCurrentlyHandbraking = false;
@@ -67,4 +131,15 @@ private:
 	float RightAxis = 0.0f;
 
 	bool bEnabledRagdoll = false;
+
+	float CameraYaw = 0.f;
+	float CameraPitch = 0.f;
+
+	FSkateboardTraceResult LastTraceResult;
+
+	void UpdateCameraRotation(float DeltaTime);
+
+	void UpdateSkateboardRotation(float DeltaTime);
+
+	FQuat GetDesiredRotation(FVector DestinationNormal) const;
 };

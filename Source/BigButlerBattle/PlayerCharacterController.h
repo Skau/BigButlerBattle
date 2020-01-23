@@ -6,7 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
-class APlayerCharacter;
+DECLARE_DELEGATE_OneParam(PauseGameSignature, APlayerCharacterController*);
+
+class UBaseUserWidget;
 class UPlayerWidget;
 /**
  * 
@@ -19,30 +21,22 @@ class BIGBUTLERBATTLE_API APlayerCharacterController : public APlayerController
 public:
 	APlayerCharacterController();
 
+	PauseGameSignature PauseGame;
+
 protected:
 	void BeginPlay() override;
+
+	void OnPossess(APawn* InPawn) override;
 
 	void Tick(float DeltaTime) override;
 
 	void SetupInputComponent() override;
-	
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* ControlledPlayer = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPlayerWidget> PlayerWidgetType;
 
-	UPROPERTY(BlueprintReadOnly)
-	UPlayerWidget* PlayerWidget;
+	UPlayerWidget* PlayerWidget = nullptr;
 
 private:
-	bool bAllowBrakingWhileHandbraking = false;
-
-private:
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void Jump();
-	void Handbrake();
-	void LetGoHandBrake();
-	bool bHoldingHandbrake = false;
+	void PauseGamePressed();
 };

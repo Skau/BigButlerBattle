@@ -6,6 +6,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
+class APlayerCharacter;
+class APlayerCharacterController;
+class UPauseWidget;
+
 /**
  * 
  */
@@ -13,5 +17,27 @@ UCLASS()
 class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	static float GetAngleBetween(FVector Vector1, FVector Vector2);
+	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2);
+
+protected:
+	void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPauseWidget> PauseWidgetClass;
+
+	UPauseWidget* PauseWidget;
+private:
+	UFUNCTION()
+	void OnPlayerPaused(APlayerCharacterController* Controller);
+	UFUNCTION()
+	void OnPlayerContinued(APlayerCharacterController* Controller);
+	UFUNCTION()
+	void OnPlayerQuit();
 	
 };
