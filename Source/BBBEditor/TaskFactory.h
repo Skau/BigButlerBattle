@@ -10,7 +10,7 @@
 *
 */
 UCLASS()
-class BIGBUTLERBATTLE_API UTaskFactory : public UFactory
+class BBBEDITOR_API UTaskFactory : public UFactory
 {
     GENERATED_BODY()
 
