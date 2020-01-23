@@ -8,18 +8,20 @@
 
 // Forward declarations
 class APlayerCharacter;
+class USplineComponent;
 
 UENUM(BlueprintType)
 enum class ECustomMovementType : uint8
 {
 	MOVE_None			UMETA(DisplayName = "None"),
-	MOVE_Skateboard		UMETA(DisplayName = "Skateboard")
+	MOVE_Skateboard		UMETA(DisplayName = "Skateboard"),
+	MOVE_Grinding		UMETA(DisplayName = "Grinding")
 };
 
 /** Custom override of movement component
  * 
  */
-UCLASS()
+UCLASS(hideCategories=("Character Movement: Walking", "Character Movement: Swimming", "Character Movement (Networking)"))
 class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
@@ -52,6 +54,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
 	float SlopeGravityMultiplier = 2048.f;
 
+	/// Grinding movement:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
+	USplineComponent* SkateboardSplineReference;
+
+	float SplinePos = -1.f;
+	int SplineDir = 1;
+
 public:
 	UPlayerCharacterMovementComponent();
 
@@ -72,13 +81,14 @@ protected:
 	void PhysCustom(float deltaTime, int32 Iterations) override;
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
+	void PhysGrinding(float deltaTime, int32 Iterations);
 
 	/** Handle falling movement. */
 	void PhysFalling(float deltaTime, int32 Iterations) override;
 
 	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
-	void ApplyVelocityBraking(float DeltaTime, float Friction, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
+	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;

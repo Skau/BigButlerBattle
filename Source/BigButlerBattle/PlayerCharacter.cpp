@@ -14,6 +14,7 @@
 #include "DrawDebugHelpers.h"
 #include "CharacterAnimInstance.h"
 #include "SkateboardAnimInstance.h"
+#include "btd.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -219,7 +220,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 {
 	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
-	
+
 	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch);
 	FVector Direction = FVector(0, 0, 0) - point;
 	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
@@ -253,12 +254,12 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			Params.DrawDebugTime = 0.1f;
 			Params.DrawDebugType = EDrawDebugTrace::ForDuration;
 		}
-		
+
 		FPredictProjectilePathResult Result;
 		if (UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result))
 		{
 			FVector LandNormal = Result.HitResult.ImpactNormal;
-			float Angle = ABigButlerBattleGameModeBase::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
+			float Angle = btd::GetAngleBetweenNormals(LandNormal, SkateboardMesh->GetUpVector());
 
 			if (bDebugMovement)
 				DrawDebugSphere(GetWorld(), Result.HitResult.ImpactPoint, 10.f, 10, FColor::Green, false, 0.1f);
@@ -289,13 +290,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 				auto DesiredRotation = GetDesiredRotation(newNormal);
 				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * dot));
 			}
-			
+
 			// There is a case here where we should fall, because if the player handbrakes over an edge it is still glued to the slope and it looks weird.
 			// If some combination of normals changing here is true, we need to switch movement mode to falling.
 		}
 		// One hit:
 		else if (traceResults.Front.bBlockingHit || traceResults.Back.bBlockingHit)
-		{	
+		{
 			auto &result = traceResults.Front.bBlockingHit ? traceResults.Front : traceResults.Back;
 			auto DesiredRotation = GetDesiredRotation(result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
@@ -303,7 +304,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			// Turn on falling just in case we are at an edge/incline and the velocity is great enough to get some air
 			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
-		// No hits: 
+		// No hits:
 		else
 		{
 			// Turn on falling, because we have no idea where the ground is and we are definitely in the air.
@@ -316,7 +317,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 {
 	FVector Right = FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
-	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal); 
+	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
 
 	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
 

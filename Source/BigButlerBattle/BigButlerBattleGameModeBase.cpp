@@ -13,16 +13,6 @@
 #include "Components/Button.h"
 #include "ButlerGameInstance.h"
 
-float ABigButlerBattleGameModeBase::GetAngleBetween(FVector Vector1, FVector Vector2)
-{
-	return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
-}
-
-float ABigButlerBattleGameModeBase::GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
-{
-	return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
-}
-
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -52,7 +42,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
-		auto PC = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0)); 
+		auto PC = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0));
 		PC->Possess(Character);
 		PC->SetInputMode(FInputModeGameOnly());
 		PC->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
@@ -69,7 +59,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
 	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
-	
+
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(APlayerCharacterController* Controller)
