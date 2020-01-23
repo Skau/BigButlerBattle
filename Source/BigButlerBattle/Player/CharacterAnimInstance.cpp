@@ -26,7 +26,6 @@ void UCharacterAnimInstance::NativeBeginPlay()
 	LeftKneeStartYawOffset = character->GetCharacterRefPoseBoneTransform("calf_l", FTransform::Identity).Rotator().Yaw;
 	RightKneeStartYawOffset = character->GetCharacterRefPoseBoneTransform("calf_r", FTransform::Identity).Rotator().Yaw;
 
-	UE_LOG(LogTemp, Warning, TEXT("Binding jumpanim"));
 	character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
 }
 
@@ -48,12 +47,6 @@ void UCharacterAnimInstance::JumpAnim()
 {
 	if (IsValid(JumpMontage))
         Montage_Play(JumpMontage);
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Character jumping montage not valid!"));
-    }   
-    
-    UE_LOG(LogTemp, Warning, TEXT("character Jumping anim!"));
 }
 
 // TPair<FVector, FVector> UCharacterAnimInstance::GetFeetLocations() const

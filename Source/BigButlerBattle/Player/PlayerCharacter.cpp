@@ -112,7 +112,7 @@ void APlayerCharacter::Jump()
 {
 	Super::Jump();
 
-	OnJumpEvent.Broadcast();
+	// OnJumpEvent.Broadcast();
 }
 
 void APlayerCharacter::BeginPlay()

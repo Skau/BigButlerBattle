@@ -23,12 +23,6 @@ void USkateboardAnimInstance::JumpAnim()
 {
     if (IsValid(JumpMontage))
         Montage_Play(JumpMontage);
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Jumping montage not valid!"));
-    }   
-    
-    UE_LOG(LogTemp, Warning, TEXT("Jumping anim!"));
 }
 
 void USkateboardAnimInstance::NativeUpdateAnimation(float DeltaTime)
