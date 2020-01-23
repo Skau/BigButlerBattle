@@ -65,7 +65,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+#if WITH_EDITOR
 	void PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent) override;
+#endif
 
 private:
 	UFUNCTION(BlueprintCallable)

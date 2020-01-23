@@ -18,9 +18,12 @@ ARailing::ARailing()
 
 	SplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	SplineComp->SetupAttachment(RootComponent);
+	SplineComp->bSplineHasBeenEdited = true;
+
+#if WITH_EDITORONLY_DATA
 	SplineComp->ScaleVisualizationWidth = 5.f;
 	SplineComp->bShouldVisualizeScale = true;
-	SplineComp->bSplineHasBeenEdited = true;
+#endif
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +40,7 @@ void ARailing::Tick(float DeltaTime)
 
 }
 
+#if WITH_EDITOR
 void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
 {
     //Get the name of the property that was changed  
@@ -50,6 +54,7 @@ void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChan
     // Call the base class version  
     Super::PostEditChangeProperty(PropertyChangedEvent);  
 }
+#endif
 
 void ARailing::BuildSpline()
 {
