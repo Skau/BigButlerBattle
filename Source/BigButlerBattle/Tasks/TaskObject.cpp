@@ -24,14 +24,14 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 
-	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/TaskObjects/Wine/WineData.WineData'"));
+	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
 	auto WineDataObject = WineDataTableDefinition.Object;
 	if (WineDataObject)
 	{
 		WineDataTable = WineDataObject;
 	}
 
-	ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/TaskObjects/Food/FoodData.FoodData'"));
+	ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Food/FoodData.FoodData'"));
 	auto FoodDataObject = FoodDataTableDefinition.Object;
 	if (FoodDataObject)
 	{
