@@ -3,7 +3,7 @@
 
 #include "TaskFactory.h"
 #include "Kismet2/SClassPickerDialog.h"
-#include "BaseTask.h"
+#include "Tasks/BaseTask.h"
 
 #define LOCTEXT_NAMESPACE "Task"
 
