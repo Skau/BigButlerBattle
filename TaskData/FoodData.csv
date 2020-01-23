@@ -1,0 +1,4 @@
+Name,Type,Mesh,Material,Temperature
+Chicken,2,"""StaticMesh'/Game/TaskObjects/Food/Shape_Torus.Shape_Torus'""","""MaterialInstanceConstant'/Game/TaskObjects/Food/FoodMaterial_Inst1.FoodMaterial_Inst1'""",25
+Steak,2,"""StaticMesh'/Game/TaskObjects/Food/Shape_Torus.Shape_Torus'""","""MaterialInstanceConstant'/Game/TaskObjects/Food/FoodMaterial_Inst2.FoodMaterial_Inst2'""",50
+Banana,2,"""StaticMesh'/Game/TaskObjects/Food/Shape_Torus.Shape_Torus'""","""MaterialInstanceConstant'/Game/TaskObjects/Food/FoodMaterial_Inst3.FoodMaterial_Inst3'""",75

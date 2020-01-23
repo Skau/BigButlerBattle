@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerWidget.generated.h"
 
-class UButton;
+class UTaskWidget;
 
 /**
  * 
@@ -17,20 +17,29 @@ class BIGBUTLERBATTLE_API UPlayerWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UPlayerWidget(const FObjectInitializer& ObjectInitializer);
+	void UpdateTaskSlotName(FString name, int index);
 
 protected:
-
-	void NativeConstruct() override;
-
 	bool Initialize() override;
 
-	void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTaskWidget* TaskSlot0;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* ButtonTest;
+	UTaskWidget* TaskSlot1;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTaskWidget* TaskSlot2;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTaskWidget* TaskSlot3;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTaskWidget* TaskSlot4;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTaskWidget* TaskSlot5;
 
 private:
-	UFUNCTION()
-	void Test();
+	TArray<UTaskWidget*> TaskWidgets;
 };

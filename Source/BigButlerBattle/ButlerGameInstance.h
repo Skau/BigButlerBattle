@@ -14,4 +14,15 @@ class BIGBUTLERBATTLE_API UButlerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
+public:
+    void Init() override;
+
+	int GetCurrentRandomSeed() { return Seed; }
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
+	bool bUseCustomSeed = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
+	int Seed = 0;
 };

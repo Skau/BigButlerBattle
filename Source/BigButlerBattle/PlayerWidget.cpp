@@ -2,40 +2,27 @@
 
 
 #include "PlayerWidget.h"
-#include "Components/Button.h"
-
-
-UPlayerWidget::UPlayerWidget(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{}
-
-
-void UPlayerWidget::NativeConstruct()
-{
-	Super::NativeConstruct();
-}
-
+#include "TaskWidget.h"
 
 bool UPlayerWidget::Initialize()
 {
 	if (!Super::Initialize())
 		return false;
 
-
-	ButtonTest->OnClicked.AddDynamic(this, &UPlayerWidget::Test);
-
+	TaskWidgets.Add(TaskSlot0);
+	TaskWidgets.Add(TaskSlot1);
+	TaskWidgets.Add(TaskSlot2);
+	TaskWidgets.Add(TaskSlot3);
+	TaskWidgets.Add(TaskSlot4);
+	TaskWidgets.Add(TaskSlot5);
 
 	return true;
 }
 
-
-void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+void UPlayerWidget::UpdateTaskSlotName(FString name, int index)
 {
-	Super::NativeTick(MyGeometry, DeltaTime);
-}
-
-
-void UPlayerWidget::Test()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Test"))
+	if (index >= 0 && index < TaskWidgets.Num())
+	{
+		TaskWidgets[index]->SetTaskName(name);
+	}
 }

@@ -9,9 +9,11 @@
 #include "PlayerCharacter.h"
 #include "PauseWidget.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/TextBlock.h"
-#include "Components/Button.h"
-#include "ButlerGameInstance.h"
+#include "TimerManager.h"
+#include "TaskObject.h"
+#include "EngineUtils.h"
+#include "Math/RandomStream.h"
+#include "BaseTask.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
@@ -60,6 +62,16 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
 	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
 
+
+	// Wait a bit for task objects to finish
+
+	FTimerDelegate TimerCallback;
+	TimerCallback.BindLambda([&]
+	{
+		GenerateTasks();
+	});
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.1f, false);
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(APlayerCharacterController* Controller)
@@ -89,4 +101,154 @@ void ABigButlerBattleGameModeBase::OnPlayerContinued(APlayerCharacterController*
 void ABigButlerBattleGameModeBase::OnPlayerQuit()
 {
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
+}
+
+void ABigButlerBattleGameModeBase::GenerateTasks()
+{
+	if (Tasks.Num())
+	{
+		Tasks.Empty();
+	}
+
+	TMap<EObjectType, FIntRange> Ranges
+	{
+		{EObjectType::Wine, WineRange},
+		{EObjectType::Food, FoodRange}
+	};
+
+
+	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
+
+	// Get all actors that are task objects
+	for (TActorIterator<ATaskObject> itr(GetWorld()); itr; ++itr)
+	{
+		if (!itr)
+			continue;
+
+		// Get the task
+		auto Task = itr->GetTaskData();
+
+		// If the task is legit
+		if (Task && Task->Type != EObjectType::None)
+		{
+			// [] operator on TMaps doesn't automatically add, so we do it manually
+			if (!WorldTaskData.Find(Task->Type))
+				WorldTaskData.Add(Task->Type, TArray<UBaseTask*>());
+
+			// Add the task to the types TArray of tasks
+			WorldTaskData[Task->Type].Add(Task);
+		}
+	}
+
+	// If there are no tasks, just return
+	if (!WorldTaskData.Num())
+		return;
+
+	// Setup random generator and get seed from game instance
+
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FRandomStream Stream;
+	Stream.Initialize(Instance->GetCurrentRandomSeed());
+
+	// Shuffle the arrays
+
+	for (auto& TaskData : WorldTaskData)
+	{
+		auto TaskArray = TaskData.Value;
+		if (!TaskArray.Num())
+			continue;
+
+		int LastIndex = TaskArray.Num() - 1;
+		for (int i = 0; i < LastIndex; ++i)
+		{
+			int Index = Stream.RandRange(0, LastIndex);
+			if (i != Index)
+			{
+				TaskArray.Swap(i, Index);
+			}
+		}
+	}
+
+	// Get all types
+	TArray<EObjectType> Types;
+	WorldTaskData.GetKeys(Types);
+	if (!Types.Num())
+		return;
+
+	// Remove Ranges not needed (no tasks of type in world)
+	TArray<EObjectType> TypesToRemove;
+	for (auto& Range : Ranges)
+	{
+		if (!Types.FindByKey(Range.Key))
+		{
+			TypesToRemove.Add(Range.Key);
+		}
+	}
+	for (auto& Type : TypesToRemove)
+	{
+		Ranges.Remove(Type);
+	}
+
+	// Used for the outside while loop to keep track of when max possible tasks are reached
+	int Remaining = TotalTasks;
+
+	// Random start index
+	int Index = Stream.RandRange(0, Types.Num() - 1);
+
+	// Loop until there are no more tasks to add
+	while (Remaining > 0)
+	{
+		// Loop through all task types, with an extra break on remaining == 0
+		// Index will loop back to 0 if reach end of types
+		for (int Iterations = 0; Iterations < WorldTaskData.Num() && Remaining > 0; ++Iterations, Index = ++Index % WorldTaskData.Num())
+		{
+			// Get the type
+			auto Type = Types[Index];
+
+			// Get the tasks available
+			auto& TaskData = WorldTaskData[Type];
+
+			// Get the number of tasks available
+			int TasksAvailable = TaskData.Num();
+
+			// Calculate new min number of tasks for this type
+			Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, TotalTasks);
+
+			// Calculate new max number of tasks for this type
+			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), Ranges[Type].Min, TotalTasks);
+
+			if (Ranges[Type].Max == 0)
+				continue;
+
+			// How many to actually get is a random value between the lowest and highest possible tasks
+			int TasksToAdd = Stream.RandRange(Ranges[Type].Min, Ranges[Type].Max);
+
+			// If no tasks to add, just continue
+			if (TasksToAdd == 0)
+				continue;
+
+			// Add the tasks - we can loop from 0 because we shuffled the tasks earlier
+			for (int i = 0; i < TasksToAdd; ++i)
+			{
+				Tasks.Add(TaskData[i]);
+
+				Ranges[Type].Max -= 1;
+			}
+
+			// Remove the tasks just added
+			TaskData.RemoveAt(0, TasksToAdd);
+		}
+
+		// If all ranges max values are zero we are done
+
+		int Sum = 0;
+		for (auto& Range : Ranges)
+			Sum += Range.Value.Max;
+
+		if (Sum == 0)
+			break;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Tasks: %i"), Tasks.Num());
+	OnTasksGenerated.ExecuteIfBound(Tasks);
 }

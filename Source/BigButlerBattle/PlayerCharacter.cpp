@@ -11,10 +11,13 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "CharacterAnimInstance.h"
 #include "SkateboardAnimInstance.h"
 #include "btd.h"
+#include "TaskObject.h"
+#include "BaseTask.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -29,6 +32,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+
+	ObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
+	ObjectPickupCollision->SetupAttachment(RootComponent);
+
+	ObjectPickupCollision->SetGenerateOverlapEvents(true);
 
 	bUseControllerRotationYaw = false;
 }
@@ -119,6 +127,11 @@ void APlayerCharacter::BeginPlay()
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(GameMode != nullptr);
+
+	Inventory.Reserve(6);
+	Inventory.AddZeroed(6);
+
+	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
@@ -351,4 +364,26 @@ FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, co
 {
 	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
 	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
+}
+
+void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (auto Obj = Cast<ATaskObject>(OtherActor))
+	{
+		for (int i = 0; i < Inventory.Num(); ++i)
+		{
+			if (Inventory[i] == nullptr)
+			{
+				Inventory[i] = Obj;
+
+				if (auto Task = Obj->GetTaskData())
+				{
+					//Obj->OnPickedUp();
+					//Obj->Destroy();
+					//OnTaskObjectPickedUp.ExecuteIfBound(Task->GetName(), i);
+				}
+				break;
+			}
+		}
+	}
 }

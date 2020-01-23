@@ -15,6 +15,11 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
+class UBoxComponent;
+class ATaskObject;
+
+DECLARE_DELEGATE_TwoParams(TaskObjectPickedUpSignature, FString, int)
+DECLARE_DELEGATE_TwoParams(TaskObjectDroppedSignature, FString, int)
 
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
@@ -64,6 +69,8 @@ public:
 	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform& localToWorld) const;
+	TaskObjectPickedUpSignature OnTaskObjectPickedUp;
+	TaskObjectDroppedSignature OnTaskObjectDropped;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -154,4 +161,18 @@ protected:
 	void UpdateSkateboardRotation(float DeltaTime);
 
 	FQuat GetDesiredRotation(FVector DestinationNormal) const;
+
+	/** Task Stuff */
+
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* ObjectPickupCollision;
+
+	UFUNCTION()
+	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	TArray<ATaskObject*> Inventory;
+
+	void OnObjectPickedUp(ATaskObject* Object);
+
+	void OnObjectDopped(ATaskObject* Object);
 };
