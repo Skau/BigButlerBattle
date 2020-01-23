@@ -9,25 +9,70 @@ void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-	Character = Cast<APlayerCharacter>(TryGetPawnOwner());
-	check(Character != nullptr);
-	MovementComp = Cast<UPlayerCharacterMovementComponent>(Character->GetMovementComponent());
-	check(MovementComp != nullptr);
-}
+	auto character = Cast<APlayerCharacter>(TryGetPawnOwner());
 
-bool UCharacterAnimInstance::isReady()
-{
-	return IsValid(Character) && IsValid(MovementComp);
+	if (!IsValid(character))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Character isn't valid!"));
+		return;
+	}
+
+	PelvisStartRotation = character->GetCharacterRefPoseBoneTransform("pelvis").GetRotation();
+	LeftFootStartRotation = character->GetCharacterRefPoseBoneTransform("foot_l").GetRotation();
+	RightFootStartRotation = character->GetCharacterRefPoseBoneTransform("foot_r").GetRotation();
+	PelvisStartYawOffset = character->GetCharacterRefPoseBoneTransform("pelvis", FTransform::Identity).Rotator().Yaw;
+	LeftFootStartYawOffset = character->GetCharacterRefPoseBoneTransform("foot_l", FTransform::Identity).Rotator().Yaw;
+	RightFootStartYawOffset = character->GetCharacterRefPoseBoneTransform("foot_r", FTransform::Identity).Rotator().Yaw;
+	LeftKneeStartYawOffset = character->GetCharacterRefPoseBoneTransform("calf_l", FTransform::Identity).Rotator().Yaw;
+	RightKneeStartYawOffset = character->GetCharacterRefPoseBoneTransform("calf_r", FTransform::Identity).Rotator().Yaw;
+
+	UE_LOG(LogTemp, Warning, TEXT("Binding jumpanim"));
+	character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
 }
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
 	Super::NativeUpdateAnimation(DeltaTime);
 
-	if (!isReady())
+	// Same tick as Event Blueprint Update Animation in anim blueprint
+	auto character = Cast<APlayerCharacter>(TryGetPawnOwner());
+
+	if (!IsValid(character))
 		return;
 
-	// Same tick as Event Blueprint Update Animation in anim blueprint
+	LeftFootTarget = GetFootLeftLocation(character);
+	RightFootTarget = GetFootRightLocation(character);
 }
 
+void UCharacterAnimInstance::JumpAnim()
+{
+	if (IsValid(JumpMontage))
+        Montage_Play(JumpMontage);
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Character jumping montage not valid!"));
+    }   
+    
+    UE_LOG(LogTemp, Warning, TEXT("character Jumping anim!"));
+}
 
+// TPair<FVector, FVector> UCharacterAnimInstance::GetFeetLocations() const
+// {
+// 	return IsValid(Character) ? Character->GetSkateboardFeetLocations() : TPair<FVector, FVector>{FVector{}, FVector{}};
+// }
+
+FVector UCharacterAnimInstance::GetFootLeftLocation(APlayerCharacter* character) const
+{
+	auto pos = IsValid(character) ? character->GetSkateboardFeetLocations().Key : FVector::ZeroVector;
+	auto delta = character->GetCharacterBoneTransform("foot_l").GetLocation() - character->GetCharacterBoneTransform("ball_l").GetLocation();
+	pos += delta;
+	return pos;
+}
+
+FVector UCharacterAnimInstance::GetFootRightLocation(APlayerCharacter* character) const
+{
+	auto pos = IsValid(character) ? character->GetSkateboardFeetLocations().Value : FVector::ZeroVector;
+	auto delta = character->GetCharacterBoneTransform("foot_r").GetLocation() - character->GetCharacterBoneTransform("ball_r").GetLocation();
+	pos += delta;
+	return pos;
+}

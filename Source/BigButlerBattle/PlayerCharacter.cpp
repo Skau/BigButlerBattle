@@ -12,6 +12,8 @@
 #include "BigButlerBattleGameModeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
+#include "CharacterAnimInstance.h"
+#include "SkateboardAnimInstance.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -89,6 +91,13 @@ bool APlayerCharacter::IsSocketsValid() const
 		return false;
 	}
 	return true;
+}
+
+void APlayerCharacter::Jump()
+{
+	Super::Jump();
+
+	OnJumpEvent.Broadcast();
 }
 
 void APlayerCharacter::BeginPlay()
@@ -312,4 +321,33 @@ FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
 
 	return Rot.Quaternion();
+}
+
+TPair<FVector, FVector> APlayerCharacter::GetSkateboardFeetLocations() const
+{
+	return TPair<FVector, FVector>{SkateboardMesh->GetSocketLocation("FootLeft"), SkateboardMesh->GetSocketLocation("FootRight")};
+}
+
+FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex) : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex, localToWorld) : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, const FTransform& localToWorld) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
 }

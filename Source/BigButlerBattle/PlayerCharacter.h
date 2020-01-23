@@ -16,6 +16,8 @@ class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
 
+DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
+
 USTRUCT(BlueprintType)
 struct FSkateboardTraceResult
 {
@@ -52,6 +54,16 @@ public:
 	bool TraceSkateboard();
 
 	bool IsSocketsValid() const;
+
+	JumpEventSignature OnJumpEvent;
+	void Jump() override;
+
+	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
+
+	FTransform GetCharacterBoneTransform(FName BoneName) const;
+	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
+	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
+	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform& localToWorld) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -107,7 +119,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent* Movement;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	USkeletalMeshComponent* SkateboardMesh;
 
 	UPROPERTY(VisibleAnywhere)
