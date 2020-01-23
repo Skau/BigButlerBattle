@@ -11,14 +11,16 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"UMG",
-				"CoreUObject",
-				"UnrealEd"
+				"CoreUObject"
 			]
 		},
 		{
 			"Name": "BBBEditor",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "PostEngineInit",
+			"AdditionalDependencies": [
+				"UnrealEd"
+			]
 		}
 	],
 	"Plugins": [
