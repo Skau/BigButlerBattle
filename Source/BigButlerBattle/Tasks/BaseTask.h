@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "DataTables.h"
+#include "Utils/DataTables.h"
 #include "BaseTask.generated.h"
 
 /**

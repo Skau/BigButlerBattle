@@ -5,15 +5,15 @@
 #include "ButlerGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "PlayerCharacterController.h"
-#include "PlayerCharacter.h"
-#include "PauseWidget.h"
+#include "Player/PlayerCharacterController.h"
+#include "Player/PlayerCharacter.h"
+#include "UI/PauseWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
-#include "TaskObject.h"
+#include "Tasks/TaskObject.h"
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
-#include "BaseTask.h"
+#include "Tasks/BaseTask.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {

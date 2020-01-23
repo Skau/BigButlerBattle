@@ -4,7 +4,7 @@
 #include "PauseWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
-#include "PlayerCharacterController.h"
+#include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
 
 bool UPauseWidget::Initialize()
