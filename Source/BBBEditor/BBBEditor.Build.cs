@@ -8,7 +8,7 @@ public class BBBEditor : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UnrealEd", "ClassViewer" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UnrealEd", "ClassViewer", "MainFrame" });
         PublicDependencyModuleNames.AddRange(new string[] { "BigButlerBattle" });
 
         // PrivateDependencyModuleNames.AddRange(new string[] { });
