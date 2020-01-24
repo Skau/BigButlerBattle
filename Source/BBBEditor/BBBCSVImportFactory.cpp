@@ -2,7 +2,7 @@
 
 
 #include "BBBCSVImportFactory.h"
-#include "SCSVImportOptions.h"
+#include "BBBCSVImportOptions.h"
 
 #include "Interfaces/IMainFrameModule.h"
 
@@ -16,26 +16,30 @@ UBBBCSVImportFactory::UBBBCSVImportFactory(const FObjectInitializer& ObjectIniti
     ImportPriority = 101;
 }
 
-namespace uethings
+FBBBCSVImportSettings::FBBBCSVImportSettings()
 {
-static UClass* GetCurveClass( ECSVImportType ImportType )
+	ImportRowStruct = nullptr;
+	ImportType = EBBBCSVImportType::ECSV_DataTable;
+	ImportCurveInterpMode = ERichCurveInterpMode::RCIM_Linear;
+}
+
+static UClass* GetCurveClass( EBBBCSVImportType ImportType )
 {
 	switch( ImportType )
 	{
-	case ECSVImportType::ECSV_CurveFloat:
+	case EBBBCSVImportType::ECSV_CurveFloat:
 		return UCurveFloat::StaticClass();
 		break;
-	case ECSVImportType::ECSV_CurveVector:
+	case EBBBCSVImportType::ECSV_CurveVector:
 		return UCurveVector::StaticClass();
 		break;
-	case ECSVImportType::ECSV_CurveLinearColor:
+	case EBBBCSVImportType::ECSV_CurveLinearColor:
 		return UCurveLinearColor::StaticClass();
 		break;
 	default:
 		return UCurveVector::StaticClass();
 		break;
 	}
-}
 }
 
 UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const TCHAR*& Buffer, const TCHAR* BufferEnd, FFeedbackContext* Warn, bool& bOutOperationCanceled)
@@ -54,7 +58,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 	// Save off information if so
 	bool bHaveInfo = false;
 	ERichCurveInterpMode ImportCurveInterpMode = RCIM_Linear;
-	ECSVImportType ImportType = ECSVImportType::ECSV_DataTable;
+	EBBBCSVImportType ImportType = EBBBCSVImportType::ECSV_DataTable;
 	UClass* DataTableClass = UDataTable::StaticClass();
 
 	// Clear our temp table
@@ -63,17 +67,17 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 	if (IsAutomatedImport())
 	{
 		ImportCurveInterpMode = AutomatedImportSettings.ImportCurveInterpMode;
-		ImportType = AutomatedImportSettings.ImportType;
+		ImportType = static_cast<EBBBCSVImportType>(AutomatedImportSettings.ImportType);
 
 		TempImportDataTable = NewObject<UDataTable>(this, UDataTable::StaticClass(), InName, Flags);
 		TempImportDataTable->RowStruct = AutomatedImportSettings.ImportRowStruct;
 
 		// For automated import to work a row struct must be specified for a datatable type or a curve type must be specified
-		bHaveInfo = TempImportDataTable->RowStruct != nullptr || ImportType != ECSVImportType::ECSV_DataTable;
+		bHaveInfo = TempImportDataTable->RowStruct != nullptr || ImportType != EBBBCSVImportType::ECSV_DataTable;
 	}
 	else if (ExistingTable != nullptr)
 	{
-		ImportType = ECSVImportType::ECSV_DataTable;
+		ImportType = EBBBCSVImportType::ECSV_DataTable;
 		TempImportDataTable = NewObject<UDataTable>(this, ExistingTable->GetClass(), InName, Flags);
 		TempImportDataTable->CopyImportOptions(ExistingTable);
 		
@@ -81,12 +85,12 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 	}
 	else if (ExistingCurveTable != nullptr)
 	{
-		ImportType = ECSVImportType::ECSV_CurveTable;
+		ImportType = EBBBCSVImportType::ECSV_CurveTable;
 		bHaveInfo = true;
 	}
 	else if (ExistingCurve != nullptr)
 	{
-		ImportType = ExistingCurve->IsA(UCurveFloat::StaticClass()) ? ECSVImportType::ECSV_CurveFloat : ECSVImportType::ECSV_CurveVector;
+		ImportType = ExistingCurve->IsA(UCurveFloat::StaticClass()) ? EBBBCSVImportType::ECSV_CurveFloat : EBBBCSVImportType::ECSV_CurveVector;
 		bHaveInfo = true;
 	}
 
@@ -109,7 +113,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 			ParentWindow = MainFrame.GetParentWindow();
 		}
 
-		TSharedPtr<SCSVImportOptions> ImportOptionsWindow;
+		TSharedPtr<SBBBCSVImportOptions> ImportOptionsWindow;
 
 		TSharedRef<SWindow> Window = SNew(SWindow)
 			.Title( LOCTEXT("DataTableOptionsWindowTitle", "DataTable Options" ))
@@ -124,7 +128,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 
 		Window->SetContent
 		(
-			SAssignNew(ImportOptionsWindow, SCSVImportOptions)
+			SAssignNew(ImportOptionsWindow, SBBBCSVImportOptions)
 				.WidgetWindow(Window)
 				.FullPath(FText::FromString(ParentFullPath))
 				.TempImportDataTable(TempImportDataTable)
@@ -132,7 +136,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 
 		FSlateApplication::Get().AddModalWindow(Window, ParentWindow, false);
 
-		ImportType = ImportOptionsWindow->GetSelectedImportType();
+		ImportType = static_cast<EBBBCSVImportType>(ImportOptionsWindow->GetSelectedImportType());
 		TempImportDataTable->RowStruct = ImportOptionsWindow->GetSelectedRowStruct();
 		ImportCurveInterpMode = ImportOptionsWindow->GetSelectedCurveIterpMode();
 		bDoImport = ImportOptionsWindow->ShouldImport();
@@ -140,7 +144,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 	}
 	else if (!bHaveInfo && IsAutomatedImport())
 	{
-		if (ImportType == ECSVImportType::ECSV_DataTable && !TempImportDataTable->RowStruct)
+		if (ImportType == EBBBCSVImportType::ECSV_DataTable && !TempImportDataTable->RowStruct)
 		{
 			UE_LOG(LogCSVImportFactory, Error, TEXT("A Data table row type must be specified in the import settings json file for automated import"));
 		}
@@ -162,7 +166,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 
 		TArray<FString> Problems;
 
-		if (ImportType == ECSVImportType::ECSV_DataTable)
+		if (ImportType == EBBBCSVImportType::ECSV_DataTable)
 		{
 			// If there is an existing table, need to call this to free data memory before recreating object
 			UDataTable::FOnDataTableChanged OldOnDataTableChanged;
@@ -191,7 +195,7 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 			UE_LOG(LogCSVImportFactory, Log, TEXT("Imported DataTable '%s' - %d Problems"), *InName.ToString(), Problems.Num());
 			NewAsset = NewTable;
 		}
-		else if (ImportType == ECSVImportType::ECSV_CurveTable)
+		else if (ImportType == EBBBCSVImportType::ECSV_CurveTable)
 		{
 			UClass* CurveTableClass = UCurveTable::StaticClass();
 
@@ -220,9 +224,9 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 			UE_LOG(LogCSVImportFactory, Log, TEXT("Imported CurveTable '%s' - %d Problems"), *InName.ToString(), Problems.Num());
 			NewAsset = NewTable;
 		}
-		else if (ImportType == ECSVImportType::ECSV_CurveFloat || ImportType == ECSVImportType::ECSV_CurveVector || ImportType == ECSVImportType::ECSV_CurveLinearColor)
+		else if (ImportType == EBBBCSVImportType::ECSV_CurveFloat || ImportType == EBBBCSVImportType::ECSV_CurveVector || ImportType == EBBBCSVImportType::ECSV_CurveLinearColor)
 		{
-			UClass* CurveClass = ExistingCurve ? ExistingCurve->GetClass() : uethings::GetCurveClass( ImportType );
+			UClass* CurveClass = ExistingCurve ? ExistingCurve->GetClass() : GetCurveClass( ImportType );
 
 			// Create/reset curve
 			UCurveBase* NewCurve = NewObject<UCurveBase>(InParent, CurveClass, InName, Flags);
@@ -232,6 +236,10 @@ UObject* UBBBCSVImportFactory::FactoryCreateText(UClass* InClass, UObject* InPar
 			UE_LOG(LogCSVImportFactory, Log, TEXT("Imported Curve '%s' - %d Problems"), *InName.ToString(), Problems.Num());
 			NewCurve->AssetImportData->Update(CurrentFilename);
 			NewAsset = NewCurve;
+		}
+		else if (ImportType == EBBBCSVImportType::ECSV_BezierDataTable)
+		{
+			// Something here
 		}
 		
 		if (Problems.Num() > 0)
