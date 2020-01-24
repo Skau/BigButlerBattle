@@ -11,21 +11,6 @@
 class USplineComponent;
 class UStaticMeshComponent;
 
-USTRUCT(BlueprintType)
-struct FBezierPoint : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector Position;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector InTangent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector OutTangent;
-};
-
 
 UCLASS()
 class BIGBUTLERBATTLE_API ARailing : public AActor
@@ -40,13 +25,16 @@ public:
 	bool bMultiplyByHundred = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Railing", meta = (DisplayName = "Swap x and y axis?"))
-	bool bSwapXY = false;
+	bool bSwapXY = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Railing", meta = (DisplayName = "Swap y axis?"))
 	bool bSwapY = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap tangent y axis?"))
 	bool bSwapTangentY = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Tangent multiplier"))
+	float TangentMultiplier = 1.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RailMesh;

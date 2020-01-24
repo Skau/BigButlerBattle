@@ -63,11 +63,19 @@ struct FFoodTableData : public FBaseTableData
 };
 
 
-/**
- * 
- */
-class BIGBUTLERBATTLE_API DataTables
+USTRUCT(BlueprintType)
+struct FBezierPoint : public FTableRowBase
 {
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector Position;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector InTangent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector OutTangent;
 
 };
 

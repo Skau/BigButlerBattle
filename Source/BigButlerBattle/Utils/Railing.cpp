@@ -4,6 +4,15 @@
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "btd.h"
+#include "Utils/DataTables.h"
+
+/// ------------------------------- FBezierPoint -------------------------------
+
+
+
+
+
+/// ------------------------------- ARailing -------------------------------
 
 // Sets default values
 ARailing::ARailing()
@@ -48,7 +57,7 @@ void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChan
 
     // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name  
     // in the future this will fail to compile and we can update it.  
-    if ((PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints)))  
+    if (PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) || PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier))
         BuildSpline();
 
     // Call the base class version  
@@ -77,35 +86,66 @@ void ARailing::BuildSpline()
 			{
 				const float hermite = 3.f;
 
-				auto pos = row->Position;
-				if (bSwapY)
-					pos.Y = pos.Y;
-				if (bSwapXY)
-					pos = btd::SwapXY(pos);
-				if (bMultiplyByHundred)
-					pos *= 100.f;
+				/** First curve worked with:
+				 * 0th in tangent = out tangent
+				 * y = -y
+				 * xy = yx
+				 * xyz *= 100
+				 * xyz *= 3
+				 */
+
+				// auto pos = row->Position;
+				// /*
+				// if (bSwapY)
+				// 	pos.Y = -pos.Y;
+				// if (bSwapXY)
+				// 	pos = btd::SwapXY(pos);
+				// if (bMultiplyByHundred)
+				// 	pos *= 100.f;
+				// */
+
+				// pos = FVector{pos.Y, -pos.X, pos.Z} * 100.f;
 
 				
-				auto inTan = row->InTangent - row->Position;
-				if (bSwapY ^ bSwapTangentY)
-					inTan.Y = -inTan.Y;
-				if (bSwapXY)
-					inTan = btd::SwapXY(inTan);
-				if (bMultiplyByHundred)
-					inTan *= 100.f;
+				// auto inTan = row->InTangent - row->Position;
+				// /*
+				// if (bSwapY ^ bSwapTangentY || i == 0)
+				// 	inTan.Y = -inTan.Y;
+				// if (bSwapXY)
+				// 	inTan = btd::SwapXY(inTan);
+				// if (bMultiplyByHundred)
+				// 	inTan *= 100.f;
+				// */
+
+				// if (i == 0)
+				// 	inTan = FVector{inTan.Y, -inTan.X, inTan.Z} * 100.f;
+				// else
+				// 	inTan = FVector{inTan.Y, -inTan.X, inTan.Z} * 100.f;
 
 
-				auto outTan = row->OutTangent - row->Position;
-				if (bSwapY ^ bSwapTangentY)
-					outTan.Y = -outTan.Y;
-				if (bSwapXY)
-					outTan = btd::SwapXY(outTan);		
-				if (bMultiplyByHundred)
-					outTan *= 100.f;
+				// inTan *= TangentMultiplier;
 
 
-				SplineComp->AddSplinePoint(pos, ESplineCoordinateSpace::Local);
-				SplineComp->SetTangentsAtSplinePoint(i, inTan, outTan, ESplineCoordinateSpace::Local);
+				// auto outTan = row->OutTangent - row->Position;
+				// /*
+				// if (bSwapY ^ bSwapTangentY || i == 0)
+				// 	outTan.Y = -outTan.Y;
+				// if (bSwapXY)
+				// 	outTan = btd::SwapXY(outTan);		
+				// if (bMultiplyByHundred)
+				// 	outTan *= 100.f;
+				// */
+
+				// if (i == 0)
+				// 	outTan = FVector{outTan.X, outTan.Y, outTan.Z} * 100.f;
+				// else
+				// 	outTan = FVector{outTan.X, outTan.Y, outTan.Z} * 100.f;
+
+				// outTan *= TangentMultiplier;
+
+
+				SplineComp->AddSplinePoint(row->Position, ESplineCoordinateSpace::Local);
+				SplineComp->SetTangentsAtSplinePoint(i, row->InTangent * TangentMultiplier, row->OutTangent * TangentMultiplier, ESplineCoordinateSpace::Local);
 
 				// if (10.f < row->Position.Z)
 				// 	SplineComp->SetUpVectorAtSplinePoint(i, FVector::UpVector, ESplineCoordinateSpace::World);
