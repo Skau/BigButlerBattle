@@ -77,6 +77,7 @@ struct FBezierPoint : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector OutTangent;
 
+	void OnPostDataImport(const UDataTable* InDataTable, const FName InRowName, TArray<FString>& OutCollectedImportProblems) override;
 };
 
 
