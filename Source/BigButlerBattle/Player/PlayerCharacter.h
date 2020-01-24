@@ -130,6 +130,9 @@ protected:
 	USkeletalMeshComponent* SkateboardMesh;
 
 	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* Tray;
+
+	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera;
 
 	UPROPERTY(VisibleAnywhere)
@@ -171,6 +174,8 @@ protected:
 	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	TArray<ATaskObject*> Inventory;
+
+	TArray<FName> TraySlotNames;
 
 	void OnObjectPickedUp(ATaskObject* Object);
 

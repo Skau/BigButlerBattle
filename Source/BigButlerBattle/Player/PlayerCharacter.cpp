@@ -44,6 +44,19 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	ObjectPickupCollision->SetGenerateOverlapEvents(true);
 
+	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
+	Tray->SetupAttachment(GetMesh());
+
+	check(Tray != nullptr);
+
+	TraySlotNames.Reserve(4);
+	TraySlotNames.Add("Slot_0");
+	TraySlotNames.Add("Slot_1");
+	TraySlotNames.Add("Slot_2");
+	TraySlotNames.Add("Slot_3");
+
+	Inventory.AddZeroed(4);
+
 	bUseControllerRotationYaw = false;
 }
 
@@ -133,9 +146,6 @@ void APlayerCharacter::BeginPlay()
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(GameMode != nullptr);
-
-	Inventory.Reserve(6);
-	Inventory.AddZeroed(6);
 
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 }
@@ -240,7 +250,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch);
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 20.f);
 	FVector Direction = FVector(0, 0, 0) - point;
 	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
@@ -374,22 +384,37 @@ FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, co
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (auto Obj = Cast<ATaskObject>(OtherActor))
+	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
-		for (int i = 0; i < Inventory.Num(); ++i)
-		{
-			if (Inventory[i] == nullptr)
-			{
-				Inventory[i] = Obj;
+		OnObjectPickedUp(Cast<ATaskObject>(OtherActor));
+	}
+}
 
-				if (auto Task = Obj->GetTaskData())
-				{
-					//Obj->OnPickedUp();
-					//Obj->Destroy();
-					//OnTaskObjectPickedUp.ExecuteIfBound(Task->GetName(), i);
-				}
-				break;
-			}
+void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
+{
+	for(int i = 0; i < Inventory.Num(); ++i)
+	{
+		if (Inventory[i] == nullptr)
+		{
+			Object->OnPickedUp();
+
+			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+			Spawned->SetTaskData(Object->GetTaskData());
+			Spawned->SetEnable(true, false);
+			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
+
+			Inventory[i] = Spawned;
+			Spawned->AttachToComponent(
+				Tray, 
+				FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
+				TraySlotNames[i]);
+
+			break;
 		}
 	}
+}
+
+void APlayerCharacter::OnObjectDopped(ATaskObject* Object)
+{
+
 }

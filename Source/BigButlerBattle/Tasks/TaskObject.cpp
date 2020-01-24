@@ -22,7 +22,11 @@ ATaskObject::ATaskObject()
 	SetRootComponent(MeshComponent);
 
 	MeshComponent->SetGenerateOverlapEvents(true);
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
+
+	MeshComponent->SetWorldScale3D({ 0.3f, 0.3f, 0.3f });
 
 	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
 	auto WineDataObject = WineDataTableDefinition.Object;
@@ -266,22 +270,25 @@ void ATaskObject::SetDefault()
 
 void ATaskObject::OnPickedUp()
 {
+	SetEnable(false, false);
+
 	if (bRespawn)
 	{
 		FTransform CurrentTransform = GetTransform();
 		FTimerDelegate TimerCallback;
 		TimerCallback.BindLambda([&]
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Respawning.."));
-				FActorSpawnParameters Params;
-				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				auto Obj = GetWorld()->SpawnActor<ATaskObject>(ATaskObject::StaticClass(), CurrentTransform, Params);
-				Obj->TaskType = TaskType;
-				Obj->TaskData = TaskData;
-				Obj->SetDataFromAssetData();
+				SetEnable(true, true);
 			});
 
 		FTimerHandle Handle;
 		GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, RespawnTime, false);
 	}
+}
+
+void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision)
+{
+	MeshComponent->SetVisibility(NewVisiblity, true);
+	MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	MeshComponent->SetGenerateOverlapEvents(NewCollision);
 }
