@@ -32,4 +32,13 @@ void FBezierPoint::OnPostDataImport(const UDataTable* InDataTable, const FName I
 
     // auto& out = row->OutTangent;
     // out = FVector{out.X, out.Y, out.Z} * 100.f;
+
+    auto rotate = [](const FVector& f)
+    {
+        return FVector{f.Y, -f.X, f.Z};
+    };
+
+    row->Position = rotate(row->Position);
+    row->InTangent = rotate(row->InTangent);
+    row->OutTangent = rotate(row->OutTangent);
 }
