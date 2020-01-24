@@ -28,4 +28,17 @@ namespace btd
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
     }
+
+    /**
+     * @brief Swaps the values of two elements.
+     * Attempts to invoke move semantics on two values to swap the contents of the values.
+     * @param v1 The first value
+     */
+    template<typename T>
+    static void Swap(T& v1, T& v2)
+    {
+        T temp{std::move(v1)};
+        v1 = std::move(v2);
+        v2 = std::move(temp);
+    }
 }

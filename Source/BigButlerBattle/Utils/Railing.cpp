@@ -81,7 +81,7 @@ void ARailing::BuildSpline()
 
 		for (int32 i{0}; i < rows.Num(); ++i)
 		{
-			auto row = Splinepoints->FindRow<FBezierPoint>(rows[i], *Splinepoints->GetName());
+			auto row = Splinepoints->FindRow<FBezierPoint>(bSwapPointOrder ? rows[rows.Num() - i - 1] : rows[i], *Splinepoints->GetName());
 			if (row)
 			{
 				const float hermite = 3.f;
@@ -143,9 +143,17 @@ void ARailing::BuildSpline()
 
 				// outTan *= TangentMultiplier;
 
+				if (bInvertTangents)
+				{
+					row->InTangent = -row->InTangent;
+					row->OutTangent = -row->OutTangent;
+				}
+
+				// if (bSwapInOutTangents)
+				// 	btd::Swap(row->InTangent, row->OutTangent);
 
 				SplineComp->AddSplinePoint(row->Position, ESplineCoordinateSpace::Local);
-				SplineComp->SetTangentsAtSplinePoint(i, row->InTangent * TangentMultiplier, row->OutTangent * TangentMultiplier, ESplineCoordinateSpace::Local);
+				SplineComp->SetTangentsAtSplinePoint(i, (bSwapInOutTangents ? row->OutTangent : row->InTangent) * TangentMultiplier, (bSwapInOutTangents ? row->InTangent : row->OutTangent) * TangentMultiplier, ESplineCoordinateSpace::Local);
 
 				// if (10.f < row->Position.Z)
 				// 	SplineComp->SetUpVectorAtSplinePoint(i, FVector::UpVector, ESplineCoordinateSpace::World);

@@ -2,6 +2,8 @@
 
 
 #include "DataTables.h"
+#include "Templates/UnrealTemplate.h"
+#include "btd.h"
 
 void FBezierPoint::OnPostDataImport(const UDataTable* InDataTable, const FName InRowName, TArray<FString>& OutCollectedImportProblems)
 {
@@ -19,8 +21,12 @@ void FBezierPoint::OnPostDataImport(const UDataTable* InDataTable, const FName I
         return FVector{f.Y, f.X, f.Z} * 100.f;
     };
 
+    /* In-tangent is multiplied by -1 because tangents are relative to the direction they're pointing.
+     * So the in-tangent isn't a vector pointing from the control point, it's a negative direction vector
+     * from the control point.
+     */
     row->InTangent = transform(row->InTangent);
-    row->OutTangent = transform(row->OutTangent);
+    row->OutTangent = -transform(row->OutTangent);
     // auto& in = row->InTangent;
     // in = FVector{in.X, in.Y, in.Z} * 100.f;
 

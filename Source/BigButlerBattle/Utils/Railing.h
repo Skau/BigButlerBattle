@@ -33,8 +33,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap tangent y axis?"))
 	bool bSwapTangentY = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap in and out tangents?"))
+	bool bSwapInOutTangents = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Invert direction of tangents?"))
+	bool bInvertTangents = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap point order?"))
+	bool bSwapPointOrder = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Tangent multiplier"))
-	float TangentMultiplier = 1.f;
+	float TangentMultiplier = 3.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RailMesh;

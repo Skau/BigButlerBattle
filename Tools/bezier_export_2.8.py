@@ -15,8 +15,8 @@ for ob in bpy.context.selected_objects:
 				for bezier_point in spline.bezier_points.values():
 					file.write('%s,' % (ob.name + str(counter)));
 					co = ob.matrix_world @ bezier_point.co;
-					handle_in = ob.matrix_world @ bezier_point.handle_right;
-					handle_out = ob.matrix_world @ bezier_point.handle_left;
+					handle_in = ob.matrix_world @ bezier_point.handle_left;
+					handle_out = ob.matrix_world @ bezier_point.handle_right;
 					file.write('"(X=%.3f,Y=%.3f,Z=%.3f)",' % (co.x, co.y, co.z));
 					file.write('"(X=%.3f,Y=%.3f,Z=%.3f)",' % (handle_in.x - co.x, handle_in.y - co.y, handle_in.z - co.z));
 					file.write('"(X=%.3f,Y=%.3f,Z=%.3f)"\n' % (handle_out.x - co.x, handle_out.y - co.y, handle_out.z - co.z));
