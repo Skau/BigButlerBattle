@@ -21,12 +21,11 @@ ATaskObject::ATaskObject()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh Component");
 	SetRootComponent(MeshComponent);
 
-	MeshComponent->SetGenerateOverlapEvents(true);
-	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 
 	MeshComponent->SetWorldScale3D({ 0.3f, 0.3f, 0.3f });
+	SetEnable(true, true, true);
 
 	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
 	auto WineDataObject = WineDataTableDefinition.Object;
@@ -270,7 +269,7 @@ void ATaskObject::SetDefault()
 
 void ATaskObject::OnPickedUp()
 {
-	SetEnable(false, false);
+	SetEnable(false, false, false);
 
 	if (bRespawn)
 	{
@@ -278,7 +277,7 @@ void ATaskObject::OnPickedUp()
 		FTimerDelegate TimerCallback;
 		TimerCallback.BindLambda([&]
 			{
-				SetEnable(true, true);
+				SetEnable(true, true, true);
 			});
 
 		FTimerHandle Handle;
@@ -286,9 +285,17 @@ void ATaskObject::OnPickedUp()
 	}
 }
 
-void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision)
+void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics)
 {
 	MeshComponent->SetVisibility(NewVisiblity, true);
+
+	MeshComponent->SetSimulatePhysics(NewPhysics);
+
 	MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 	MeshComponent->SetGenerateOverlapEvents(NewCollision);
+}
+
+void ATaskObject::Launch(FVector Direction, float Force)
+{
+	MeshComponent->AddImpulse(Direction * Force);
 }

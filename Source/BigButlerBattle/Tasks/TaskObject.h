@@ -24,7 +24,9 @@ public:
 
 	void OnPickedUp();
 
-	void SetEnable(bool NewVisiblity, bool NewCollision);
+	void SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics);
+
+	void Launch(FVector Direction, float Force);
 
 protected:
 	void BeginPlay() override;

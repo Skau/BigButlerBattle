@@ -55,7 +55,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TraySlotNames.Add("Slot_2");
 	TraySlotNames.Add("Slot_3");
 
-	Inventory.AddZeroed(4);
+	Inventory.Reserve(4);
+	for (int i = 0; i < 4; ++i)
+		Inventory.Add(nullptr);
 
 	bUseControllerRotationYaw = false;
 }
@@ -158,6 +160,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent
 	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::Handbrake);
 	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::LetGoHandBrake);
 	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
+	InputComponent->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	InputComponent->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
+	InputComponent->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
 
 	// Axis Mappings
 	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
@@ -400,7 +405,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
-			Spawned->SetEnable(true, false);
+			Spawned->SetEnable(true, false, false);
 			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 
 			Inventory[i] = Spawned;
@@ -409,12 +414,66 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 				FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
 				TraySlotNames[i]);
 
+			//OnTaskObjectPickedUp.ExecuteIfBound()
 			break;
 		}
 	}
 }
 
-void APlayerCharacter::OnObjectDopped(ATaskObject* Object)
+void APlayerCharacter::DropCurrentObject()
 {
+	auto Obj = Inventory[CurrentItemIndex];
+	if (Obj)
+	{
+		// Disable old object
+		Obj->SetEnable(false, false, false);
 
+		// Deferred spawn new
+		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+		Spawned->SetTaskData(Obj->GetTaskData());
+		Spawned->SetEnable(true, true, true);
+		UGameplayStatics::FinishSpawningActor(Spawned, Obj->GetTransform());
+
+		// Yeet new object
+		Spawned->Launch(GetActorForwardVector(), 1000.f);
+
+		// Destroy old object
+		Obj->Destroy();
+		Inventory[CurrentItemIndex] = nullptr;
+
+		//OnTaskObjectDropped.ExecuteIfBound()
+	}
+}
+
+void APlayerCharacter::IncrementCurrentItemIndex()
+{
+	int i = CurrentItemIndex;
+	do
+	{
+		i = (i + 1) % Inventory.Num();
+		if (Inventory[i] != nullptr)
+		{
+			CurrentItemIndex = i;
+			break;
+		}
+	} while (i != CurrentItemIndex);
+
+	UE_LOG(LogTemp, Warning, TEXT("Index: %i"), CurrentItemIndex);
+}
+
+void APlayerCharacter::DecrementCurrentItemIndex()
+{
+	int i = CurrentItemIndex;
+	do
+	{
+		i = (i ? i : Inventory.Num()) - 1;
+
+		if (Inventory[i] != nullptr)
+		{
+			CurrentItemIndex = i;
+			break;
+		}
+	} while (i != CurrentItemIndex);
+
+	UE_LOG(LogTemp, Warning, TEXT("Index: %i"), CurrentItemIndex);
 }

@@ -69,6 +69,7 @@ public:
 	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform& localToWorld) const;
+
 	TaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	TaskObjectDroppedSignature OnTaskObjectDropped;
 
@@ -179,5 +180,11 @@ protected:
 
 	void OnObjectPickedUp(ATaskObject* Object);
 
-	void OnObjectDopped(ATaskObject* Object);
+	void DropCurrentObject();
+
+	void IncrementCurrentItemIndex();
+
+	void DecrementCurrentItemIndex();
+
+	int CurrentItemIndex = 0;
 };
