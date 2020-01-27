@@ -14,41 +14,43 @@
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
 #include "Tasks/BaseTask.h"
+#include "EngineUtils.h"
+#include "King/King.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Spawn and possess
-	const bool bIDsIsEmpty = GetNumPlayers() == 0;
-	int PauseWidgetOwner = 0;
-	if (!bIDsIsEmpty)
+	// Get all controllers
+	for (TActorIterator<APlayerCharacterController> iter(GetWorld()); iter; ++iter)
 	{
-		TArray<AActor*> Actors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacterController::StaticClass(), Actors);
-		for (auto& Actor : Actors)
-		{
-			auto controller = Cast<APlayerCharacterController>(Actor);
-			FActorSpawnParameters Params;
-			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-			auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
-			controller->Possess(Character);
-			controller->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
-			controller->SetInputMode(FInputModeGameOnly());
-			PauseWidgetOwner = UGameplayStatics::GetPlayerControllerID(controller);
-		}
+		Controllers.Add(*iter);
 	}
-	// For editor testing
-	else
+
+	// If in editor this can happen
+	if (!Controllers.Num())
 	{
+		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0)));
+	}
+	
+	for (auto& Controller : Controllers)
+	{
+		// Spawn character and posess
+
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
-		auto PC = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0));
-		PC->Possess(Character);
-		PC->SetInputMode(FInputModeGameOnly());
-		PC->PauseGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+		Controller->Possess(Character);
+
+		Controller->SetInputMode(FInputModeGameOnly());
+
+		// Delegates
+
+		Controller->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+		Controller->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
 	}
+
+	// Pause widget setup
 
 	if (!PauseWidgetClass)
 	{
@@ -56,12 +58,11 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		return;
 	}
 
-	PauseWidget = CreateWidget<UPauseWidget>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), PauseWidgetOwner), PauseWidgetClass);
+	PauseWidget = CreateWidget<UPauseWidget>(Controllers[0], PauseWidgetClass);
 	PauseWidget->AddToViewport();
 
 	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
 	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
-
 
 	// Wait a bit for task objects to finish
 
@@ -74,28 +75,36 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.1f, false);
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerPaused(APlayerCharacterController* Controller)
+void ABigButlerBattleGameModeBase::OnPlayerPaused(int ID)
 {
 	if (!PauseWidget->IsVisible())
 	{
 		PauseWidget->SetVisibility(ESlateVisibility::Visible);
+		auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
 		PauseWidget->FocusWidget(Controller);
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
 	else
 	{
-		OnPlayerContinued(Controller);
+		OnPlayerContinued(ID);
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerContinued(APlayerCharacterController* Controller)
+void ABigButlerBattleGameModeBase::OnPlayerContinued(int ID)
 {
+	auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
+
 	if (PauseWidget->IsVisible())
 	{
 		PauseWidget->SetVisibility(ESlateVisibility::Hidden);
 		Controller->SetInputMode(FInputModeGameOnly());
 		UGameplayStatics::SetGamePaused(GetWorld(), false);
 	}
+}
+
+void ABigButlerBattleGameModeBase::OnGameFinished(int ID)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Player %i won!"), ID);
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerQuit()
@@ -105,17 +114,13 @@ void ABigButlerBattleGameModeBase::OnPlayerQuit()
 
 void ABigButlerBattleGameModeBase::GenerateTasks()
 {
-	if (Tasks.Num())
-	{
-		Tasks.Empty();
-	}
+	TArray<UBaseTask*> Tasks;
 
 	TMap<EObjectType, FIntRange> Ranges
 	{
 		{EObjectType::Wine, WineRange},
 		{EObjectType::Food, FoodRange}
 	};
-
 
 	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
 
@@ -231,9 +236,9 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			for (int i = 0; i < TasksToAdd; ++i)
 			{
 				Tasks.Add(TaskData[i]);
-
-				Ranges[Type].Max -= 1;
 			}
+
+			Ranges[Type].Max -= TasksToAdd;
 
 			// Remove the tasks just added
 			TaskData.RemoveAt(0, TasksToAdd);
@@ -249,6 +254,22 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			break;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Tasks: %i"), Tasks.Num());
-	OnTasksGenerated.Broadcast(Tasks);
+	UE_LOG(LogTemp, Warning, TEXT("Total tasks: %i"), Tasks.Num());
+	if (Tasks.Num() > 6)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FIX THIS: Shaving off excess tasks."))
+		Tasks.RemoveAt(0, Tasks.Num() - 6);
+	}
+
+	// Setup player tasks and give them to the controllers
+	for (auto& Controller : Controllers)
+	{
+		auto ID = UGameplayStatics::GetPlayerControllerID(Controller);
+		TArray<TPair<UBaseTask*, ETaskState>> PlayerTasks;
+		for (auto& Task : Tasks)
+		{
+			PlayerTasks.Add(TPair<UBaseTask*, ETaskState>(Task, ETaskState::NotPresent));
+		}
+		Controller->SetPlayerTasks(PlayerTasks);
+	}
 }

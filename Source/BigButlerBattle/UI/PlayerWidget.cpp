@@ -3,6 +3,8 @@
 
 #include "PlayerWidget.h"
 #include "TaskWidget.h"
+#include "Components/TextBlock.h"
+#include "BigButlerBattleGameModeBase.h"
 
 bool UPlayerWidget::Initialize()
 {
@@ -19,10 +21,37 @@ bool UPlayerWidget::Initialize()
 	return true;
 }
 
-void UPlayerWidget::UpdateTaskSlotName(FString name, int index)
+void UPlayerWidget::UpdateTaskSlotName(int index, FString name)
 {
 	if (index >= 0 && index < TaskWidgets.Num())
 	{
-		TaskWidgets[index]->SetTaskName(name);
+		TaskWidgets[index]->TaskBlock->SetText(FText::FromString(name));
+	}
+}
+
+void UPlayerWidget::UpdateTaskState(int index, ETaskState State)
+{
+	if (index >= 0 && index < TaskWidgets.Num())
+	{
+		switch (State)
+		{
+		case ETaskState::NotPresent:
+		{
+			TaskWidgets[index]->TaskBlock->SetColorAndOpacity(NotPresent);
+		}
+		break;
+		case ETaskState::Present:
+		{
+			TaskWidgets[index]->TaskBlock->SetColorAndOpacity(Present);
+		}
+		break;
+		case ETaskState::Finished:
+		{
+			TaskWidgets[index]->TaskBlock->SetColorAndOpacity(Finished);
+		}
+		break;
+		default:
+			break;
+		}
 	}
 }

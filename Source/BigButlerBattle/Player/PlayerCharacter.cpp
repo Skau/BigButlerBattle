@@ -21,6 +21,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "King/King.h"
+#include "PlayerCharacterController.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -403,17 +404,10 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 	}
 	else if(OtherActor->IsA(AKing::StaticClass()))
 	{
-		auto King = Cast<AKing>(OtherActor);
-		for (int i = 0; i < Inventory.Num(); ++i)
+		auto Controller = Cast<APlayerCharacterController>(GetController());
+		if (Controller)
 		{
-			if (auto Obj = Inventory[i])
-			{
-				if (King->CheckIfDone(Obj->GetTaskData()))
-				{
-					Obj->Destroy();
-					Inventory[i] = nullptr;
-				}
-			}
+			Controller->CheckIfTasksAreDone(Inventory);
 		}
 	}
 }
@@ -452,7 +446,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 			auto scale = Spawned->GetActorScale3D();
 			Spawned->SetActorScale3D(scale * 0.3f);
 
-			//OnTaskObjectPickedUp.ExecuteIfBound()
+			OnTaskObjectPickedUp.ExecuteIfBound(Spawned->GetTaskData());
 			break;
 		}
 	}
@@ -460,8 +454,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 
 void APlayerCharacter::DropCurrentObject()
 {
-	auto Obj = Inventory[CurrentItemIndex];
-	if (Obj)
+	if (auto Obj = Inventory[CurrentItemIndex])
 	{
 		// Disable old object
 		Obj->SetEnable(false, false, false);
@@ -487,7 +480,7 @@ void APlayerCharacter::DropCurrentObject()
 		Inventory[CurrentItemIndex] = nullptr;
 		DecrementCurrentItemIndex();
 
-		//OnTaskObjectDropped.ExecuteIfBound()
+		OnTaskObjectDropped.ExecuteIfBound(Spawned->GetTaskData());
 	}
 }
 
@@ -503,8 +496,6 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 			break;
 		}
 	} while (i != CurrentItemIndex);
-
-	UE_LOG(LogTemp, Warning, TEXT("Index: %i"), CurrentItemIndex);
 }
 
 void APlayerCharacter::DecrementCurrentItemIndex()
@@ -520,6 +511,4 @@ void APlayerCharacter::DecrementCurrentItemIndex()
 			break;
 		}
 	} while (i != CurrentItemIndex);
-
-	UE_LOG(LogTemp, Warning, TEXT("Index: %i"), CurrentItemIndex);
 }

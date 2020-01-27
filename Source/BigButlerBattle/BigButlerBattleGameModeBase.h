@@ -11,8 +11,13 @@ class APlayerCharacterController;
 class UPauseWidget;
 class UBaseTask;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<UBaseTask*>&);
-
+UENUM()
+enum class ETaskState
+{
+	NotPresent,
+	Present,
+	Finished
+};
 
 USTRUCT(BlueprintType)
 struct FIntRange
@@ -39,14 +44,7 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
-public:
-
-	FORCEINLINE const TArray<UBaseTask*> GetGeneratedTasks() const { return Tasks; }
-
-	TasksGeneratedSignature OnTasksGenerated;
-
 protected:
-
 	void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -70,13 +68,14 @@ protected:
 	FIntRange CutleryRange;
 
 private:
-
-	TArray<UBaseTask*> Tasks;
+	TArray<APlayerCharacterController*> Controllers;
 
 	UFUNCTION()
-	void OnPlayerPaused(APlayerCharacterController* Controller);
+	void OnGameFinished(int ControllerID);
 	UFUNCTION()
-	void OnPlayerContinued(APlayerCharacterController* Controller);
+	void OnPlayerPaused(int ControllerID);
+	UFUNCTION()
+	void OnPlayerContinued(int ControllerID);
 	UFUNCTION()
 	void OnPlayerQuit();
 

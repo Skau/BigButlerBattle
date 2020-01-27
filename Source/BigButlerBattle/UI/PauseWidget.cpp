@@ -32,7 +32,8 @@ void UPauseWidget::OnPlayerCharacterControllerSet()
 
 void UPauseWidget::OnContinuePressed()
 {
-	ContinueGame.ExecuteIfBound(OwningCharacterController);
+	auto ID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
+	ContinueGame.ExecuteIfBound(ID);
 }
 
 void UPauseWidget::OnQuitPressed()

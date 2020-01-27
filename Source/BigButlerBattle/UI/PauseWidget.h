@@ -6,7 +6,7 @@
 #include "BaseUserWidget.h"
 #include "PauseWidget.generated.h"
 
-DECLARE_DELEGATE_OneParam(ContinueGameSignature, APlayerCharacterController*);
+DECLARE_DELEGATE_OneParam(ContinueGameSignature, int);
 DECLARE_DELEGATE(QuitGameSignature);
 
 class UTextBlock;
