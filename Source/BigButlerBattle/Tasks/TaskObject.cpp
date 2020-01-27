@@ -24,7 +24,6 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 
-	MeshComponent->SetWorldScale3D({ 0.3f, 0.3f, 0.3f });
 	SetEnable(true, true, true);
 
 	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
@@ -61,6 +60,11 @@ void ATaskObject::BeginPlay()
 	if (!Success)
 	{
 		SetDefault();
+	}
+
+	if (LaunchVelocity != FVector::ZeroVector)
+	{
+		MeshComponent->AddImpulse(LaunchVelocity);
 	}
 }
 
@@ -290,6 +294,8 @@ void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysic
 	MeshComponent->SetVisibility(NewVisiblity, true);
 
 	MeshComponent->SetSimulatePhysics(NewPhysics);
+	MeshComponent->SetEnableGravity(NewPhysics);
+	MeshComponent->SetMassOverrideInKg(NAME_None, 1.f);
 
 	MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 	MeshComponent->SetGenerateOverlapEvents(NewCollision);

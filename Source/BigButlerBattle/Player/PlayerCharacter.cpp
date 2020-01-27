@@ -19,6 +19,7 @@
 #include "Tasks/TaskObject.h"
 #include "Tasks/BaseTask.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -150,6 +151,7 @@ void APlayerCharacter::BeginPlay()
 	check(GameMode != nullptr);
 
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
+	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
@@ -255,7 +257,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 20.f);
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 10.f);
 	FVector Direction = FVector(0, 0, 0) - point;
 	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
@@ -391,7 +393,19 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 {
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
-		OnObjectPickedUp(Cast<ATaskObject>(OtherActor));
+		auto TaskObject = Cast<ATaskObject>(OtherActor);
+		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
+		{
+			OnObjectPickedUp(Cast<ATaskObject>(OtherActor));
+		}
+	}
+}
+
+void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	{
+		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
 	}
 }
 
@@ -401,18 +415,25 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 	{
 		if (Inventory[i] == nullptr)
 		{
+			// Disable picked up object
 			Object->OnPickedUp();
 
+			// Spawn new object
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
 			Spawned->SetEnable(true, false, false);
 			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 
+			// Attach new object
 			Inventory[i] = Spawned;
 			Spawned->AttachToComponent(
 				Tray, 
 				FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
 				TraySlotNames[i]);
+
+			// Scale it down
+			auto scale = Spawned->GetActorScale3D();
+			Spawned->SetActorScale3D(scale * 0.3f);
 
 			//OnTaskObjectPickedUp.ExecuteIfBound()
 			break;
@@ -431,15 +452,23 @@ void APlayerCharacter::DropCurrentObject()
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Obj->GetTaskData());
-		Spawned->SetEnable(true, true, true);
-		UGameplayStatics::FinishSpawningActor(Spawned, Obj->GetTransform());
+		PickupBlacklist.Add(Spawned);
 
-		// Yeet new object
-		Spawned->Launch(GetActorForwardVector(), 1000.f);
+		// Scale it back up
+		auto transform = Obj->GetTransform();
+		transform.SetScale3D(transform.GetScale3D() / 0.3f);
+		transform.SetLocation(transform.GetLocation() + (FVector::UpVector * 10.f));
+
+		// Yeet
+		Spawned->LaunchVelocity = GetActorForwardVector() * 3000.f;
+
+		// Finish
+		UGameplayStatics::FinishSpawningActor(Spawned, transform);
 
 		// Destroy old object
 		Obj->Destroy();
 		Inventory[CurrentItemIndex] = nullptr;
+		DecrementCurrentItemIndex();
 
 		//OnTaskObjectDropped.ExecuteIfBound()
 	}

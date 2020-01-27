@@ -28,6 +28,8 @@ public:
 
 	void Launch(FVector Direction, float Force);
 
+	FVector LaunchVelocity = FVector::ZeroVector;
+
 protected:
 	void BeginPlay() override;
 

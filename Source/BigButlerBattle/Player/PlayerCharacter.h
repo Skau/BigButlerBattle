@@ -174,7 +174,12 @@ protected:
 	UFUNCTION()
 	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	TArray<ATaskObject*> Inventory;
+
+	TArray<ATaskObject*> PickupBlacklist;
 
 	TArray<FName> TraySlotNames;
 
