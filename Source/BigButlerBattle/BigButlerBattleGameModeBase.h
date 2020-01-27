@@ -11,7 +11,7 @@ class APlayerCharacterController;
 class UPauseWidget;
 class UBaseTask;
 
-DECLARE_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<UBaseTask*>&);
+DECLARE_MULTICAST_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<UBaseTask*>&);
 
 
 USTRUCT(BlueprintType)

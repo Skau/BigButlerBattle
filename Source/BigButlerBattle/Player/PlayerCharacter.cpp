@@ -20,6 +20,7 @@
 #include "Tasks/BaseTask.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "King/King.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -44,6 +45,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	ObjectPickupCollision->SetupAttachment(RootComponent);
 
 	ObjectPickupCollision->SetGenerateOverlapEvents(true);
+	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh());
@@ -397,6 +399,21 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
 		{
 			OnObjectPickedUp(Cast<ATaskObject>(OtherActor));
+		}
+	}
+	else if(OtherActor->IsA(AKing::StaticClass()))
+	{
+		auto King = Cast<AKing>(OtherActor);
+		for (int i = 0; i < Inventory.Num(); ++i)
+		{
+			if (auto Obj = Inventory[i])
+			{
+				if (King->CheckIfDone(Obj->GetTaskData()))
+				{
+					Obj->Destroy();
+					Inventory[i] = nullptr;
+				}
+			}
 		}
 	}
 }

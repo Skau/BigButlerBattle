@@ -250,5 +250,5 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Tasks: %i"), Tasks.Num());
-	OnTasksGenerated.ExecuteIfBound(Tasks);
+	OnTasksGenerated.Broadcast(Tasks);
 }

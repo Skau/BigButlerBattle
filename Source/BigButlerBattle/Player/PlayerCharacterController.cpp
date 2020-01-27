@@ -24,7 +24,7 @@ void APlayerCharacterController::BeginPlay()
 		ButlerGameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 		if (ButlerGameMode)
 		{
-			ButlerGameMode->OnTasksGenerated.BindUObject(this, &APlayerCharacterController::OnTasksGenerated);
+			ButlerGameMode->OnTasksGenerated.AddUObject(this, &APlayerCharacterController::OnTasksGenerated);
 		}
 		// Delegates
 
