@@ -84,76 +84,45 @@ void ARailing::BuildSpline()
 			auto row = Splinepoints->FindRow<FBezierPoint>(bSwapPointOrder ? rows[rows.Num() - i - 1] : rows[i], *Splinepoints->GetName());
 			if (row)
 			{
-				const float hermite = 3.f;
+				auto transform = [](const FVector& f)
+				{
+					return FVector{f.Y, f.X, f.Z} * 100.f;
+				};
 
-				/** First curve worked with:
-				 * 0th in tangent = out tangent
-				 * y = -y
-				 * xy = yx
-				 * xyz *= 100
-				 * xyz *= 3
-				 */
+				auto pos = transform(row->Position);
 
-				// auto pos = row->Position;
-				// /*
-				// if (bSwapY)
-				// 	pos.Y = -pos.Y;
-				// if (bSwapXY)
-				// 	pos = btd::SwapXY(pos);
-				// if (bMultiplyByHundred)
-				// 	pos *= 100.f;
-				// */
+				/* In-tangent is multiplied by -1 because tangents are relative to the direction they're pointing.
+				* So the in-tangent isn't a vector pointing from the control point, it's a negative direction vector
+				* from the control point.
+				*/
+				auto inTan = transform(row->InTangent);
+				auto outTan = -transform(row->OutTangent);
 
-				// pos = FVector{pos.Y, -pos.X, pos.Z} * 100.f;
+				if (bRotateSpline)
+				{
+					auto rotate = [](const FVector& f)
+					{
+						return FVector{f.Y, -f.X, f.Z};
+					};
 
-				
-				// auto inTan = row->InTangent - row->Position;
-				// /*
-				// if (bSwapY ^ bSwapTangentY || i == 0)
-				// 	inTan.Y = -inTan.Y;
-				// if (bSwapXY)
-				// 	inTan = btd::SwapXY(inTan);
-				// if (bMultiplyByHundred)
-				// 	inTan *= 100.f;
-				// */
-
-				// if (i == 0)
-				// 	inTan = FVector{inTan.Y, -inTan.X, inTan.Z} * 100.f;
-				// else
-				// 	inTan = FVector{inTan.Y, -inTan.X, inTan.Z} * 100.f;
-
-
-				// inTan *= TangentMultiplier;
-
-
-				// auto outTan = row->OutTangent - row->Position;
-				// /*
-				// if (bSwapY ^ bSwapTangentY || i == 0)
-				// 	outTan.Y = -outTan.Y;
-				// if (bSwapXY)
-				// 	outTan = btd::SwapXY(outTan);		
-				// if (bMultiplyByHundred)
-				// 	outTan *= 100.f;
-				// */
-
-				// if (i == 0)
-				// 	outTan = FVector{outTan.X, outTan.Y, outTan.Z} * 100.f;
-				// else
-				// 	outTan = FVector{outTan.X, outTan.Y, outTan.Z} * 100.f;
-
-				// outTan *= TangentMultiplier;
+					pos = rotate(pos);
+					inTan = rotate(inTan);
+					outTan = rotate(outTan);
+				}
 
 				if (bInvertTangents)
 				{
-					row->InTangent = -row->InTangent;
-					row->OutTangent = -row->OutTangent;
+					inTan *= -1.f;
+					outTan *= -1.f;
 				}
 
-				// if (bSwapInOutTangents)
-				// 	btd::Swap(row->InTangent, row->OutTangent);
+				if (bSwapInOutTangents)
+					btd::Swap(inTan, outTan);
 
-				SplineComp->AddSplinePoint(row->Position, ESplineCoordinateSpace::Local);
-				SplineComp->SetTangentsAtSplinePoint(i, (bSwapInOutTangents ? row->OutTangent : row->InTangent) * TangentMultiplier, (bSwapInOutTangents ? row->InTangent : row->OutTangent) * TangentMultiplier, ESplineCoordinateSpace::Local);
+
+
+				SplineComp->AddSplinePoint(pos, ESplineCoordinateSpace::Local);
+				SplineComp->SetTangentsAtSplinePoint(i, inTan * TangentMultiplier, outTan * TangentMultiplier, ESplineCoordinateSpace::Local);
 
 				// if (10.f < row->Position.Z)
 				// 	SplineComp->SetUpVectorAtSplinePoint(i, FVector::UpVector, ESplineCoordinateSpace::World);

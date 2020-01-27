@@ -19,28 +19,19 @@ class BIGBUTLERBATTLE_API ARailing : public AActor
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Splinepoints"))
-	UDataTable *Splinepoints;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Railing", meta = (DisplayName = "Multiply by a hundo?"))
-	bool bMultiplyByHundred = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Railing", meta = (DisplayName = "Swap x and y axis?"))
-	bool bSwapXY = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Railing", meta = (DisplayName = "Swap y axis?"))
-	bool bSwapY = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap tangent y axis?"))
-	bool bSwapTangentY = false;
+	UDataTable *Splinepoints = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap in and out tangents?"))
 	bool bSwapInOutTangents = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Invert direction of tangents?"))
-	bool bInvertTangents = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap point order?"))
 	bool bSwapPointOrder = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Rotate spline -90 in yaw?"))
+	bool bRotateSpline = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Invert direction of tangents?"))
+	bool bInvertTangents = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Tangent multiplier"))
 	float TangentMultiplier = 3.f;

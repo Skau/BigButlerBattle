@@ -4,7 +4,7 @@
 
 IMPLEMENT_GAME_MODULE(FBBBEditorModule, BBBEditor);
 
-#define LOCTEXT_NAMESPACE "TutorialEditor"
+#define LOCTEXT_NAMESPACE "BBBEditorModule"
 
 void FBBBEditorModule::StartupModule()
 {
