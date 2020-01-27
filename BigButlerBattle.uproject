@@ -19,8 +19,7 @@
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
 			"AdditionalDependencies": [
-				"UnrealEd",
-				"MainFrame"
+				"UnrealEd"
 			]
 		}
 	],
