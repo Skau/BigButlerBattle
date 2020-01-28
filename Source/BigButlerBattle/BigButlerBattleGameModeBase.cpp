@@ -200,6 +200,40 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	// Random start index
 	int Index = Stream.RandRange(0, Types.Num() - 1);
 
+	// Add all minimum
+	for (auto& Type : Types)
+	{
+		// Get tasks for given type
+		auto TaskData = WorldTaskData[Type];
+
+		int TasksAvailable = TaskData.Num();
+
+		// Update min in case there are not enough tasks available
+		Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, Remaining);
+
+		if(Ranges[Type].Min == 0)
+			continue;
+
+		for (int i = 0; i < Ranges[Type].Min; ++i)
+		{
+			Tasks.Add(TaskData[i]);
+			Remaining -= 1;
+
+			// If we reach max tasks early
+			if (Remaining == 0)
+			{
+				GeneratePlayerTasks(Tasks);
+				return;
+			}
+		}
+
+		// Remove tasks added
+		TaskData.RemoveAt(0, Ranges[Type].Min);
+
+		// Update max
+		Ranges[Type].Max -= Ranges[Type].Min;
+	}
+
 	// Loop until there are no more tasks to add
 	while (Remaining > 0)
 	{
@@ -217,10 +251,10 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			int TasksAvailable = TaskData.Num();
 
 			// Calculate new min number of tasks for this type
-			Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, TotalTasks);
+			Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, Remaining);
 
 			// Calculate new max number of tasks for this type
-			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), Ranges[Type].Min, TotalTasks);
+			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), Ranges[Type].Min, Remaining);
 
 			if (Ranges[Type].Max == 0)
 				continue;
@@ -236,6 +270,14 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			for (int i = 0; i < TasksToAdd; ++i)
 			{
 				Tasks.Add(TaskData[i]);
+				Remaining -= 1;
+
+				// If we reach max tasks early
+				if (Remaining == 0)
+				{
+					GeneratePlayerTasks(Tasks);
+					return;
+				}
 			}
 
 			Ranges[Type].Max -= TasksToAdd;
@@ -254,14 +296,18 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			break;
 	}
 
+	GeneratePlayerTasks(Tasks);
+}
+
+void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
+{
 	UE_LOG(LogTemp, Warning, TEXT("Total tasks: %i"), Tasks.Num());
 	if (Tasks.Num() > 6)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FIX THIS: Shaving off excess tasks."))
-		Tasks.RemoveAt(0, Tasks.Num() - 6);
+			Tasks.RemoveAt(0, Tasks.Num() - 6);
 	}
 
-	// Setup player tasks and give them to the controllers
 	for (auto& Controller : Controllers)
 	{
 		auto ID = UGameplayStatics::GetPlayerControllerID(Controller);

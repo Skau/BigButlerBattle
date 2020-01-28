@@ -82,4 +82,6 @@ private:
 	UFUNCTION()
 	void GenerateTasks();
 
+	void GeneratePlayerTasks(TArray<UBaseTask*> Tasks);
+
 };
