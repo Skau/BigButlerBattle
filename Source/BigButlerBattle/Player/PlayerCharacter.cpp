@@ -476,7 +476,6 @@ void APlayerCharacter::DropCurrentObject()
 		// Destroy old object
 		Obj->Destroy();
 		Inventory[CurrentItemIndex] = nullptr;
-		DecrementCurrentItemIndex();
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned->GetTaskData());
 	}
@@ -484,29 +483,38 @@ void APlayerCharacter::DropCurrentObject()
 
 void APlayerCharacter::IncrementCurrentItemIndex()
 {
+	float DeltaYaw = 0.0f;
 	int i = CurrentItemIndex;
 	do
 	{
+		DeltaYaw += 90.f;
 		i = (i + 1) % Inventory.Num();
 		if (Inventory[i] != nullptr)
 		{
+			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
 			CurrentItemIndex = i;
 			break;
 		}
 	} while (i != CurrentItemIndex);
+
+	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
 }
 
 void APlayerCharacter::DecrementCurrentItemIndex()
 {
+	float DeltaYaw = 0.0f;
 	int i = CurrentItemIndex;
 	do
 	{
+		DeltaYaw -= 90.f;
 		i = (i ? i : Inventory.Num()) - 1;
-
 		if (Inventory[i] != nullptr)
 		{
+			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
 			CurrentItemIndex = i;
 			break;
 		}
 	} while (i != CurrentItemIndex);
+
+	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
 }

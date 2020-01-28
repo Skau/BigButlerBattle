@@ -73,11 +73,6 @@ public:
 	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	FTaskObjectDroppedSignature OnTaskObjectDropped;
 
-	void IncrementCurrentItemIndex();
-
-	void DecrementCurrentItemIndex();
-
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
 	float HandbrakeRotationFactor = 300.f;
@@ -197,4 +192,7 @@ protected:
 	void DropCurrentObject();
 
 	int CurrentItemIndex = 0;
+
+	void IncrementCurrentItemIndex();
+	void DecrementCurrentItemIndex();
 };
