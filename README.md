@@ -7,7 +7,7 @@ tasked with delivering various objects to the king. At the start of each game ea
 required by the king and the first person to deliver all objects to the king wins the game.
 
 ## How to play
-The game is designed for controllers but works with a keyboard as well.
+The game is designed for controllers but works with a keyboard as well. Keyboard can only be player 1 and all other players must use controllers (player 1 can aswell and the first controller will always be player 1).
  - The left joystick / ad rotates the skateboard
  - Right trigger / w accelerates the skateboard forwards
  - The A button / space makes the character jump
