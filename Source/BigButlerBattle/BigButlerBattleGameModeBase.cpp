@@ -35,6 +35,17 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0)));
 	}
 
+	Controllers.Sort([](const APlayerCharacterController& C1, const APlayerCharacterController& C2)
+	{
+		return	  UGameplayStatics::GetPlayerControllerID(const_cast<APlayerCharacterController*>(&C1)) 
+				< UGameplayStatics::GetPlayerControllerID(const_cast<APlayerCharacterController*>(&C2));
+	});
+
+	for (auto& Controller : Controllers)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Controller ID: %i"), UGameplayStatics::GetPlayerControllerID(Controller));
+	}
+
 	// Get player start locations
 	TArray<APlayerStart*> PlayerStarts;
 	for (TActorIterator<APlayerStart> iter(GetWorld()); iter; ++iter)
@@ -70,6 +81,18 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
 		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
+	}
+
+
+	switch (Controllers.Num())
+	{
+	case 2:
+		Cast<APlayerCharacter>(Controllers[0]->GetCharacter())->SetCustomSpringArmLength();
+		Cast<APlayerCharacter>(Controllers[1]->GetCharacter())->SetCustomSpringArmLength();
+		break;
+	case 3:
+		Cast<APlayerCharacter>(Controllers[0]->GetCharacter())->SetCustomSpringArmLength();
+		break;
 	}
 
 

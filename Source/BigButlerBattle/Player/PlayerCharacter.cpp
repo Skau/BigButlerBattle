@@ -258,7 +258,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 10.f);
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 5.f);
 	FVector Direction = FVector(0, 0, 0) - point;
 	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
@@ -388,6 +388,11 @@ FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, co
 {
 	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
 	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
+}
+
+void APlayerCharacter::SetCustomSpringArmLength()
+{
+	SpringArm->TargetArmLength = CustomSpringArmLength;
 }
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
