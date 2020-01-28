@@ -24,8 +24,6 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 
-	SetEnable(true, true, true);
-
 	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
 	auto WineDataObject = WineDataTableDefinition.Object;
 	if (WineDataObject)
@@ -44,6 +42,8 @@ ATaskObject::ATaskObject()
 void ATaskObject::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SetEnable(true, true, true);
 
 	bool Success = false;
 
