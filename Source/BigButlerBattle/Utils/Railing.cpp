@@ -31,15 +31,14 @@ ARailing::ARailing()
 	SplineComp->ScaleVisualizationWidth = 5.f;
 	SplineComp->bShouldVisualizeScale = true;
 #endif
-
-	BuildSpline();
 }
 
 // Called when the game starts or when spawned
 void ARailing::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	BuildSpline();
 }
 
 // Called every frame
