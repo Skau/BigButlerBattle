@@ -21,8 +21,10 @@ ATaskObject::ATaskObject()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh Component");
 	SetRootComponent(MeshComponent);
 
-	MeshComponent->SetGenerateOverlapEvents(true);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
+
+	SetEnable(true, true, true);
 
 	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
 	auto WineDataObject = WineDataTableDefinition.Object;
@@ -58,6 +60,11 @@ void ATaskObject::BeginPlay()
 	if (!Success)
 	{
 		SetDefault();
+	}
+
+	if (LaunchVelocity != FVector::ZeroVector)
+	{
+		MeshComponent->AddImpulse(LaunchVelocity);
 	}
 }
 
@@ -266,22 +273,35 @@ void ATaskObject::SetDefault()
 
 void ATaskObject::OnPickedUp()
 {
+	SetEnable(false, false, false);
+
 	if (bRespawn)
 	{
 		FTransform CurrentTransform = GetTransform();
 		FTimerDelegate TimerCallback;
 		TimerCallback.BindLambda([&]
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Respawning.."));
-				FActorSpawnParameters Params;
-				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				auto Obj = GetWorld()->SpawnActor<ATaskObject>(ATaskObject::StaticClass(), CurrentTransform, Params);
-				Obj->TaskType = TaskType;
-				Obj->TaskData = TaskData;
-				Obj->SetDataFromAssetData();
+				SetEnable(true, true, true);
 			});
 
 		FTimerHandle Handle;
 		GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, RespawnTime, false);
 	}
+}
+
+void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics)
+{
+	MeshComponent->SetVisibility(NewVisiblity, true);
+
+	MeshComponent->SetSimulatePhysics(NewPhysics);
+	MeshComponent->SetEnableGravity(NewPhysics);
+	MeshComponent->SetMassOverrideInKg(NAME_None, 1.f);
+
+	MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	MeshComponent->SetGenerateOverlapEvents(NewCollision);
+}
+
+void ATaskObject::Launch(FVector Direction, float Force)
+{
+	MeshComponent->AddImpulse(Direction * Force);
 }

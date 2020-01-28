@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerWidget.generated.h"
 
+enum class ETaskState;
 class UTaskWidget;
 
 /**
@@ -17,7 +18,8 @@ class BIGBUTLERBATTLE_API UPlayerWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void UpdateTaskSlotName(FString name, int index);
+	void UpdateTaskSlotName(int index, FString Name);
+	void UpdateTaskState(int index, ETaskState State);
 
 protected:
 	bool Initialize() override;
@@ -39,6 +41,15 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTaskWidget* TaskSlot5;
+
+	UPROPERTY(EditDefaultsOnly)
+	FSlateColor NotPresent;
+
+	UPROPERTY(EditDefaultsOnly)
+	FSlateColor Present;
+
+	UPROPERTY(EditDefaultsOnly)
+	FSlateColor Finished;
 
 private:
 	TArray<UTaskWidget*> TaskWidgets;

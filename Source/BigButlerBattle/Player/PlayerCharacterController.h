@@ -6,13 +6,19 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
-DECLARE_DELEGATE_OneParam(PauseGameSignature, APlayerCharacterController*);
+// Broadcasted when the player presses pause
+DECLARE_DELEGATE_OneParam(FPauseGameSignature, int);
+
+// Broadcasted when the player finishes all tasks at the king
+DECLARE_DELEGATE_OneParam(FGameFinishedSignature, int);
 
 class UBaseUserWidget;
 class UPlayerWidget;
 class APlayerCharacter;
 class ABigButlerBattleGameModeBase;
+class ATaskObject;
 class UBaseTask;
+enum class ETaskState;
 
 /**
  * 
@@ -25,7 +31,17 @@ class BIGBUTLERBATTLE_API APlayerCharacterController : public APlayerController
 public:
 	APlayerCharacterController();
 
-	PauseGameSignature PauseGame;
+	FPauseGameSignature OnPausedGame;
+	FGameFinishedSignature OnGameFinished;
+
+	void SetPlayerTasks(const TArray<TPair<UBaseTask*, ETaskState>>& Tasks);
+
+	TArray<TPair<UBaseTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
+
+	void SetPlayerTaskName(int Index, FString Name);
+	void SetPlayerTaskState(int Index, ETaskState NewState);
+
+	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
 
 protected:
 	void BeginPlay() override;
@@ -46,7 +62,13 @@ protected:
 	ABigButlerBattleGameModeBase* ButlerGameMode = nullptr;
 
 private:
+	TArray<TPair<UBaseTask*, ETaskState>> PlayerTasks;
+
 	void PauseGamePressed();
 
-	void OnTasksGenerated(const TArray<UBaseTask*>& Tasks);
+	UFUNCTION()
+	void OnPlayerPickedUpObject(UBaseTask* TaskIn);
+
+	UFUNCTION()
+	void OnPlayerDroppedObject(UBaseTask* TaskIn);
 };

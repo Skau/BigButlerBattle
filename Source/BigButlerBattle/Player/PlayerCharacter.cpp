@@ -19,6 +19,9 @@
 #include "Tasks/TaskObject.h"
 #include "Tasks/BaseTask.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "King/King.h"
+#include "PlayerCharacterController.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -43,6 +46,22 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	ObjectPickupCollision->SetupAttachment(RootComponent);
 
 	ObjectPickupCollision->SetGenerateOverlapEvents(true);
+	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
+
+	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
+	Tray->SetupAttachment(GetMesh());
+
+	check(Tray != nullptr);
+
+	TraySlotNames.Reserve(4);
+	TraySlotNames.Add("Slot_0");
+	TraySlotNames.Add("Slot_1");
+	TraySlotNames.Add("Slot_2");
+	TraySlotNames.Add("Slot_3");
+
+	Inventory.Reserve(4);
+	for (int i = 0; i < 4; ++i)
+		Inventory.Add(nullptr);
 
 	bUseControllerRotationYaw = false;
 }
@@ -134,10 +153,8 @@ void APlayerCharacter::BeginPlay()
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(GameMode != nullptr);
 
-	Inventory.Reserve(6);
-	Inventory.AddZeroed(6);
-
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
+	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
@@ -148,6 +165,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent
 	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::Handbrake);
 	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::LetGoHandBrake);
 	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
+	InputComponent->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	InputComponent->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
+	InputComponent->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
 
 	// Axis Mappings
 	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
@@ -240,7 +260,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch);
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 10.f);
 	FVector Direction = FVector(0, 0, 0) - point;
 	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
@@ -374,22 +394,121 @@ FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, co
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (auto Obj = Cast<ATaskObject>(OtherActor))
+	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
-		for (int i = 0; i < Inventory.Num(); ++i)
+		auto TaskObject = Cast<ATaskObject>(OtherActor);
+		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
 		{
-			if (Inventory[i] == nullptr)
-			{
-				Inventory[i] = Obj;
-
-				if (auto Task = Obj->GetTaskData())
-				{
-					//Obj->OnPickedUp();
-					//Obj->Destroy();
-					//OnTaskObjectPickedUp.ExecuteIfBound(Task->GetName(), i);
-				}
-				break;
-			}
+			OnObjectPickedUp(Cast<ATaskObject>(OtherActor));
 		}
 	}
+	else if(OtherActor->IsA(AKing::StaticClass()))
+	{
+		auto Controller = Cast<APlayerCharacterController>(GetController());
+		if (Controller)
+		{
+			Controller->CheckIfTasksAreDone(Inventory);
+		}
+	}
+}
+
+void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	{
+		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
+	}
+}
+
+void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
+{
+	for(int i = 0; i < Inventory.Num(); ++i)
+	{
+		if (Inventory[i] == nullptr)
+		{
+			// Disable picked up object
+			Object->OnPickedUp();
+
+			// Spawn new object
+			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+			Spawned->SetTaskData(Object->GetTaskData());
+			Spawned->SetEnable(true, false, false);
+			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
+
+			// Attach new object
+			Inventory[i] = Spawned;
+			Spawned->AttachToComponent(
+				Tray, 
+				FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
+				TraySlotNames[i]);
+
+			// Scale it down
+			auto scale = Spawned->GetActorScale3D();
+			Spawned->SetActorScale3D(scale * 0.3f);
+
+			OnTaskObjectPickedUp.ExecuteIfBound(Spawned->GetTaskData());
+			break;
+		}
+	}
+}
+
+void APlayerCharacter::DropCurrentObject()
+{
+	if (auto Obj = Inventory[CurrentItemIndex])
+	{
+		// Disable old object
+		Obj->SetEnable(false, false, false);
+
+		// Deferred spawn new
+		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+		Spawned->SetTaskData(Obj->GetTaskData());
+		PickupBlacklist.Add(Spawned);
+
+		// Scale it back up
+		auto transform = Obj->GetTransform();
+		transform.SetScale3D(transform.GetScale3D() / 0.3f);
+		transform.SetLocation(transform.GetLocation() + (FVector::UpVector * 10.f));
+
+		// Yeet
+		Spawned->LaunchVelocity = GetActorForwardVector() * 3000.f;
+
+		// Finish
+		UGameplayStatics::FinishSpawningActor(Spawned, transform);
+
+		// Destroy old object
+		Obj->Destroy();
+		Inventory[CurrentItemIndex] = nullptr;
+		DecrementCurrentItemIndex();
+
+		OnTaskObjectDropped.ExecuteIfBound(Spawned->GetTaskData());
+	}
+}
+
+void APlayerCharacter::IncrementCurrentItemIndex()
+{
+	int i = CurrentItemIndex;
+	do
+	{
+		i = (i + 1) % Inventory.Num();
+		if (Inventory[i] != nullptr)
+		{
+			CurrentItemIndex = i;
+			break;
+		}
+	} while (i != CurrentItemIndex);
+}
+
+void APlayerCharacter::DecrementCurrentItemIndex()
+{
+	int i = CurrentItemIndex;
+	do
+	{
+		i = (i ? i : Inventory.Num()) - 1;
+
+		if (Inventory[i] != nullptr)
+		{
+			CurrentItemIndex = i;
+			break;
+		}
+	} while (i != CurrentItemIndex);
 }

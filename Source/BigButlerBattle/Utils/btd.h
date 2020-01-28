@@ -9,22 +9,22 @@
  */
 namespace btd
 {
-	static FVector SwapXY(const FVector& v)
+    FORCEINLINE FVector SwapXY(const FVector& v)
     {
         return FVector{v.Y, v.X, v.Z}; 
     }
 
-    static FVector SwapY(const FVector& v)
+    FORCEINLINE FVector SwapY(const FVector& v)
     {
         return FVector{v.X, -v.Y, v.Z};
     }
 
-    static float GetAngleBetween(FVector Vector1, FVector Vector2)
+    FORCEINLINE static float GetAngleBetween(FVector Vector1, FVector Vector2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
     }
     
-	static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
+	FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
     }
@@ -35,10 +35,28 @@ namespace btd
      * @param v1 The first value
      */
     template<typename T>
-    static void Swap(T& v1, T& v2)
+    FORCEINLINE static void Swap(T& v1, T& v2)
     {
         T temp{std::move(v1)};
         v1 = std::move(v2);
         v2 = std::move(temp);
+    /*
+     Shuffles the given array (out parameter) based on the given FRandomStream.
+    */
+    template<typename T>
+    FORCEINLINE static void ShuffleArray(TArray<T>& Arr, const FRandomStream& Stream)
+    {
+        if (!Arr.Num())
+            return;
+
+        int LastIndex = Arr.Num() - 1;
+        for (int i = 0; i < LastIndex; ++i)
+        {
+            int Index = Stream.RandRange(0, LastIndex);
+            if (i != Index)
+            {
+                Swap(i, Index);
+            }
+        }
     }
 }

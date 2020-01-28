@@ -20,8 +20,15 @@ public:
 	ATaskObject();
 
 	UBaseTask* GetTaskData() { return TaskData; }
+	void SetTaskData(UBaseTask* Task) { TaskData = Task; }
 
 	void OnPickedUp();
+
+	void SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics);
+
+	void Launch(FVector Direction, float Force);
+
+	FVector LaunchVelocity = FVector::ZeroVector;
 
 protected:
 	void BeginPlay() override;
@@ -51,10 +58,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Task")
 	EObjectType TaskType = EObjectType::None;
 
-	UPROPERTY(EditInstanceOnly, Category = "Task")
+	UPROPERTY(EditAnywhere, Category = "Task")
 	bool bRespawn = false;
 
-	UPROPERTY(EditInstanceOnly, Category = "Task")
+	UPROPERTY(EditAnywhere, Category = "Task")
 	float RespawnTime = 15.f;
 
 	UPROPERTY(EditInstanceOnly, Category = "Task")

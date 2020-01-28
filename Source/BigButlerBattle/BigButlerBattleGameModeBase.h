@@ -4,15 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Utils/DataTables.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
 class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
 class UBaseTask;
+class UGameFinishedWidget;
 
-DECLARE_DELEGATE_OneParam(TasksGeneratedSignature, const TArray<UBaseTask*>&);
-
+UENUM()
+enum class ETaskState
+{
+	NotPresent,
+	Present,
+	Finished
+};
 
 USTRUCT(BlueprintType)
 struct FIntRange
@@ -39,14 +46,7 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
-public:
-
-	FORCEINLINE const TArray<UBaseTask*> GetGeneratedTasks() const { return Tasks; }
-
-	TasksGeneratedSignature OnTasksGenerated;
-
 protected:
-
 	void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -56,6 +56,11 @@ protected:
 	TSubclassOf<UPauseWidget> PauseWidgetClass;
 
 	UPauseWidget* PauseWidget;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameFinishedWidget> GameFinishedWidgetClass;
+
+	UGameFinishedWidget* GameFinishedWidget;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
 	int TotalTasks = 6;
@@ -70,17 +75,53 @@ protected:
 	FIntRange CutleryRange;
 
 private:
-
-	TArray<UBaseTask*> Tasks;
+	TArray<APlayerCharacterController*> Controllers;
 
 	UFUNCTION()
-	void OnPlayerPaused(APlayerCharacterController* Controller);
+	void OnGameFinished(int ControllerID);
 	UFUNCTION()
-	void OnPlayerContinued(APlayerCharacterController* Controller);
+	void OnPlayerPaused(int ControllerID);
+	UFUNCTION()
+	void OnPlayerContinued(int ControllerID);
 	UFUNCTION()
 	void OnPlayerQuit();
 
+	int RemainingTasksToCreate = 0;
+
+	/*
+	 Starts the process of generating tasks
+	*/
 	UFUNCTION()
-	void GenerateTasks();
+	void BeginTaskGeneration();
+
+	/* 
+	 Helper function that returns all tasks found in world.
+	 Return value is a TMap where key is the type of task and the value is an array containing the tasks
+	*/
+	TMap<EObjectType, TArray<UBaseTask*>> GetWorldTaskData();
+
+	/*
+	 Helper function that returns all tasks that needs to be created
+	*/
+	TArray<UBaseTask*> GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UBaseTask*>>& WorldTaskData, bool bShouldGenerateMinTasks);
+
+	/*
+	 Helper function that returns a list of tasks based on the random stream
+	*/
+	TArray<UBaseTask*> ProcessWorldTasks(TArray<UBaseTask*>& TaskData, const FRandomStream& Stream, int Min, int Max);
+
+	/*
+	 Called when the task generation is done
+	*/
+	void EndTaskGeneration(TArray<UBaseTask*> Tasks);
+
+	/*
+	 Sets up the individual player tasks and gives them to the respective controller
+	 Called from EndTaskGeneration()
+	*/
+	void GeneratePlayerTasks(TArray<UBaseTask*> Tasks);
+
+
+	double TaskGenerationStartTime = 0;
 
 };

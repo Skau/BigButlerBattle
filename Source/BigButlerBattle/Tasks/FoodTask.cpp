@@ -20,16 +20,19 @@ bool UFoodTask::InitTaskData(uint8* Data)
 
 bool UFoodTask::IsEqual(const UBaseTask* Other) const
 {
-    UE_LOG(LogTemp, Warning, TEXT("Food IsEqual Called"));
-
     auto OtherData = (UFoodTask*)(Other);
     if (OtherData)
     {
-        if (OtherData == this)
-        {
-            return true;
-        }
+        if (OtherData->Name != Name)
+            return false;
+
+        if (OtherData->Temperature != Temperature)
+            return false;
+    }
+    else
+    {
+        return false;
     }
 
-    return false;
+    return true;
 }

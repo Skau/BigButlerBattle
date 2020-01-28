@@ -20,16 +20,19 @@ bool UWineTask::InitTaskData(uint8* Data)
 
 bool UWineTask::IsEqual(const UBaseTask* Other) const
 {
-    UE_LOG(LogTemp, Warning, TEXT("Wine IsEqual Called"));
-
     auto OtherData = (UWineTask*)(Other);
     if (OtherData)
     {
-        if (OtherData == this)
-        {
-            return true;
-        }
+        if (OtherData->Name != Name)
+            return false;
+
+        if (OtherData->Year != Year)
+            return false;
+    }
+    else
+    {
+        return false;
     }
 
-    return false;
+    return true;
 }

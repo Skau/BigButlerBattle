@@ -17,10 +17,10 @@ class USpringArmComponent;
 class USkeletalMeshSocket;
 class UBoxComponent;
 class ATaskObject;
+class UBaseTask;
 
-DECLARE_DELEGATE_TwoParams(TaskObjectPickedUpSignature, FString, int)
-DECLARE_DELEGATE_TwoParams(TaskObjectDroppedSignature, FString, int)
-
+DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, UBaseTask*);
+DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, UBaseTask*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
 USTRUCT(BlueprintType)
@@ -69,8 +69,14 @@ public:
 	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform& localToWorld) const;
-	TaskObjectPickedUpSignature OnTaskObjectPickedUp;
-	TaskObjectDroppedSignature OnTaskObjectDropped;
+
+	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
+	FTaskObjectDroppedSignature OnTaskObjectDropped;
+
+	void IncrementCurrentItemIndex();
+
+	void DecrementCurrentItemIndex();
+
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -130,6 +136,9 @@ protected:
 	USkeletalMeshComponent* SkateboardMesh;
 
 	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* Tray;
+
+	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera;
 
 	UPROPERTY(VisibleAnywhere)
@@ -170,9 +179,22 @@ protected:
 	UFUNCTION()
 	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+public:
+	TArray<ATaskObject*>& GetInventory() { return Inventory; }
+
+protected:
 	TArray<ATaskObject*> Inventory;
+
+	TArray<ATaskObject*> PickupBlacklist;
+
+	TArray<FName> TraySlotNames;
 
 	void OnObjectPickedUp(ATaskObject* Object);
 
-	void OnObjectDopped(ATaskObject* Object);
+	void DropCurrentObject();
+
+	int CurrentItemIndex = 0;
 };
