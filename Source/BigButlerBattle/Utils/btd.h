@@ -37,9 +37,10 @@ namespace btd
     template<typename T>
     FORCEINLINE static void Swap(T& v1, T& v2)
     {
-        T temp{std::move(v1)};
+        T temp{ std::move(v1) };
         v1 = std::move(v2);
         v2 = std::move(temp);
+    }
     /*
      Shuffles the given array (out parameter) based on the given FRandomStream.
     */
