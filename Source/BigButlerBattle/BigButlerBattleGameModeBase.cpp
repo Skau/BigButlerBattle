@@ -14,8 +14,8 @@
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
 #include "Tasks/BaseTask.h"
-#include "EngineUtils.h"
 #include "King/King.h"
+#include "Utils/btd.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
@@ -69,7 +69,8 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	FTimerDelegate TimerCallback;
 	TimerCallback.BindLambda([&]
 	{
-		GenerateTasks();
+		TaskGenerationStartTime = FPlatformTime::Seconds();
+		BeginTaskGeneration();
 	});
 	FTimerHandle Handle;
 	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.1f, false);
@@ -112,16 +113,105 @@ void ABigButlerBattleGameModeBase::OnPlayerQuit()
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 
-void ABigButlerBattleGameModeBase::GenerateTasks()
+void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 {
+	RemainingTasksToCreate = TotalTasks;
+
+	// The actual tasks to generate player tasks from
 	TArray<UBaseTask*> Tasks;
 
+	// Putting the ranges in a map for an easier/optimal algorithm.
 	TMap<EObjectType, FIntRange> Ranges
 	{
 		{EObjectType::Wine, WineRange},
 		{EObjectType::Food, FoodRange}
 	};
 
+	// Get all tasks available in the world
+	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData = GetWorldTaskData();
+	if (!WorldTaskData.Num())
+	{
+		EndTaskGeneration(Tasks);
+		return;
+	}
+
+	// Setup random generator and get seed from game instance
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FRandomStream Stream;
+	Stream.Initialize(Instance->GetCurrentRandomSeed());
+
+	// Shuffle the tasks
+	for (auto& TaskData : WorldTaskData)
+	{
+		btd::ShuffleArray(TaskData.Value, Stream);
+	}
+
+	// Get all types
+	TArray<EObjectType> Types;
+	WorldTaskData.GetKeys(Types);
+	if (!Types.Num())
+	{
+		EndTaskGeneration(Tasks);
+		return;
+	}
+
+	// Remove Ranges not needed (no tasks of type in world)
+	TArray<EObjectType> TypesToRemove;
+	for (auto& Range : Ranges)
+	{
+		if (!Types.FindByKey(Range.Key))
+		{
+			TypesToRemove.Add(Range.Key);
+		}
+	}
+	for (auto& Type : TypesToRemove)
+	{
+		Ranges.Remove(Type);
+	}
+
+	/* Create minimum number of tasks */
+
+	btd::ShuffleArray(Types, Stream);
+
+	// Get the tasks
+	auto TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, true);
+
+	// Append them
+	Tasks += TasksCreated;
+
+	// Check if we are done early
+	if (RemainingTasksToCreate <= 0)
+	{
+		EndTaskGeneration(Tasks);
+		return;
+	}
+
+	btd::ShuffleArray(Types, Stream);
+
+	/* Create remaining tasks */
+
+	while (RemainingTasksToCreate > 0)
+	{
+		// Get the tasks
+		auto TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
+
+		// Append them
+		Tasks += TasksCreated;
+
+		// If all ranges max values are zero we are done
+		int Sum = 0;
+		for (auto& Range : Ranges)
+			Sum += Range.Value.Max;
+
+		if (Sum <= 0)
+			break;
+	}
+
+	EndTaskGeneration(Tasks);
+}
+
+TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData()
+{
 	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
 
 	// Get all actors that are task objects
@@ -145,165 +235,97 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		}
 	}
 
-	// If there are no tasks, just return
-	if (!WorldTaskData.Num())
-		return;
+	return WorldTaskData;
+}
 
-	// Setup random generator and get seed from game instance
+TArray<UBaseTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UBaseTask*>>& WorldTaskData, bool bShouldGenerateMinTasks)
+{
+	TArray<UBaseTask*> Tasks;
 
-	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	FRandomStream Stream;
-	Stream.Initialize(Instance->GetCurrentRandomSeed());
+	int MinToCreate, MaxToCreate;
 
-	// Shuffle the arrays
-
-	for (auto& TaskData : WorldTaskData)
+	for (auto& Type : Types)
 	{
-		auto TaskArray = TaskData.Value;
-		if (!TaskArray.Num())
-			continue;
+		// Get the tasks available
+		auto& TaskData = WorldTaskData[Type];
 
-		int LastIndex = TaskArray.Num() - 1;
-		for (int i = 0; i < LastIndex; ++i)
+		// When we want to add minimum number of tasks
+		if (bShouldGenerateMinTasks)
 		{
-			int Index = Stream.RandRange(0, LastIndex);
-			if (i != Index)
-			{
-				TaskArray.Swap(i, Index);
-			}
+			// Update min in case there are not enough tasks available
+			Ranges[Type].Min = FMath::Clamp(FMath::Min(TaskData.Num(), Ranges[Type].Min), 0, RemainingTasksToCreate);
+
+			if (Ranges[Type].Min == 0)
+				continue;
+
+			MinToCreate = Ranges[Type].Min;
+			MaxToCreate = Ranges[Type].Min;
 		}
-	}
-
-	// Get all types
-	TArray<EObjectType> Types;
-	WorldTaskData.GetKeys(Types);
-	if (!Types.Num())
-		return;
-
-	// Remove Ranges not needed (no tasks of type in world)
-	TArray<EObjectType> TypesToRemove;
-	for (auto& Range : Ranges)
-	{
-		if (!Types.FindByKey(Range.Key))
+		// When we want to fill in the rest
+		else
 		{
-			TypesToRemove.Add(Range.Key);
-		}
-	}
-	for (auto& Type : TypesToRemove)
-	{
-		Ranges.Remove(Type);
-	}
-
-	// Used for the outside while loop to keep track of when max possible tasks are reached
-	int Remaining = TotalTasks;
-
-	// Random start index
-	int Index = Stream.RandRange(0, Types.Num() - 1);
-
-	// Add all minimum
-	for (int Iterations = 0; Iterations < WorldTaskData.Num() && Remaining > 0; ++Iterations, Index = ++Index % WorldTaskData.Num())
-	{
-		// Get the type
-		auto Type = Types[Index];
-
-		// Get tasks for given type
-		auto TaskData = WorldTaskData[Type];
-
-		int TasksAvailable = TaskData.Num();
-
-		// Update min in case there are not enough tasks available
-		Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, Remaining);
-
-		if(Ranges[Type].Min == 0)
-			continue;
-
-		for (int i = 0; i < Ranges[Type].Min; ++i)
-		{
-			Tasks.Add(TaskData[i]);
-			Remaining -= 1;
-
-			// If we reach max tasks early
-			if (Remaining == 0)
-			{
-				GeneratePlayerTasks(Tasks);
-				return;
-			}
-		}
-
-		// Remove tasks added
-		TaskData.RemoveAt(0, Ranges[Type].Min);
-
-		// Update max
-		Ranges[Type].Max -= Ranges[Type].Min;
-	}
-
-	// Randomize index again
-	Index = Stream.RandRange(0, Types.Num() - 1);
-
-	// Loop until there are no more tasks to add
-	while (Remaining > 0)
-	{
-		// Loop through all task types, with an extra break on remaining == 0
-		// Index will loop back to 0 if reach end of types
-		for (int Iterations = 0; Iterations < WorldTaskData.Num() && Remaining > 0; ++Iterations, Index = ++Index % WorldTaskData.Num())
-		{
-			// Get the type
-			auto Type = Types[Index];
-
-			// Get the tasks available
-			auto& TaskData = WorldTaskData[Type];
-
-			// Get the number of tasks available
-			int TasksAvailable = TaskData.Num();
-
 			// Calculate new max number of tasks for this type based on tasks available
-			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), 0, Remaining);
+			Ranges[Type].Max = FMath::Clamp(FMath::Min(TaskData.Num(), Ranges[Type].Max), 0, RemainingTasksToCreate);
 
 			if (Ranges[Type].Max == 0)
 				continue;
 
-			// How many to actually get is a random value between the lowest and highest possible tasks
-			int TasksToAdd = Stream.RandRange(0, Ranges[Type].Max);
-
-			// If no tasks to add, just continue
-			if (TasksToAdd == 0)
-				continue;
-
-			// Add the tasks - we can loop from 0 because we shuffled the tasks earlier
-			for (int i = 0; i < TasksToAdd; ++i)
-			{
-				Tasks.Add(TaskData[i]);
-				Remaining -= 1;
-
-				// If we reach max tasks early
-				if (Remaining == 0)
-				{
-					GeneratePlayerTasks(Tasks);
-					return;
-				}
-			}
-
-			Ranges[Type].Max -= TasksToAdd;
-
-			// Remove the tasks just added
-			TaskData.RemoveAt(0, TasksToAdd);
+			MinToCreate = 0;
+			MaxToCreate = Ranges[Type].Max;
 		}
 
-		// If all ranges max values are zero we are done
+		// Get the tasks
+		auto TasksCreated = ProcessWorldTasks(TaskData, Stream, MinToCreate, MaxToCreate);
 
-		int Sum = 0;
-		for (auto& Range : Ranges)
-			Sum += Range.Value.Max;
+		// Append them
+		Tasks += TasksCreated;
 
-		if (Sum == 0)
-			break;
+		// Update max tasks left for this type
+		Ranges[Type].Max -= TasksCreated.Num();
+
+		if (RemainingTasksToCreate <= 0)
+		{
+			return Tasks;
+		}
 	}
 
-	GeneratePlayerTasks(Tasks);
+	return Tasks;
 }
 
-void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
+TArray<UBaseTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UBaseTask*>& TaskData, const FRandomStream& Stream, int Min, int Max)
 {
+	TArray<UBaseTask*> Tasks;
+
+	int TasksToAdd = Stream.RandRange(Min, Max);
+
+	if (TasksToAdd == 0)
+		return Tasks;
+
+	for (int i = 0; i < TasksToAdd; ++i)
+	{
+		Tasks.Add(TaskData[i]);
+
+		RemainingTasksToCreate -= 1;
+
+		if (RemainingTasksToCreate <= 0)
+		{
+			return Tasks;
+		}
+	}
+
+	TaskData.RemoveAt(0, TasksToAdd);
+
+	return Tasks;
+}
+
+void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UBaseTask*> Tasks)
+{
+	if (!Tasks.Num())
+	{
+		UE_LOG(LogTemp, Error, TEXT("No tasks were created. Hopefully it was intended."));
+		return;
+	}
+
 	if (Tasks.Num() > TotalTasks)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Current task count is %i. It's greater than set max!"), Tasks.Num());
@@ -311,7 +333,15 @@ void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
 		Tasks.RemoveAt(0, Tasks.Num() - TotalTasks);
 	}
 
+	GeneratePlayerTasks(Tasks);
 
+	double TaskGenerationEndTime = FPlatformTime::Seconds();
+
+	UE_LOG(LogTemp, Warning, TEXT("Task generation finished. Total time used: %f"), TaskGenerationEndTime - TaskGenerationStartTime);
+}
+
+void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
+{
 	for (auto& Controller : Controllers)
 	{
 		auto ID = UGameplayStatics::GetPlayerControllerID(Controller);
