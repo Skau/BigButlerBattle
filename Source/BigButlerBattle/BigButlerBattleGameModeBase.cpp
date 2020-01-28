@@ -16,6 +16,8 @@
 #include "Tasks/BaseTask.h"
 #include "King/King.h"
 #include "Utils/btd.h"
+#include "GameFramework/PlayerStart.h"
+#include "UI/GameFinishedWidget.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
@@ -32,37 +34,73 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	{
 		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), 0)));
 	}
-	
-	for (auto& Controller : Controllers)
+
+	// Get player start locations
+	TArray<APlayerStart*> PlayerStarts;
+	for (TActorIterator<APlayerStart> iter(GetWorld()); iter; ++iter)
+	{
+		PlayerStarts.Add(*iter);
+	}
+
+	if (!Controllers.Num())
+	{
+		UE_LOG(LogTemp, Error, TEXT("No player controllers found"));
+		return;
+	}
+
+	for(int i = 0; i < Controllers.Num(); ++i)
 	{
 		// Spawn character and posess
 
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, Params);
-		Controller->Possess(Character);
 
-		Controller->SetInputMode(FInputModeGameOnly());
+		FTransform SpawnTransform = FTransform::Identity;
+		if (auto PlayerStart = PlayerStarts[i])
+		{
+			SpawnTransform = PlayerStart->GetActorTransform();
+		}
+
+		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params);
+		Controllers[i]->Possess(Character);
+
+		Controllers[i]->SetInputMode(FInputModeGameOnly());
 
 		// Delegates
 
-		Controller->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
-		Controller->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
+		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
 	}
+
 
 	// Pause widget setup
 
 	if (!PauseWidgetClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Pause Widget Class not setup in Gamemode!"));
-		return;
+	}
+	else
+	{
+		PauseWidget = CreateWidget<UPauseWidget>(Controllers[0], PauseWidgetClass);
+		PauseWidget->AddToViewport();
+
+		PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
+		PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
 	}
 
-	PauseWidget = CreateWidget<UPauseWidget>(Controllers[0], PauseWidgetClass);
-	PauseWidget->AddToViewport();
+	// Game finished widget setup
 
-	PauseWidget->ContinueGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerContinued);
-	PauseWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
+	if (!GameFinishedWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Game Finished Widget Class not setup in Gamemode!"));
+	}
+	else
+	{
+		GameFinishedWidget = CreateWidget<UGameFinishedWidget>(Controllers[0], GameFinishedWidgetClass);
+		GameFinishedWidget->AddToViewport();
+
+		GameFinishedWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
+	}
 
 	// Wait a bit for task objects to finish
 
@@ -105,11 +143,28 @@ void ABigButlerBattleGameModeBase::OnPlayerContinued(int ID)
 
 void ABigButlerBattleGameModeBase::OnGameFinished(int ID)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Player %i won!"), ID);
+	if (!GameFinishedWidget)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Game finished widget not setup!"));
+		UE_LOG(LogTemp, Warning, TEXT("Player %i won!"), ID +1);
+		UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
+	}
+
+	if (!GameFinishedWidget->IsVisible())
+	{
+		GameFinishedWidget->SetWonText("Player " + FString::FromInt(ID + 1) + " won!");
+		GameFinishedWidget->SetVisibility(ESlateVisibility::Visible);
+		auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
+		GameFinishedWidget->FocusWidget(Controller);
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+	}
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerQuit()
 {
+	UE_LOG(LogTemp, Warning, TEXT("GM: Player Quit"));
+
+
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 

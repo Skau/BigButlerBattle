@@ -11,6 +11,7 @@ class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
 class UBaseTask;
+class UGameFinishedWidget;
 
 UENUM()
 enum class ETaskState
@@ -55,6 +56,11 @@ protected:
 	TSubclassOf<UPauseWidget> PauseWidgetClass;
 
 	UPauseWidget* PauseWidget;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameFinishedWidget> GameFinishedWidgetClass;
+
+	UGameFinishedWidget* GameFinishedWidget;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
 	int TotalTasks = 6;
