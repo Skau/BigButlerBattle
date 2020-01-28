@@ -59,9 +59,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TraySlotNames.Add("Slot_2");
 	TraySlotNames.Add("Slot_3");
 
-	Inventory.Reserve(4);
-	for (int i = 0; i < 4; ++i)
-		Inventory.Add(nullptr);
+	Inventory.Init(nullptr, 4);
 
 	bUseControllerRotationYaw = false;
 }
@@ -399,7 +397,7 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
 		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
 		{
-			OnObjectPickedUp(Cast<ATaskObject>(OtherActor));
+			OnObjectPickedUp(TaskObject);
 		}
 	}
 	else if(OtherActor->IsA(AKing::StaticClass()))
@@ -428,7 +426,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		{
 			// Disable picked up object
 			Object->OnPickedUp();
-
+			PickupBlacklist.Add(Object);
 			// Spawn new object
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
@@ -458,7 +456,7 @@ void APlayerCharacter::DropCurrentObject()
 	{
 		// Disable old object
 		Obj->SetEnable(false, false, false);
-
+		PickupBlacklist.RemoveSingle(Obj);
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Obj->GetTaskData());

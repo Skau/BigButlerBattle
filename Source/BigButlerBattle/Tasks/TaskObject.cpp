@@ -43,8 +43,6 @@ void ATaskObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetEnable(true, true, true);
-
 	bool Success = false;
 
 	if (TaskData && TaskData->Type != EObjectType::None)
@@ -64,6 +62,7 @@ void ATaskObject::BeginPlay()
 
 	if (LaunchVelocity != FVector::ZeroVector)
 	{
+		SetEnable(true, true, true);
 		MeshComponent->AddImpulse(LaunchVelocity);
 	}
 }
