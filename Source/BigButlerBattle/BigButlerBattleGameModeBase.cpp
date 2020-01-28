@@ -201,8 +201,11 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 	int Index = Stream.RandRange(0, Types.Num() - 1);
 
 	// Add all minimum
-	for (auto& Type : Types)
+	for (int Iterations = 0; Iterations < WorldTaskData.Num() && Remaining > 0; ++Iterations, Index = ++Index % WorldTaskData.Num())
 	{
+		// Get the type
+		auto Type = Types[Index];
+
 		// Get tasks for given type
 		auto TaskData = WorldTaskData[Type];
 
@@ -234,6 +237,9 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 		Ranges[Type].Max -= Ranges[Type].Min;
 	}
 
+	// Randomize index again
+	Index = Stream.RandRange(0, Types.Num() - 1);
+
 	// Loop until there are no more tasks to add
 	while (Remaining > 0)
 	{
@@ -250,17 +256,14 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 			// Get the number of tasks available
 			int TasksAvailable = TaskData.Num();
 
-			// Calculate new min number of tasks for this type
-			Ranges[Type].Min = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Min), 0, Remaining);
-
-			// Calculate new max number of tasks for this type
-			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), Ranges[Type].Min, Remaining);
+			// Calculate new max number of tasks for this type based on tasks available
+			Ranges[Type].Max = FMath::Clamp(FMath::Min(TasksAvailable, Ranges[Type].Max), 0, Remaining);
 
 			if (Ranges[Type].Max == 0)
 				continue;
 
 			// How many to actually get is a random value between the lowest and highest possible tasks
-			int TasksToAdd = Stream.RandRange(Ranges[Type].Min, Ranges[Type].Max);
+			int TasksToAdd = Stream.RandRange(0, Ranges[Type].Max);
 
 			// If no tasks to add, just continue
 			if (TasksToAdd == 0)
@@ -301,12 +304,13 @@ void ABigButlerBattleGameModeBase::GenerateTasks()
 
 void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Total tasks: %i"), Tasks.Num());
-	if (Tasks.Num() > 6)
+	if (Tasks.Num() > TotalTasks)
 	{
-		UE_LOG(LogTemp, Error, TEXT("FIX THIS: Shaving off excess tasks."))
-			Tasks.RemoveAt(0, Tasks.Num() - 6);
+		UE_LOG(LogTemp, Error, TEXT("Current task count is %i. It's greater than set max!"), Tasks.Num());
+		UE_LOG(LogTemp, Error, TEXT("Shaving off %i tasks to make the round playable"), Tasks.Num() - TotalTasks);
+		Tasks.RemoveAt(0, Tasks.Num() - TotalTasks);
 	}
+
 
 	for (auto& Controller : Controllers)
 	{
