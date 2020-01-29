@@ -271,7 +271,7 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	while (RemainingTasksToCreate > 0)
 	{
 		// Get the tasks
-		auto TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
+		TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
 
 		// Append them
 		Tasks += TasksCreated;

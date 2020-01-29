@@ -54,12 +54,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
 	float SlopeGravityMultiplier = 2048.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Rotation"))
+	float HandbrakeRotationFactor = 300.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Velocity Threshold"))
+	float HandbrakeVelocityThreshold = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
+	bool bAllowBrakingWhileHandbraking = false;
+
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference;
 
 	float SplinePos = -1.f;
 	int SplineDir = 1;
+
+	bool bHandbrake = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	APlayerCharacter* PlayerCharacter = nullptr;
+
+	FVector InputDir;
+	float SidewaysForce = 0.0f;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -90,12 +107,11 @@ protected:
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* PlayerCharacter = nullptr;
+	void PerformSickAssHandbraking(float DeltaTime);
 
-private:
-	FVector InputDir;
-	float SidewaysForce = 0.0f;
+	void UpdateInput() { InputDir = GetPendingInputVector(); }
+
+	bool ShouldFallOff() const;
 
 	void CalcSkateboardVelocity(float DeltaTime);
 
@@ -110,6 +126,5 @@ private:
 	 */
 	FORCEINLINE FVector CalcAcceleration() const;
 	FORCEINLINE float CalcRotation() const;
-
-	
+	FORCEINLINE float CalcHandbrakeRotation() const;
 };
