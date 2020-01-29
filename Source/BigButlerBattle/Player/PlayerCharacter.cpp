@@ -49,7 +49,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
-	Tray->SetupAttachment(GetMesh());
+	Tray->SetupAttachment(GetMesh(), "item1_socket");
+
 
 	check(Tray != nullptr);
 
