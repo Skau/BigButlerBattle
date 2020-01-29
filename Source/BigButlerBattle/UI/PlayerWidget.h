@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/BaseUserWidget.h"
 #include "PlayerWidget.generated.h"
 
 enum class ETaskState;
@@ -13,7 +13,7 @@ class UTaskWidget;
  * 
  */
 UCLASS()
-class BIGBUTLERBATTLE_API UPlayerWidget : public UUserWidget
+class BIGBUTLERBATTLE_API UPlayerWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 	

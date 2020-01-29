@@ -18,6 +18,8 @@ void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bShowMouseCursor = false;
+
 	// Add in-game UI if we're actually in the game and not main menu
 	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
 	if (PlayerCharacter && PlayerWidgetType)

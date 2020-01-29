@@ -4,6 +4,7 @@
 #include "BaseUserWidget.h"
 #include "Player/PlayerCharacterController.h"
 #include "Components/Button.h"
+#include "Application/SlateApplication.h"
 
 UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -50,8 +51,14 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 			ActualWidgetToFocus = WidgetToFocus;
 
 		FInputModeUIOnly Mode;
+		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 		Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
 		Controller->SetInputMode(Mode);
+		Controller->CurrentMouseCursor = EMouseCursor::None;
+		Controller->bShowMouseCursor = false;
+		Controller->bEnableClickEvents = false;
+		Controller->bEnableMouseOverEvents = false;
+		FSlateApplication::Get().OnCursorSet();
 
 		OwningCharacterController = Controller;
 		OnPlayerCharacterControllerSet();

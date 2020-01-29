@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/BaseUserWidget.h"
 #include "MainMenuWidget.generated.h"
 
 class UWidgetSwitcher;
@@ -15,7 +15,7 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class BIGBUTLERBATTLE_API UMainMenuWidget : public UUserWidget
+class BIGBUTLERBATTLE_API UMainMenuWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 
