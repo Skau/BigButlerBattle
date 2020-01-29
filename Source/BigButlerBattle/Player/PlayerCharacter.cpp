@@ -87,23 +87,23 @@ void APlayerCharacter::BeginPlay()
 	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
 }
 
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
-	Super::SetupPlayerInputComponent(InputComponent);
+	Super::SetupPlayerInputComponent(Input);
 
 	// Action Mappings
-	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
-	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
-	InputComponent->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
-	InputComponent->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
-	InputComponent->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
+	Input->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
+	Input->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
+	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
+	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
+	Input->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
 
 	// Axis Mappings
-	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
-	InputComponent->BindAxis("Right", this, &APlayerCharacter::MoveRight);
-	InputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
-	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
+	Input->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
+	Input->BindAxis("Right", this, &APlayerCharacter::MoveRight);
+	Input->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
+	Input->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -539,10 +539,10 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 	}
 	else if(OtherActor->IsA(AKing::StaticClass()))
 	{
-		auto Controller = Cast<APlayerCharacterController>(GetController());
-		if (Controller)
+		auto Con = Cast<APlayerCharacterController>(GetController());
+		if (Con)
 		{
-			Controller->CheckIfTasksAreDone(Inventory);
+			Con->CheckIfTasksAreDone(Inventory);
 		}
 	}
 }
