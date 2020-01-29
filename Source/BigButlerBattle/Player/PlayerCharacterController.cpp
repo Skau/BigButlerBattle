@@ -78,33 +78,44 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 	PlayerWidget->UpdateTaskState(Index, NewState);
 }
 
-void APlayerCharacterController::OnPlayerPickedUpObject(UTask* TaskIn)
+void APlayerCharacterController::OnPlayerPickedUpObject()
 {
-	for (int i = 0; i < PlayerTasks.Num(); ++i)
-	{
-		if (PlayerTasks[i].Value == ETaskState::NotPresent)
-		{
-			if (PlayerTasks[i].Key->IsEqual(TaskIn))
-			{
-				PlayerTasks[i].Value = ETaskState::Present;
-				SetPlayerTaskState(i, ETaskState::Present);
-				break;
-			}
-		}
-	}
+	UpdatePlayerTasks();
 }
 
-void APlayerCharacterController::OnPlayerDroppedObject(UTask* TaskIn)
+void APlayerCharacterController::OnPlayerDroppedObject()
+{
+	UpdatePlayerTasks();
+}
+
+void APlayerCharacterController::UpdatePlayerTasks()
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
-		if (PlayerTasks[i].Value == ETaskState::Present)
+		if(PlayerTasks[i].Value != ETaskState::Finished)
+			SetPlayerTaskState(i, ETaskState::NotPresent);
+	}
+
+	auto Inventory = PlayerCharacter->GetInventory();
+	TArray<int> IndicesFound;
+	for (int i = 0; i < Inventory.Num(); ++i)
+	{
+		if (auto Obj = Inventory[i])
 		{
-			if (PlayerTasks[i].Key->IsEqual(TaskIn))
+			auto TaskData = Obj->GetTaskData();
+
+			for (int j = 0; j < PlayerTasks.Num(); ++j)
 			{
-				PlayerTasks[i].Value = ETaskState::NotPresent;
-				SetPlayerTaskState(i, ETaskState::NotPresent);
-				break;
+				if (IndicesFound.Find(j) == INDEX_NONE)
+				{
+					auto PlayerTask = PlayerTasks[j];
+					if (PlayerTask.Value != ETaskState::Finished && TaskData->IsEqual(PlayerTask.Key))
+					{
+						SetPlayerTaskState(j, ETaskState::Present);
+						IndicesFound.Add(j);
+						break;
+					}
+				}
 			}
 		}
 	}

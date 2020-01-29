@@ -67,8 +67,10 @@ private:
 	void PauseGamePressed();
 
 	UFUNCTION()
-	void OnPlayerPickedUpObject(UTask* TaskIn);
+	void OnPlayerPickedUpObject();
 
 	UFUNCTION()
-	void OnPlayerDroppedObject(UTask* TaskIn);
+	void OnPlayerDroppedObject();
+
+	void UpdatePlayerTasks();
 };

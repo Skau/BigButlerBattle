@@ -438,7 +438,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 			auto scale = Spawned->GetActorScale3D();
 			Spawned->SetActorScale3D(scale * 0.3f);
 
-			OnTaskObjectPickedUp.ExecuteIfBound(Spawned->GetTaskData());
+			OnTaskObjectPickedUp.ExecuteIfBound();
 			break;
 		}
 	}
@@ -471,7 +471,7 @@ void APlayerCharacter::DropCurrentObject()
 		Obj->Destroy();
 		Inventory[CurrentItemIndex] = nullptr;
 
-		OnTaskObjectDropped.ExecuteIfBound(Spawned->GetTaskData());
+		OnTaskObjectDropped.ExecuteIfBound();
 	}
 }
 
