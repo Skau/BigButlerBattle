@@ -15,7 +15,7 @@ UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectIni
 
 bool UMainMenuPlayerWidget::Initialize()
 {
-	bool bInitialized =  Super::Initialize();
+	bool bInit =  Super::Initialize();
 
 	CheckBox->OnCheckStateChanged.AddDynamic(this, &UMainMenuPlayerWidget::OnCheckStateChanged);
 
@@ -27,7 +27,7 @@ bool UMainMenuPlayerWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Join;
 
-	return bInitialized;
+	return bInit;
 }
 
 void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()

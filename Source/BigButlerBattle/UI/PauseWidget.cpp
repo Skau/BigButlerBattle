@@ -9,7 +9,7 @@
 
 bool UPauseWidget::Initialize()
 {
-	bool bInitialized = Super::Initialize();
+	bool bInit = Super::Initialize();
 
 	SetVisibility(ESlateVisibility::Hidden);
 
@@ -21,7 +21,7 @@ bool UPauseWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Continue;
 
-	return bInitialized;
+	return bInit;
 }
 
 void UPauseWidget::OnPlayerCharacterControllerSet()

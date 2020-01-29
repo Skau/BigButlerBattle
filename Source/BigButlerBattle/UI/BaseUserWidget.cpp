@@ -12,9 +12,9 @@ UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 
 bool UBaseUserWidget::Initialize()
 {
-	bool bInitialized = Super::Initialize();
+	bool bInit = Super::Initialize();
 
-	return bInitialized;
+	return bInit;
 }
 
 void UBaseUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
