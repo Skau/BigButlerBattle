@@ -5,23 +5,23 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "Utils/DataTables.h"
-#include "BaseTask.generated.h"
+#include "Task.generated.h"
 
 
 /**
  * 
  */
 UCLASS(BlueprintType)
-class BIGBUTLERBATTLE_API UBaseTask : public UObject
+class BIGBUTLERBATTLE_API UTask : public UObject
 {
 	GENERATED_BODY()
 
 public:
-    UBaseTask();
+    UTask();
 
-    virtual bool InitTaskData(uint8* Data);
+    bool InitTaskData(uint8* Data);
 
-    virtual bool IsEqual(const UBaseTask* Other) const { UE_LOG(LogTemp, Warning, TEXT("Base IsEqual Called")); return false; }
+    bool IsEqual(const UTask* Other) const;
 
     UPROPERTY(EditAnywhere)
     FString Name;

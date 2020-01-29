@@ -17,7 +17,7 @@
 #include "SkateboardAnimInstance.h"
 #include "Utils/btd.h"
 #include "Tasks/TaskObject.h"
-#include "Tasks/BaseTask.h"
+#include "Tasks/Task.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "King/King.h"

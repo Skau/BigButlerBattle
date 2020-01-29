@@ -17,7 +17,7 @@ class UPlayerWidget;
 class APlayerCharacter;
 class ABigButlerBattleGameModeBase;
 class ATaskObject;
-class UBaseTask;
+class UTask;
 enum class ETaskState;
 
 /**
@@ -34,9 +34,9 @@ public:
 	FPauseGameSignature OnPausedGame;
 	FGameFinishedSignature OnGameFinished;
 
-	void SetPlayerTasks(const TArray<TPair<UBaseTask*, ETaskState>>& Tasks);
+	void SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks);
 
-	TArray<TPair<UBaseTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
+	TArray<TPair<UTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
 
 	void SetPlayerTaskName(int Index, FString Name);
 	void SetPlayerTaskState(int Index, ETaskState NewState);
@@ -62,13 +62,13 @@ protected:
 	ABigButlerBattleGameModeBase* ButlerGameMode = nullptr;
 
 private:
-	TArray<TPair<UBaseTask*, ETaskState>> PlayerTasks;
+	TArray<TPair<UTask*, ETaskState>> PlayerTasks;
 
 	void PauseGamePressed();
 
 	UFUNCTION()
-	void OnPlayerPickedUpObject(UBaseTask* TaskIn);
+	void OnPlayerPickedUpObject(UTask* TaskIn);
 
 	UFUNCTION()
-	void OnPlayerDroppedObject(UBaseTask* TaskIn);
+	void OnPlayerDroppedObject(UTask* TaskIn);
 };

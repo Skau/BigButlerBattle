@@ -18,11 +18,11 @@ class USpringArmComponent;
 class USkeletalMeshSocket;
 class UBoxComponent;
 class ATaskObject;
-class UBaseTask;
+class UTask;
 
 // Delegates
-DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, UBaseTask*);
-DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, UBaseTask*);
+DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, UTask*);
+DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, UTask*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
 // Structs

@@ -6,7 +6,7 @@
 #include "PlayerCharacter.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "Tasks/BaseTask.h"
+#include "Tasks/Task.h"
 #include "King/King.h"
 #include "Tasks/TaskObject.h"
 
@@ -56,7 +56,7 @@ void APlayerCharacterController::PauseGamePressed()
 	OnPausedGame.ExecuteIfBound(ID);
 }
 
-void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UBaseTask*, ETaskState>>& Tasks)
+void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks)
 {
 	PlayerTasks = Tasks;
 
@@ -78,7 +78,7 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 	PlayerWidget->UpdateTaskState(Index, NewState);
 }
 
-void APlayerCharacterController::OnPlayerPickedUpObject(UBaseTask* TaskIn)
+void APlayerCharacterController::OnPlayerPickedUpObject(UTask* TaskIn)
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
@@ -94,7 +94,7 @@ void APlayerCharacterController::OnPlayerPickedUpObject(UBaseTask* TaskIn)
 	}
 }
 
-void APlayerCharacterController::OnPlayerDroppedObject(UBaseTask* TaskIn)
+void APlayerCharacterController::OnPlayerDroppedObject(UTask* TaskIn)
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{

@@ -9,7 +9,7 @@
 
 class UBoxComponent;
 class UDataTable;
-class UBaseTask;
+class UTask;
 
 UCLASS()
 class BIGBUTLERBATTLE_API ATaskObject : public AActor
@@ -19,8 +19,8 @@ class BIGBUTLERBATTLE_API ATaskObject : public AActor
 public:	
 	ATaskObject();
 
-	UBaseTask* GetTaskData() { return TaskData; }
-	void SetTaskData(UBaseTask* Task) { TaskData = Task; }
+	UTask* GetTaskData() { return TaskData; }
+	void SetTaskData(UTask* Task) { TaskData = Task; }
 
 	void OnPickedUp();
 
@@ -46,7 +46,7 @@ private:
 	bool SetDataFromTable();
 	bool SetDataFromAssetData();
 
-	UDataTable* WineDataTable = nullptr;
+	UDataTable* DrinksDataTable = nullptr;
 	UDataTable* FoodDataTable = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task")
@@ -65,7 +65,7 @@ private:
 	float RespawnTime = 15.f;
 
 	UPROPERTY(EditInstanceOnly, Category = "Task")
-	UBaseTask* TaskData = nullptr;
+	UTask* TaskData = nullptr;
 
 	void SetDefault();
 };

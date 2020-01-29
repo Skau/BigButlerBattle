@@ -10,8 +10,7 @@
 #include "Math/RandomStream.h"
 #include "TimerManager.h"
 #include "ButlerGameInstance.h"
-#include "WineTask.h"
-#include "FoodTask.h"
+#include "Task.h"
 
 
 ATaskObject::ATaskObject()
@@ -24,11 +23,11 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 
-	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
-	auto WineDataObject = WineDataTableDefinition.Object;
-	if (WineDataObject)
+	ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
+	auto DrinksDataObject = DrinksDataTableDefinition.Object;
+	if (DrinksDataObject)
 	{
-		WineDataTable = WineDataObject;
+		DrinksDataTable = DrinksDataObject;
 	}
 
 	ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Food/FoodData.FoodData'"));
@@ -105,9 +104,9 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			SetDefault();
 		}
 	}
-	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, WineDataTable)))
+	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, DrinksDataTable)))
 	{
-		if (TaskType == EObjectType::Wine && WineDataTable)
+		if (TaskType == EObjectType::Drink && DrinksDataTable)
 		{
 			if (!SetDataFromTable())
 			{
@@ -150,49 +149,38 @@ bool ATaskObject::SetDataFromTable()
 		Stream.GenerateNewSeed();
 	}
 
+	UDataTable* DataTableToUse = nullptr;
+
 	switch (TaskType)
 	{
-	case EObjectType::Wine:
+	case EObjectType::Drink:
 	{
-		if (!WineDataTable)
-			return false;
-
-		auto Rows = WineDataTable->GetRowMap();
-		auto RowNum = Rows.Num();
-		if (!RowNum)
-			return false;
-
-		auto RowName = WineDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
-		TaskData = NewObject<UWineTask>(this, RowName);
-		TaskData->Name = RowName.ToString();
-
-		if (!TaskData->InitTaskData(Rows[RowName]))
-			return false;
-
+		DataTableToUse = DrinksDataTable;
 		break;
 	}
 	case EObjectType::Food:
 	{
-		if (!FoodDataTable)
-			return false;
-
-		auto Rows = FoodDataTable->GetRowMap();
-		auto RowNum = Rows.Num();
-		if (!RowNum)
-			return false;
-
-		auto RowName = FoodDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
-		TaskData = NewObject<UFoodTask>(this, RowName);
-		TaskData->Name = RowName.ToString();
-
-		if (!TaskData->InitTaskData(Rows[RowName]))
-			return false;
-
+		DataTableToUse = FoodDataTable;
 		break;
 	}
 	default:
 		return false;
 	}
+
+	if (!DataTableToUse)
+		return false;
+
+	auto Rows = DataTableToUse->GetRowMap();
+	auto RowNum = Rows.Num();
+	if (!RowNum)
+		return false;
+
+	auto RowName = DataTableToUse->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
+	TaskData = NewObject<UTask>(this, RowName);
+	TaskData->Name = RowName.ToString();
+
+	if (!TaskData->InitTaskData(Rows[RowName]))
+		return false;
 
 	if (TaskData && TaskData->Type != EObjectType::None)
 	{
@@ -266,7 +254,7 @@ void ATaskObject::SetDefault()
 		MeshComponent->SetMaterial(0, DefaultMaterial);
 	}
 
-	TaskData = NewObject<UBaseTask>(this, "DefaultTask");
+	TaskData = NewObject<UTask>(this, "DefaultTask");
 	TaskData->Name = "DefaultTask";
 }
 
