@@ -3,6 +3,7 @@
 #include "Railing.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "btd.h"
 #include "Utils/DataTables.h"
 
@@ -31,6 +32,9 @@ ARailing::ARailing()
 	SplineComp->ScaleVisualizationWidth = 5.f;
 	SplineComp->bShouldVisualizeScale = true;
 #endif
+
+	RailOverlap = CreateDefaultSubobject<UBoxComponent>(TEXT("RailOverlap"));
+	RailOverlap->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -39,6 +43,8 @@ void ARailing::BeginPlay()
 	Super::BeginPlay();
 
 	BuildSpline();
+
+	RailOverlap->OnComponentBeginOverlap.AddDynamic(this, &ARailing::OnBeginOverlap);
 }
 
 // Called every frame
@@ -128,4 +134,10 @@ void ARailing::BuildSpline()
 			}
 		}
 	}
+}
+
+void ARailing::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+								int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	
 }

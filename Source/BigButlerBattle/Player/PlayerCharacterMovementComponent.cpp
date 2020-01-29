@@ -213,7 +213,6 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		// Extra velocity for extra adjustments.
 		FVector extraVelocity = FVector::ZeroVector;
 
-
 		if (HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity())
 		{
 			UE_LOG(LogTemp, Error, TEXT("Grinding motion doesn't know how to manage root motion!"));
@@ -224,7 +223,10 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		{
 			return;
 		}
-		
+
+		const int pointCount = SkateboardSplineReference->GetNumberOfSplinePoints() - 1;
+		if (pointCount < 1)
+			return;
 
 		// If just entering the spline, do a setup.
 		if (SplinePos < 0.f)
@@ -247,7 +249,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		float NextSplinePos = SplinePos + timeTick * SplineDir;
 		FVector SplineNextWorldPos;
 		// If inside curve, use curve point.
-		if (NextSplinePos <= 1.f)
+		if (NextSplinePos <= pointCount)
 		{
 			SplineNextWorldPos = SkateboardSplineReference->GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World);
 		}
