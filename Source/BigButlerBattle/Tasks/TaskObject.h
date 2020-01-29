@@ -10,6 +10,9 @@
 class UBoxComponent;
 class UDataTable;
 class UTask;
+class APlayerCharacter;
+
+DECLARE_DELEGATE_OneParam(FTaskObjectDeliveredSignature, ATaskObject*);
 
 UCLASS()
 class BIGBUTLERBATTLE_API ATaskObject : public AActor
@@ -29,6 +32,8 @@ public:
 	void Launch(FVector Direction, float Force);
 
 	FVector LaunchVelocity = FVector::ZeroVector;
+
+	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
 
 protected:
 	void BeginPlay() override;
@@ -64,8 +69,18 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Task")
 	float RespawnTime = 15.f;
 
+	UPROPERTY(EditAnywhere, Category = "Task")
+	float CountAsPlayerTaskThreshold = 10.f;
+
 	UPROPERTY(EditInstanceOnly, Category = "Task")
 	UTask* TaskData = nullptr;
 
+	UFUNCTION()
+	void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	void SetDefault();
+
+	float TimeSinceThrown = 0.0f;
+
+	bool bRecordingTimeSinceThrown = false;
 };

@@ -78,14 +78,16 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 	PlayerWidget->UpdateTaskState(Index, NewState);
 }
 
-void APlayerCharacterController::OnPlayerPickedUpObject()
+void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 {
 	UpdatePlayerTasks();
 }
 
-void APlayerCharacterController::OnPlayerDroppedObject()
+void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 {
 	UpdatePlayerTasks();
+
+	Object->OnTaskObjectDelivered.BindUObject(this, &APlayerCharacterController::OnTaskObjectDelivered);
 }
 
 void APlayerCharacterController::UpdatePlayerTasks()
@@ -116,6 +118,23 @@ void APlayerCharacterController::UpdatePlayerTasks()
 						break;
 					}
 				}
+			}
+		}
+	}
+}
+
+void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
+{
+	for (int i = 0; i < PlayerTasks.Num(); ++i)
+	{
+		auto PlayerTask = PlayerTasks[i];
+		if (PlayerTask.Value == ETaskState::NotPresent)
+		{
+			if (PlayerTask.Key->IsEqual(Object->GetTaskData()))
+			{
+				SetPlayerTaskState(i, ETaskState::Finished);
+				Object->Destroy();
+				break;
 			}
 		}
 	}

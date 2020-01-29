@@ -11,17 +11,19 @@
 #include "TimerManager.h"
 #include "ButlerGameInstance.h"
 #include "Task.h"
-
+#include "King/King.h"
 
 ATaskObject::ATaskObject()
 {
-	// PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh Component");
 	SetRootComponent(MeshComponent);
 
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
+	MeshComponent->SetGenerateOverlapEvents(true);
 
 	ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
 	auto DrinksDataObject = DrinksDataTableDefinition.Object;
@@ -59,10 +61,13 @@ void ATaskObject::BeginPlay()
 		SetDefault();
 	}
 
+	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &ATaskObject::OnCollisionBeginOverlap);
+
 	if (LaunchVelocity != FVector::ZeroVector)
 	{
 		SetEnable(true, true, true);
 		MeshComponent->AddImpulse(LaunchVelocity);
+		bRecordingTimeSinceThrown = true;
 	}
 }
 
@@ -71,6 +76,15 @@ void ATaskObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bRecordingTimeSinceThrown)
+	{
+		TimeSinceThrown += DeltaTime;
+
+		if (TimeSinceThrown > CountAsPlayerTaskThreshold)
+		{
+			bRecordingTimeSinceThrown = false;
+		}
+	}
 }
 
 #if WITH_EDITOR
@@ -239,6 +253,18 @@ bool ATaskObject::SetDataFromAssetData()
 	else
 	{
 		return false;
+	}
+}
+
+void ATaskObject::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->IsA(AKing::StaticClass()))
+	{
+		if (bRecordingTimeSinceThrown && TimeSinceThrown < CountAsPlayerTaskThreshold)
+		{
+			OnTaskObjectDelivered.ExecuteIfBound(this);
+			bRecordingTimeSinceThrown = false;
+		}
 	}
 }
 

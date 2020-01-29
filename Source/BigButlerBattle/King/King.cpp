@@ -16,7 +16,8 @@ AKing::AKing()
 	BoxCollision->SetupAttachment(RootComponent);
 
 	BoxCollision->SetGenerateOverlapEvents(true);
-	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel2);
+	BoxCollision->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel2);
+	BoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 }
 
 

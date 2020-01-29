@@ -67,10 +67,12 @@ private:
 	void PauseGamePressed();
 
 	UFUNCTION()
-	void OnPlayerPickedUpObject();
+	void OnPlayerPickedUpObject(ATaskObject* Object);
 
 	UFUNCTION()
-	void OnPlayerDroppedObject();
+	void OnPlayerDroppedObject(ATaskObject* Object);
 
 	void UpdatePlayerTasks();
+
+	void OnTaskObjectDelivered(ATaskObject* Object);
 };

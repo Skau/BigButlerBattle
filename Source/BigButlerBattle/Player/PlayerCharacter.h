@@ -21,8 +21,8 @@ class ATaskObject;
 class UTask;
 
 // Delegates
-DECLARE_DELEGATE(FTaskObjectPickedUpSignature);
-DECLARE_DELEGATE(FTaskObjectDroppedSignature);
+DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
+DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
 // Structs
