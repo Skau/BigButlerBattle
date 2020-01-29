@@ -127,7 +127,6 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 						Inventory[i]->Destroy();
 						Inventory[i] = nullptr;
 						SetPlayerTaskState(j, ETaskState::Finished);
-						PlayerCharacter->DecrementCurrentItemIndex();
 					}
 				}
 			}

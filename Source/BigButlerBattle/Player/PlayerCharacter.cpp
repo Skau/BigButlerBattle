@@ -258,7 +258,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
 
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 10.f);
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 5.f);
 	FVector Direction = FVector(0, 0, 0) - point;
 	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
@@ -390,6 +390,11 @@ FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, co
 	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
 }
 
+void APlayerCharacter::SetCustomSpringArmLength()
+{
+	SpringArm->TargetArmLength = CustomSpringArmLength;
+}
+
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
@@ -476,7 +481,6 @@ void APlayerCharacter::DropCurrentObject()
 		// Destroy old object
 		Obj->Destroy();
 		Inventory[CurrentItemIndex] = nullptr;
-		DecrementCurrentItemIndex();
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned->GetTaskData());
 	}
@@ -484,29 +488,38 @@ void APlayerCharacter::DropCurrentObject()
 
 void APlayerCharacter::IncrementCurrentItemIndex()
 {
+	float DeltaYaw = 0.0f;
 	int i = CurrentItemIndex;
 	do
 	{
+		DeltaYaw += 90.f;
 		i = (i + 1) % Inventory.Num();
 		if (Inventory[i] != nullptr)
 		{
+			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
 			CurrentItemIndex = i;
 			break;
 		}
 	} while (i != CurrentItemIndex);
+
+	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
 }
 
 void APlayerCharacter::DecrementCurrentItemIndex()
 {
+	float DeltaYaw = 0.0f;
 	int i = CurrentItemIndex;
 	do
 	{
+		DeltaYaw -= 90.f;
 		i = (i ? i : Inventory.Num()) - 1;
-
 		if (Inventory[i] != nullptr)
 		{
+			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
 			CurrentItemIndex = i;
 			break;
 		}
 	} while (i != CurrentItemIndex);
+
+	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
 }

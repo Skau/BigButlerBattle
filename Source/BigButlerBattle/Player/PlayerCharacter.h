@@ -73,10 +73,7 @@ public:
 	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	FTaskObjectDroppedSignature OnTaskObjectDropped;
 
-	void IncrementCurrentItemIndex();
-
-	void DecrementCurrentItemIndex();
-
+	void SetCustomSpringArmLength();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
@@ -108,6 +105,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Max Rotation Offset", ShortTooltip = "In angles"))
 	float MaxCameraRotationOffset = 89.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	float CustomSpringArmLength = 450.f;
 
 	virtual void BeginPlay() override;
 
@@ -197,4 +197,7 @@ protected:
 	void DropCurrentObject();
 
 	int CurrentItemIndex = 0;
+
+	void IncrementCurrentItemIndex();
+	void DecrementCurrentItemIndex();
 };
