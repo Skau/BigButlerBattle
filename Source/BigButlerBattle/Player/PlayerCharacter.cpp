@@ -110,11 +110,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bEnabledRagdoll && bCurrentlyHoldingHandbrake && Movement->Velocity.Size() > HandbreakeVelocityThreshold && !Movement->IsFalling())
-	{
-		AddActorLocalRotation({ 0, RightAxis * DeltaTime * HandbrakeRotationFactor, 0 });
-	}
-
 	UpdateCameraRotation(DeltaTime);
 	UpdateSkateboardRotation(DeltaTime);
 }
@@ -186,10 +181,7 @@ void APlayerCharacter::MoveForward(float Value)
 	if (HasEnabledRagdoll())
 		return;
 
-	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bCurrentlyHoldingHandbrake && Value != 0))
-	{
-		AddMovementInput(FVector::ForwardVector * Value);
-	}
+	AddMovementInput(FVector::ForwardVector * Value);
 }
 
 void APlayerCharacter::MoveRight(float Value)
@@ -197,24 +189,17 @@ void APlayerCharacter::MoveRight(float Value)
 	if (HasEnabledRagdoll())
 		return;
 
-	const bool bCanMoveHorizontally = !bCurrentlyHoldingHandbrake || Movement->IsFalling();
-
-	if (bCanMoveHorizontally)
-	{
-		AddMovementInput(FVector::RightVector * Value);
-	}
-
-	RightAxis = Value;
+	AddMovementInput(FVector::RightVector * Value);
 }
 
 void APlayerCharacter::HandbrakeEnable()
 {
-	bCurrentlyHoldingHandbrake = true;
+	if (Movement) Movement->bHandbrake = true;
 }
 
 void APlayerCharacter::HandbrakeDisable()
 {
-	bCurrentlyHoldingHandbrake = false;
+	if (Movement) Movement->bHandbrake = false;
 }
 
 

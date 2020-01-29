@@ -108,14 +108,6 @@ public:
 	/// ==================================== Movement =================================================
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
-	float HandbrakeRotationFactor = 300.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbreake Velocity Threshold"))
-	float HandbreakeVelocityThreshold = 300.f;
-
-	bool bAllowBrakingWhileHandbraking = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
 	float SkateboardRotationGroundSpeed = 0.16f;
 
@@ -126,15 +118,7 @@ protected:
 	bool bDebugMovement = false;
 
 	UPROPERTY(VisibleAnywhere)
-	UPlayerCharacterMovementComponent *Movement;
-
-	FTimerHandle HandbrakeHandle;
-	FTimerDelegate HandbrakeTimerCallback;
-	bool bCurrentlyHandbraking = false;
-
-	bool bCurrentlyHoldingHandbrake = false;
-
-	float RightAxis = 0.0f;
+	UPlayerCharacterMovementComponent *Movement = nullptr;
 
 public:
 	JumpEventSignature OnJumpEvent;

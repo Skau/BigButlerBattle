@@ -35,7 +35,7 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 
 void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction)
 {
-	InputDir = GetPendingInputVector();
+	UpdateInput();
 
 	Super::TickComponent(deltaTime, TickType, thisTickFunction);
 }
@@ -105,7 +105,11 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		CalcSkateboardVelocity(TimeTick);
 		check(!Velocity.ContainsNaN());
 
-		if (PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
+		if (bHandbrake)
+			PerformSickAssHandbraking(TimeTick);
+
+		// Check if player should fall off
+		if (ShouldFallOff())
 			PlayerCharacter->EnableRagdoll();
 
 		// Compute move parameters
@@ -377,6 +381,17 @@ void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float Del
 	}
 }
 
+void UPlayerCharacterMovementComponent::PerformSickAssHandbraking(float DeltaTime)
+{
+	if (Velocity.Size() > HandbrakeVelocityThreshold && !IsFalling())
+		UpdatedComponent->AddLocalRotation({0.f, CalcHandbrakeRotation() * DeltaTime, 0.f});	
+}	
+
+bool UPlayerCharacterMovementComponent::ShouldFallOff() const
+{
+	return PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold();
+}
+
 void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 {
 	// Do not update velocity when using root motion or when SimulatedProxy and not simulating root motion - SimulatedProxy are repped their Velocity
@@ -475,11 +490,21 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
 {
 	const auto input = GetForwardInput();
-	const float factor = input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
+	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
+	const bool bCanMoveVertically = !bHandbrake || (bAllowBrakingWhileHandbraking && InputDir.X < 0.f);
+	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
 	return UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 }
 
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
-	return SkateboardRotationSpeed * GetRotationInput();
+	// Remove horizontal input if handbraking and not in air.
+	const bool bCanMoveHorizontally = !bHandbrake || IsFalling();
+	return bCanMoveHorizontally * SkateboardRotationSpeed * GetRotationInput();
+}
+
+float UPlayerCharacterMovementComponent::CalcHandbrakeRotation() const
+{
+	const bool bShouldHandbrake = bHandbrake && !IsFalling();
+	return bShouldHandbrake * HandbrakeRotationFactor * GetRotationInput();
 }
