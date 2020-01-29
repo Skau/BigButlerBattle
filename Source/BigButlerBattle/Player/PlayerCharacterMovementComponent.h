@@ -70,13 +70,14 @@ protected:
 	float SplinePos = -1.f;
 	int SplineDir = 1;
 
-	bool bHandbrake = false;
-
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
 
 	FVector InputDir;
 	float SidewaysForce = 0.0f;
+
+public:
+	bool bHandbrake = false;
 
 public:
 	UPlayerCharacterMovementComponent();
