@@ -134,7 +134,7 @@ protected:
 
 	bool bCurrentlyHoldingHandbrake = false;
 
-	float RightAxis = 0.0f
+	float RightAxis = 0.0f;
 
 public:
 	JumpEventSignature OnJumpEvent;
