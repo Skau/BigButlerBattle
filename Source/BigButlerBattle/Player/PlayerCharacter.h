@@ -226,7 +226,7 @@ protected:
 	int CurrentItemIndex = 0;
 
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent *Tray;
+	UStaticMeshComponent* Tray;
 
 public:
 	TArray<ATaskObject*>& GetInventory() { return Inventory; }
