@@ -64,6 +64,66 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	bUseControllerRotationYaw = false;
 }
 
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!SkateboardMesh || !IsValid(SkateboardMesh))
+	{
+		UE_LOG(LogTemp, Error, TEXT("SkateboardMesh is not valid!"));
+		return;
+	}
+
+	LinetraceSocketFront = SkateboardMesh->GetSocketByName("LinetraceFront");
+	LinetraceSocketBack = SkateboardMesh->GetSocketByName("LinetraceBack");
+
+	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
+	check(Movement != nullptr);
+
+	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	check(GameMode != nullptr);
+
+	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
+	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
+}
+
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
+{
+	Super::SetupPlayerInputComponent(InputComponent);
+
+	// Action Mappings
+	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
+	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
+	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
+	InputComponent->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	InputComponent->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
+	InputComponent->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
+
+	// Axis Mappings
+	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
+	InputComponent->BindAxis("Right", this, &APlayerCharacter::MoveRight);
+	InputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
+	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
+}
+
+void APlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!bEnabledRagdoll && bCurrentlyHoldingHandbrake && Movement->Velocity.Size() > HandbreakeVelocityThreshold && !Movement->IsFalling())
+	{
+		AddActorLocalRotation({ 0, RightAxis * DeltaTime * HandbrakeRotationFactor, 0 });
+	}
+
+	UpdateCameraRotation(DeltaTime);
+	UpdateSkateboardRotation(DeltaTime);
+}
+
+
+
+
+
+
 void APlayerCharacter::EnableRagdoll()
 {
 	if (!bCanFall || bEnabledRagdoll)
@@ -73,6 +133,134 @@ void APlayerCharacter::EnableRagdoll()
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	//bEnabledRagdoll = true;
 }
+
+
+
+
+
+
+TPair<FVector, FVector> APlayerCharacter::GetSkateboardFeetLocations() const
+{
+	return TPair<FVector, FVector>{SkateboardMesh->GetSocketLocation("FootLeft"), SkateboardMesh->GetSocketLocation("FootRight")};
+}
+
+FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex) : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex, localToWorld) : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, const FTransform& localToWorld) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
+}
+
+
+
+
+
+
+
+void APlayerCharacter::Jump()
+{
+	Super::Jump();
+
+	// OnJumpEvent.Broadcast();
+}
+
+void APlayerCharacter::MoveForward(float Value)
+{
+	if (HasEnabledRagdoll())
+		return;
+
+	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bCurrentlyHoldingHandbrake && Value != 0))
+	{
+		AddMovementInput(FVector::ForwardVector * Value);
+	}
+}
+
+void APlayerCharacter::MoveRight(float Value)
+{
+	if (HasEnabledRagdoll())
+		return;
+
+	const bool bCanMoveHorizontally = !bCurrentlyHoldingHandbrake || Movement->IsFalling();
+
+	if (bCanMoveHorizontally)
+	{
+		AddMovementInput(FVector::RightVector * Value);
+	}
+
+	RightAxis = Value;
+}
+
+void APlayerCharacter::HandbrakeEnable()
+{
+	bCurrentlyHoldingHandbrake = true;
+}
+
+void APlayerCharacter::HandbrakeDisable()
+{
+	bCurrentlyHoldingHandbrake = false;
+}
+
+
+
+
+
+
+void APlayerCharacter::SetCustomSpringArmLength()
+{
+	SpringArm->TargetArmLength = CustomSpringArmLength;
+}
+
+void APlayerCharacter::LookUp(float Value)
+{
+	if (Value != 0)
+	{
+		CameraPitch += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
+	}
+	else
+	{
+		if (FMath::Abs(CameraPitch) <= .1f)
+			CameraPitch -= FMath::Sign(CameraPitch) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
+		else
+			CameraPitch = 0;
+	}
+}
+
+void APlayerCharacter::LookRight(float Value)
+{
+	if (Value != 0)
+	{
+		CameraYaw += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
+	}
+	else
+	{
+		if (FMath::Abs(CameraYaw) <= .1f)
+			CameraYaw -= FMath::Sign(CameraYaw) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
+		else
+			CameraYaw = 0;
+	}
+}
+
+
+
+
+
 
 bool APlayerCharacter::TraceSkateboard()
 {
@@ -123,134 +311,6 @@ bool APlayerCharacter::IsSocketsValid() const
 		return false;
 	}
 	return true;
-}
-
-void APlayerCharacter::Jump()
-{
-	Super::Jump();
-
-	// OnJumpEvent.Broadcast();
-}
-
-void APlayerCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (!SkateboardMesh || !IsValid(SkateboardMesh))
-	{
-		UE_LOG(LogTemp, Error, TEXT("SkateboardMesh is not valid!"));
-		return;
-	}
-
-	LinetraceSocketFront = SkateboardMesh->GetSocketByName("LinetraceFront");
-	LinetraceSocketBack = SkateboardMesh->GetSocketByName("LinetraceBack");
-
-	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
-	check(Movement != nullptr);
-
-	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	check(GameMode != nullptr);
-
-	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
-	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
-}
-
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
-{
-	Super::SetupPlayerInputComponent(InputComponent);
-
-	// Action Mappings
-	InputComponent->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::Handbrake);
-	InputComponent->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::LetGoHandBrake);
-	InputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
-	InputComponent->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
-	InputComponent->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
-	InputComponent->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
-
-	// Axis Mappings
-	InputComponent->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
-	InputComponent->BindAxis("Right", this, &APlayerCharacter::MoveRight);
-	InputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
-	InputComponent->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
-}
-
-void APlayerCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (!bEnabledRagdoll && bCurrentlyHoldingHandbrake && Movement->Velocity.Size() > HandbreakeVelocityThreshold && !Movement->IsFalling())
-	{
-		AddActorLocalRotation({ 0, RightAxis * DeltaTime * HandbrakeRotationFactor, 0 });
-	}
-
-	UpdateCameraRotation(DeltaTime);
-	UpdateSkateboardRotation(DeltaTime);
-}
-
-void APlayerCharacter::MoveForward(float Value)
-{
-	if (HasEnabledRagdoll())
-		return;
-
-	if ((bAllowBrakingWhileHandbraking && Value < 0.0f) || (!bCurrentlyHoldingHandbrake && Value != 0))
-	{
-		AddMovementInput(FVector::ForwardVector * Value);
-	}
-}
-
-void APlayerCharacter::MoveRight(float Value)
-{
-	if (HasEnabledRagdoll())
-		return;
-
-	const bool bCanMoveHorizontally = !bCurrentlyHoldingHandbrake || Movement->IsFalling();
-
-	if (bCanMoveHorizontally)
-	{
-		AddMovementInput(FVector::RightVector * Value);
-	}
-
-	RightAxis = Value;
-}
-
-void APlayerCharacter::LookUp(float Value)
-{
-	if (Value != 0)
-	{
-		CameraPitch += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
-	}
-	else
-	{
-		if (FMath::Abs(CameraPitch) <= .1f)
-			CameraPitch -= FMath::Sign(CameraPitch) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
-		else
-			CameraPitch = 0;
-	}
-}
-
-void APlayerCharacter::LookRight(float Value)
-{
-	if (Value != 0)
-	{
-		CameraYaw += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
-	}
-	else
-	{
-		if (FMath::Abs(CameraYaw) <= .1f)
-			CameraYaw -= FMath::Sign(CameraYaw) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
-		else
-			CameraYaw = 0;
-	}
-}
-
-void APlayerCharacter::Handbrake()
-{
-	bCurrentlyHoldingHandbrake = true;
-}
-
-void APlayerCharacter::LetGoHandBrake()
-{
-	bCurrentlyHoldingHandbrake = false;
 }
 
 void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
@@ -361,67 +421,10 @@ FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
 	return Rot.Quaternion();
 }
 
-TPair<FVector, FVector> APlayerCharacter::GetSkateboardFeetLocations() const
-{
-	return TPair<FVector, FVector>{SkateboardMesh->GetSocketLocation("FootLeft"), SkateboardMesh->GetSocketLocation("FootRight")};
-}
 
-FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex) : FTransform{};
-}
 
-FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex, localToWorld) : FTransform{};
-}
 
-FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] : FTransform{};
-}
 
-FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, const FTransform& localToWorld) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
-}
-
-void APlayerCharacter::SetCustomSpringArmLength()
-{
-	SpringArm->TargetArmLength = CustomSpringArmLength;
-}
-
-void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor->IsA(ATaskObject::StaticClass()))
-	{
-		auto TaskObject = Cast<ATaskObject>(OtherActor);
-		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
-		{
-			OnObjectPickedUp(TaskObject);
-		}
-	}
-	else if(OtherActor->IsA(AKing::StaticClass()))
-	{
-		auto Controller = Cast<APlayerCharacterController>(GetController());
-		if (Controller)
-		{
-			Controller->CheckIfTasksAreDone(Inventory);
-		}
-	}
-}
-
-void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor->IsA(ATaskObject::StaticClass()))
-	{
-		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
-	}
-}
 
 void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 {
@@ -522,4 +525,32 @@ void APlayerCharacter::DecrementCurrentItemIndex()
 	} while (i != CurrentItemIndex);
 
 	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
+}
+
+void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	{
+		auto TaskObject = Cast<ATaskObject>(OtherActor);
+		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
+		{
+			OnObjectPickedUp(TaskObject);
+		}
+	}
+	else if(OtherActor->IsA(AKing::StaticClass()))
+	{
+		auto Controller = Cast<APlayerCharacterController>(GetController());
+		if (Controller)
+		{
+			Controller->CheckIfTasksAreDone(Inventory);
+		}
+	}
+}
+
+void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	{
+		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
+	}
 }
