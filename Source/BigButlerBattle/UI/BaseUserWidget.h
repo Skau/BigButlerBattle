@@ -44,4 +44,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	FButtonStyle ButtonStyleHovered;
+
+	void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
+
+private:
+	UWidget* WidgetFocusedLast = nullptr;
 };

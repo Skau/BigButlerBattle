@@ -50,9 +50,12 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 		else
 			ActualWidgetToFocus = WidgetToFocus;
 
+		WidgetFocusedLast = ActualWidgetToFocus;
+
 		FInputModeUIOnly Mode;
 		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 		Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
+		
 		Controller->SetInputMode(Mode);
 		Controller->CurrentMouseCursor = EMouseCursor::None;
 		Controller->bShowMouseCursor = false;
@@ -67,4 +70,12 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 
 void UBaseUserWidget::OnPlayerCharacterControllerSet()
 {
+}
+
+void UBaseUserWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
+{
+	// In case we want to use this function in blueprint too
+	Super::NativeOnRemovedFromFocusPath(InFocusEvent);
+
+	FocusWidget(OwningCharacterController, WidgetFocusedLast);
 }
