@@ -18,6 +18,8 @@ class BIGBUTLERBATTLE_API UCharacterAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
+	void JumpAnim();
+
 	void ForwardKick();
 
 protected:
@@ -51,9 +53,6 @@ protected:
 
 	UFUNCTION(BlueprintPure)
 	FVector GetFootRightLocation(APlayerCharacter* character) const;
-
-	UFUNCTION()
-	void JumpAnim();
 
 private:
 	FQuat PelvisStartRotation;

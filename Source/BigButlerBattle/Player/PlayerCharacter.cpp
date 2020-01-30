@@ -98,7 +98,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	// Action Mappings
 	Input->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
 	Input->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
-	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
+	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
 	Input->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
@@ -173,11 +173,12 @@ FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, co
 
 
 
-void APlayerCharacter::Jump()
+void APlayerCharacter::StartJump()
 {
-	Super::Jump();
-
-	// OnJumpEvent.Broadcast();
+	if (Movement && !Movement->IsFalling())
+	{
+		OnJumpEvent.Broadcast();
+	}
 }
 
 void APlayerCharacter::MoveForward(float Value)

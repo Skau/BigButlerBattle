@@ -128,7 +128,7 @@ protected:
 public:
 	JumpEventSignature OnJumpEvent;
 
-	void Jump() override;
+	void StartJump();
 
 protected:
 	void MoveForward(float Value);
