@@ -60,6 +60,8 @@ void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETask
 {
 	PlayerTasks = Tasks;
 
+	PlayerWidget->InitializeTaskWidgets(Tasks);
+
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
 		SetPlayerTaskName(i, PlayerTasks[i].Key->Name);
