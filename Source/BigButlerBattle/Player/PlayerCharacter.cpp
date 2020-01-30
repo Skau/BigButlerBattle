@@ -22,6 +22,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "King/King.h"
 #include "PlayerCharacterController.h"
+#include "CharacterAnimInstance.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -74,6 +75,8 @@ void APlayerCharacter::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("SkateboardMesh is not valid!"));
 		return;
 	}
+
+	AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 
 	LinetraceSocketFront = SkateboardMesh->GetSocketByName("LinetraceFront");
 	LinetraceSocketBack = SkateboardMesh->GetSocketByName("LinetraceBack");
@@ -179,10 +182,25 @@ void APlayerCharacter::Jump()
 
 void APlayerCharacter::MoveForward(float Value)
 {
-	if (HasEnabledRagdoll())
+	if (HasEnabledRagdoll() || (Movement && Movement->IsFalling()))
 		return;
 
-	AddMovementInput(FVector::ForwardVector * Value);
+	// Brake
+	if (FMath::IsNegativeFloat(Value))
+	{
+		AddMovementInput(FVector::ForwardVector * Value);
+	}
+	// Forward kick
+	else if (Value > 0 && (Movement && Movement->Velocity.SizeSquared() < (FMath::Square(Movement->MaxCustomMovementSpeed) * 0.8) && !Movement->bHandbrake))
+	{
+		if (AnimInstance)
+			AnimInstance->ForwardKick();
+	}
+}
+
+void APlayerCharacter::AddForwardInput()
+{
+	AddMovementInput(FVector::ForwardVector);
 }
 
 void APlayerCharacter::MoveRight(float Value)

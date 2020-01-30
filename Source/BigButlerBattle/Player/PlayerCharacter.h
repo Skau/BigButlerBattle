@@ -13,6 +13,7 @@
 class ABigButlerBattleGameModeBase;
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
+class UCharacterAnimInstance;
 class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
@@ -57,6 +58,9 @@ protected:
 public:
 	APlayerCharacter(const FObjectInitializer &ObjectInitializer);
 
+	UFUNCTION(BlueprintCallable)
+	void AddForwardInput();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -66,8 +70,9 @@ protected:
 
 
 
-
-
+/// ==================================== Anim =================================================
+private:
+	UCharacterAnimInstance* AnimInstance = nullptr;
 
 
 /// ==================================== Ragdoll =================================================

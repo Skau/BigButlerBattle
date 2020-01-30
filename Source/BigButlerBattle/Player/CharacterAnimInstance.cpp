@@ -43,6 +43,12 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	RightFootTarget = GetFootRightLocation(character);
 }
 
+void UCharacterAnimInstance::ForwardKick()
+{
+	if (IsValid(ForwardMontage) && !IsAnyMontagePlaying())
+		Montage_Play(ForwardMontage);
+}
+
 void UCharacterAnimInstance::JumpAnim()
 {
 	if (IsValid(JumpMontage))
