@@ -76,6 +76,8 @@ protected:
 	FVector InputDir;
 	float SidewaysForce = 0.0f;
 
+	bool bBraking = false;
+
 public:
 	bool bHandbrake = false;
 
@@ -114,18 +116,16 @@ protected:
 
 	bool ShouldFallOff() const;
 
-	void CalcSkateboardVelocity(float DeltaTime);
+	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
-	void AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime);
-
+	FORCEINLINE FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
-	/** Calculates the forward/backwards acceleration in world space.
-	 * @brief Calculates the forward/backwards acceleration in world space.
-	 * @return Forward / backwards acceleration vector in world space.
+	/** Calculates the total acceleration in world space.
+	 * @brief Calculates the total acceleration in world space.
 	 */
-	FORCEINLINE FVector CalcAcceleration() const;
+	void CalcAcceleration(const FHitResult &FloorHitResult);
 	FORCEINLINE float CalcRotation() const;
 	FORCEINLINE float CalcHandbrakeRotation() const;
 };
