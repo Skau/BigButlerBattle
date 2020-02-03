@@ -125,7 +125,7 @@ protected:
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
 	 */
-	void CalcAcceleration(const FHitResult &FloorHitResult);
+	void CalcInputAcceleration();
 	FORCEINLINE float CalcRotation() const;
 	FORCEINLINE float CalcHandbrakeRotation() const;
 };

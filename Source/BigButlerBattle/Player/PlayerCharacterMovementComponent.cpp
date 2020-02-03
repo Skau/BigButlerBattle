@@ -390,7 +390,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	float MaxSpeed = GetMaxSpeed();
 	
 	// Calculate and set acceleration
-	CalcAcceleration(FloorHitResult);
+	CalcInputAcceleration();
 
 	// Get the fully modified analog input value.
 	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
@@ -398,8 +398,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	// Apply braking or deceleration
 	const bool bZeroAcceleration = Acceleration.IsZero();
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
-
-	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	const FVector OldVelocity = Velocity;
 	// Don't allow braking to lower us below max speed if we started above it.
@@ -409,12 +407,11 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	}
 
 	const bool bIsStandstill = Velocity.Size() < StandstillThreshold;
+	const bool bShouldStopCompletely = bBraking && bIsStandstill;
 
 	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
 	if (!bZeroAcceleration)
 	{
-		const bool bShouldStopCompletely = bBraking && bIsStandstill;
-
 		if (bShouldStopCompletely)
 		{
 			Velocity = FVector::ZeroVector;
@@ -424,10 +421,17 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 			const float NewMaxSpeed = IsExceedingMaxSpeed(MaxSpeed) ? Velocity.Size() : MaxSpeed;
 			Velocity += Acceleration * DeltaTime;
 			Velocity = Velocity.GetClampedToMaxSize(NewMaxSpeed);
-
-			UE_LOG(LogTemp, Warning, TEXT("Velocity is %s, Acceleration is %s, DeltaTime is %f"), *Velocity.ToString(), *Acceleration.ToString(), DeltaTime	);
 		}
 	}
+
+	// Apply slope acceleration (needs to be applied after input acceleration as to not get clamped)
+	if (!bShouldStopCompletely)
+	{
+		const auto slopeAcceleration = GetSlopeAcceleration(FloorHitResult);
+		Velocity += slopeAcceleration * DeltaTime;
+	}
+
+	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	// Apply rotation based on input
 	auto forwardDir = GetOwner()->GetActorForwardVector();
@@ -468,7 +472,7 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
-void UPlayerCharacterMovementComponent::CalcAcceleration(const FHitResult &FloorHitResult)
+void UPlayerCharacterMovementComponent::CalcInputAcceleration()
 {
 	const auto input = GetForwardInput();
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
@@ -487,9 +491,6 @@ void UPlayerCharacterMovementComponent::CalcAcceleration(const FHitResult &Floor
 	{
 		Acceleration = -Acceleration;
 	}
-
-	// Get acceleration from slope
-	Acceleration += GetSlopeAcceleration(FloorHitResult);
 
 	if (Acceleration.IsZero())
 		Acceleration = FVector::ZeroVector;
