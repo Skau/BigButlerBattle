@@ -183,19 +183,22 @@ void APlayerCharacter::StartJump()
 
 void APlayerCharacter::MoveForward(float Value)
 {
-	if (HasEnabledRagdoll() || (Movement && Movement->IsFalling()))
+	if (HasEnabledRagdoll() || !Movement || (Movement->IsFalling()))
 		return;
 
+	bool bBraking = false;
+	bool bMovingBackwards = false;
+	auto acceleration = Movement->GetInputAcceleration(Value, bBraking, bMovingBackwards);
+
 	// Brake
-	if (FMath::IsNegativeFloat(Value))
+	if (bBraking)
 	{
 		AddMovementInput(FVector::ForwardVector * Value);
 	}
-	// Forward kick
-	else if (Value > 0 && (Movement && Movement->Velocity.SizeSquared() < (FMath::Square(Movement->MaxCustomMovementSpeed) * 0.8) && !Movement->bHandbrake))
+	// // Forward kick
+	else if (Value != 0 && Movement->CanAccelerate(acceleration, bBraking, bMovingBackwards, UGameplayStatics::GetWorldDeltaSeconds(this)) && AnimInstance)
 	{
-		if (AnimInstance)
-			AnimInstance->ForwardKick();
+		AnimInstance->ForwardKick();
 	}
 }
 

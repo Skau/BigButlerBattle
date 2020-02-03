@@ -14,7 +14,7 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
 	DefaultWaterMovementMode = EMovementMode::MOVE_Custom;
 	MaxAcceleration = 2048.f;
-	MaxCustomMovementSpeed = 2048.f;
+	MaxCustomMovementSpeed = 4196.f;
 	JumpZVelocity = 600.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
@@ -23,6 +23,17 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 bool UPlayerCharacterMovementComponent::IsMovingOnGround() const
 {
 	return ((MovementMode == MOVE_Custom && CurrentCustomMovementMode == ECustomMovementType::MOVE_Skateboard) || (MovementMode == MOVE_Walking) || (MovementMode == MOVE_NavWalking)) && UpdatedComponent;
+}
+
+bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime) const
+{
+	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
+	return CanAccelerate(AccelerationIn, bBrakingIn, bMovingBackwards, DeltaTime);
+}
+
+bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const
+{
+	return bMovingBackwards || !bBrakingIn && (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity));
 }
 
 void UPlayerCharacterMovementComponent::BeginPlay()
@@ -390,7 +401,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	float MaxSpeed = GetMaxSpeed();
 	
 	// Calculate and set acceleration
-	CalcInputAcceleration(DeltaTime);
+	Acceleration = GetClampedInputAcceleration(bBraking, DeltaTime);
 
 	// Get the fully modified analog input value.
 	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
@@ -472,34 +483,50 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
-void UPlayerCharacterMovementComponent::CalcInputAcceleration(float DeltaTime)
+FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool& bBreakingOut, bool &bMovingBackwardsOut)
 {
 	const auto input = GetForwardInput();
+	return GetInputAcceleration(input, bBreakingOut, bMovingBackwardsOut);
+}
+
+FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInput, bool &bBreakingOut, bool &bMovingBackwardsOut)
+{
+	const auto input = ForwardInput;
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
 	const bool bCanMoveVertically = !bHandbrake || (bAllowBrakingWhileHandbraking && InputDir.X < 0.f);
 	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
-	Acceleration = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
+	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 
-	if (Acceleration.IsZero())
-		Acceleration = FVector::ZeroVector;
+	if (a.IsZero())
+		a = FVector::ZeroVector;
 
-	bBraking = FMath::IsNegativeFloat(FVector::DotProduct(Acceleration, GetOwner()->GetActorForwardVector()));
-	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
+	bBreakingOut = FMath::IsNegativeFloat(FVector::DotProduct(a, GetOwner()->GetActorForwardVector()));
+	bMovingBackwardsOut = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
 
 	// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
-	if (bBraking && bMovingBackwards)
+	if (bBreakingOut && bMovingBackwardsOut)
 	{
-		Acceleration = -Acceleration;
+		a = -a;
 	}
 
-	const bool bZeroAcceleration =
-		// Cancel out acceleration for rounding errors.
-		Acceleration.IsZero()
-		// If above input acceleration, cancel out acceleration.
-		|| (!bBraking && !bMovingBackwards && DeltaTime >= MIN_TICK_TIME && (Velocity + Acceleration * DeltaTime).SizeSquared() > FMath::Square(CustomMaxAccelerationVelocity));
+	if (a.IsZero())
+		a = FVector::ZeroVector;
 
-	if (bZeroAcceleration)
-		Acceleration = FVector::ZeroVector;
+	return a;
+}
+
+FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime)
+{
+	bool bMovingBackwards;
+	auto a = GetInputAcceleration(bBrakingOut, bMovingBackwards);
+	return CanAccelerate(a, bBrakingOut, bMovingBackwards, DeltaTime) ? a : FVector::ZeroVector;
+}
+
+FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(float ForwardInput, bool &bBrakingOut, float DeltaTime)
+{
+	bool bMovingBackwards;
+	auto a = GetInputAcceleration(ForwardInput, bBrakingOut, bMovingBackwards);
+	return CanAccelerate(a, bBrakingOut, bMovingBackwards, DeltaTime) ? a : FVector::ZeroVector;
 }
 
 float UPlayerCharacterMovementComponent::CalcRotation() const
