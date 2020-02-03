@@ -4,6 +4,9 @@
 #include "MainMenuPlayWidget.h"
 #include "MainMenuWidget.h"
 #include "MainMenuPlayerWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+#include "Player/PlayerCharacterController.h"
 
 UMainMenuPlayWidget::UMainMenuPlayWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -30,5 +33,5 @@ void UMainMenuPlayWidget::BackToMainMenu()
 {
 	SetVisibility(ESlateVisibility::Hidden);
 	MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
-	MainMenuWidget->FocusWidget(OwningCharacterController);
+	MainMenuWidget->FocusWidget(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)));
 }
