@@ -1,8 +1,8 @@
-# BigButlerBattle
+# Big Butler Battle
 *A party game about serving the king while rocking a kick-ass skateboard.*
 
 ## About
-BigButlerBattle is a split-screen party game where each player plays a butler skating around on a skateboard,
+Big Butler Battle is a split-screen party game where each player plays a butler skating around on a skateboard,
 tasked with delivering various objects to the king. At the start of each game each player receives a list of objects
 required by the king and the first person to deliver all objects to the king wins the game.
 
