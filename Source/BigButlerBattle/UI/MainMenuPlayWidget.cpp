@@ -1,0 +1,34 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "MainMenuPlayWidget.h"
+#include "MainMenuWidget.h"
+#include "MainMenuPlayerWidget.h"
+
+UMainMenuPlayWidget::UMainMenuPlayWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{}
+
+void UMainMenuPlayWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+}
+
+bool UMainMenuPlayWidget::Initialize()
+{
+	bool initialized = Super::Initialize();
+
+	PlayerWidget_0->MainPlayWidget = this;
+	PlayerWidget_1->MainPlayWidget = this;
+	PlayerWidget_2->MainPlayWidget = this;
+	PlayerWidget_3->MainPlayWidget = this;
+
+	return initialized;
+}
+
+void UMainMenuPlayWidget::BackToMainMenu()
+{
+	SetVisibility(ESlateVisibility::Hidden);
+	MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
+	MainMenuWidget->FocusWidget(OwningCharacterController);
+}

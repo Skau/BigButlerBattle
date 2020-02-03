@@ -13,6 +13,8 @@ class UButton;
 class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
+class UMainMenuPlayWidget;
+
 /**
  * 
  */
@@ -24,8 +26,6 @@ class BIGBUTLERBATTLE_API UMainMenuPlayerWidget : public UBaseUserWidget
 
 public:
 	UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer);
-
-	FORCEINLINE bool getHasJoined() { return bHasJoined; }
 
 	ToggleJoinGameSignature OnToggleJoinedGame;
 	ToggleReadyGameSignature OnToggleReadyGame;
@@ -40,15 +40,20 @@ public:
 	UTextBlock* PlayerNameText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCheckBox* CheckBox;
+	UButton* Button_ToggleReady;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_Leave;
+	UTextBlock* ButtonReadyText;
+
+	UMainMenuPlayWidget* MainPlayWidget;
 
 protected:
 	bool Initialize() override;
 
 	virtual void OnPlayerCharacterControllerSet() override;
+
+	UFUNCTION(BlueprintCallable)
+	void OnBackButtonPressed() override;
 
 private:
 	void UpdatePlayerName();
@@ -57,10 +62,10 @@ private:
 	void OnJoinClicked();
 
 	UFUNCTION()
-	void OnCheckStateChanged(bool NewCheckState);
+	void OnToggledReady();
 
-	UFUNCTION()
-	void OnLeaveClicked();
+	void UpdateToggledReady();
 
+	bool bIsReady = false;
 	bool bHasJoined = false;
 };

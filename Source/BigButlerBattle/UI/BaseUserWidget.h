@@ -21,6 +21,7 @@ class BIGBUTLERBATTLE_API UBaseUserWidget : public UUserWidget
 public:
 	UBaseUserWidget(const FObjectInitializer& ObjectInitializer);
 
+	UFUNCTION(BlueprintPure)
 	APlayerCharacterController* GetOwningPlayerCharacterController();
 
 	void FocusWidget(APlayerCharacterController* Controller, UWidget* WidgetToFocus = nullptr);
@@ -35,7 +36,10 @@ protected:
 	/* Overriden in sublcasses */
 	virtual void OnPlayerCharacterControllerSet();
 
+	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacterController* OwningCharacterController;
+
+	virtual void OnBackButtonPressed();
 
 	TArray<UButton*> Buttons;
 

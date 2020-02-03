@@ -52,7 +52,7 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 
 		WidgetFocusedLast = ActualWidgetToFocus;
 
-		FInputModeUIOnly Mode;
+		FInputModeGameAndUI Mode;
 		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 		Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
 		
@@ -69,6 +69,10 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 }
 
 void UBaseUserWidget::OnPlayerCharacterControllerSet()
+{
+}
+
+void UBaseUserWidget::OnBackButtonPressed()
 {
 }
 
