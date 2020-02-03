@@ -390,7 +390,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	float MaxSpeed = GetMaxSpeed();
 	
 	// Calculate and set acceleration
-	CalcInputAcceleration();
+	CalcInputAcceleration(DeltaTime);
 
 	// Get the fully modified analog input value.
 	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
@@ -472,7 +472,7 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
-void UPlayerCharacterMovementComponent::CalcInputAcceleration()
+void UPlayerCharacterMovementComponent::CalcInputAcceleration(float DeltaTime)
 {
 	const auto input = GetForwardInput();
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
@@ -492,7 +492,13 @@ void UPlayerCharacterMovementComponent::CalcInputAcceleration()
 		Acceleration = -Acceleration;
 	}
 
-	if (Acceleration.IsZero())
+	const bool bZeroAcceleration =
+		// Cancel out acceleration for rounding errors.
+		Acceleration.IsZero()
+		// If above input acceleration, cancel out acceleration.
+		|| (!bBraking && !bMovingBackwards && DeltaTime >= MIN_TICK_TIME && (Velocity + Acceleration * DeltaTime).SizeSquared() > FMath::Square(CustomMaxAccelerationVelocity));
+
+	if (bZeroAcceleration)
 		Acceleration = FVector::ZeroVector;
 }
 

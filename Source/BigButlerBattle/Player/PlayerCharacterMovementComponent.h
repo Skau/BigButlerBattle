@@ -30,6 +30,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
+	/**
+	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Acceleration Velocity"))
+	float CustomMaxAccelerationVelocity = 2048.f;
+
 	bool bStandstill = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
@@ -125,7 +131,7 @@ protected:
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
 	 */
-	void CalcInputAcceleration();
+	void CalcInputAcceleration(float DeltaTime = 0.f);
 	FORCEINLINE float CalcRotation() const;
 	FORCEINLINE float CalcHandbrakeRotation() const;
 };
