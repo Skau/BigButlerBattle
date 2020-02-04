@@ -50,7 +50,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
-	Tray->SetupAttachment(GetMesh(), "item1_socket");
+	Tray->SetupAttachment(GetMesh(), "TraySocket");
 
 
 	check(Tray != nullptr);
@@ -64,6 +64,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	Inventory.Init(nullptr, 4);
 
 	bUseControllerRotationYaw = false;
+
 }
 
 void APlayerCharacter::BeginPlay()
@@ -75,6 +76,8 @@ void APlayerCharacter::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("SkateboardMesh is not valid!"));
 		return;
 	}
+
+	Tray->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true), "TraySocket");
 
 	AnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance());
 
