@@ -16,6 +16,9 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	MaxAcceleration = 2048.f;
 	MaxCustomMovementSpeed = 4196.f;
 	JumpZVelocity = 600.f;
+	AirControl = 0.f;
+	AirControlBoostMultiplier = 0.f;
+	AirControlBoostVelocityThreshold = 0.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
@@ -304,7 +307,6 @@ void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Itera
 	Super::PhysFalling(deltaTime, Iterations);
 
 	// Apply rotation based on input
-	auto forwardDir = GetOwner()->GetActorForwardVector();
 	const auto rotAmount = CalcRotation() * deltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 
