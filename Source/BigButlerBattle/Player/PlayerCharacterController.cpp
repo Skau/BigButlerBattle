@@ -58,7 +58,7 @@ void APlayerCharacterController::PauseGamePressed()
 
 void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks)
 {
-	PlayerTasks = Tasks;
+	PlayerTasks += Tasks;
 
 	PlayerWidget->InitializeTaskWidgets(Tasks);
 
