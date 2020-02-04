@@ -96,18 +96,18 @@ public:
 	bool IsMovingOnGround() const override;
 
 	UFUNCTION(BlueprintPure)
-	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
+	float GetRotationInput() const { return InputDir.Y; }
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 */
 	UFUNCTION(BlueprintPure)
-	FORCEINLINE bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime = 0.f) const;
+	bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime = 0.f) const;
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 * Parameter overload that doesn't calculate bMovingBackwards for you.
 	 */
-	FORCEINLINE bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime = 0.f) const;
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime = 0.f) const;
 
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
@@ -146,11 +146,11 @@ protected:
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
-	FORCEINLINE FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
-	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
-	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
-	FORCEINLINE float CalcRotation() const;
-	FORCEINLINE float CalcHandbrakeRotation() const;
+	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
+	float GetForwardInput() const { return InputDir.X; }
+	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	float CalcSidewaysBreaking(const FVector& forward) const;
+	float CalcRotation() const;
+	float CalcHandbrakeRotation() const;
 
 };

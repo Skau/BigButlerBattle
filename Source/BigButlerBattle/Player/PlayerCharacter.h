@@ -242,6 +242,11 @@ protected:
 	TArray<ATaskObject *> PickupBlacklist;
 	TArray<FName> TraySlotNames;
 
+	UPROPERTY(EditDefaultsOnly)
+	float ThrowStrength = 2000.f;
+
+	bool bCurrentlyHoldingThrow = false;
+
 	int CurrentItemIndex = 0;
 
 	UPROPERTY(VisibleAnywhere)
@@ -254,6 +259,9 @@ protected:
 	void OnObjectPickedUp(ATaskObject* Object);
 
 	void DropCurrentObject();
+
+	void OnHoldingThrow();
+	void OnHoldThrowReleased();
 
 	void IncrementCurrentItemIndex();
 	void DecrementCurrentItemIndex();

@@ -104,7 +104,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
 	Input->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
-	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	//Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
+	Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
 	Input->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
 
@@ -475,13 +477,24 @@ void APlayerCharacter::DropCurrentObject()
 		Spawned->SetTaskData(Obj->GetTaskData());
 		PickupBlacklist.Add(Spawned);
 
-		// Scale it back up
+		// Spawn transform
 		auto transform = Obj->GetTransform();
-		transform.SetScale3D(transform.GetScale3D() / 0.3f);
-		transform.SetLocation(transform.GetLocation() + (FVector::UpVector * 10.f));
 
-		// Yeet
-		Spawned->LaunchVelocity = GetActorForwardVector() * 3000.f;
+		// Scale (scale it back up)
+		transform.SetScale3D(transform.GetScale3D() / 0.3f);
+
+		// Direction to throw object
+		auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
+
+		// Position to spawn object
+		auto SpawnPos = GetActorLocation() + (Dir * 200.f);
+		transform.SetLocation(SpawnPos);
+
+		// Velocity to add to throw (based on current velocity)
+		auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
+
+		// Set velocity
+		Spawned->LaunchVelocity = bCurrentlyHoldingThrow ? VelProject + (Dir * ThrowStrength) : VelProject;
 
 		// Finish
 		UGameplayStatics::FinishSpawningActor(Spawned, transform);
@@ -492,6 +505,46 @@ void APlayerCharacter::DropCurrentObject()
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 	}
+}
+
+void APlayerCharacter::OnHoldingThrow()
+{
+	if(!bCurrentlyHoldingThrow)
+		bCurrentlyHoldingThrow = true;
+
+
+	// Direction to throw object
+	auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
+
+	auto SpawnPos = GetActorLocation() + (Dir * 200.f);
+
+	auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
+
+	FPredictProjectilePathParams Params;
+	Params.ActorsToIgnore.Add(this);
+	Params.LaunchVelocity = VelProject + (Dir * ThrowStrength);
+	Params.MaxSimTime = 1.f;
+	Params.StartLocation = SpawnPos;
+	Params.TraceChannel = ECollisionChannel::ECC_WorldStatic;
+	Params.bTraceWithChannel = true;
+	Params.bTraceWithCollision = true;
+	//if (bDebugMovement)
+	//{
+		Params.DrawDebugTime = 0.1f;
+		Params.DrawDebugType = EDrawDebugTrace::ForDuration;
+	//}
+
+
+	FPredictProjectilePathResult Result;
+	UGameplayStatics::PredictProjectilePath(GetWorld(), Params, Result);
+}
+
+void APlayerCharacter::OnHoldThrowReleased()
+{
+	DropCurrentObject();
+
+	if(bCurrentlyHoldingThrow)
+		bCurrentlyHoldingThrow = false;
 }
 
 void APlayerCharacter::IncrementCurrentItemIndex()

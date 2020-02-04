@@ -23,10 +23,10 @@ public:
 	AMainMenuGameModeBase();
 
 	UFUNCTION(BlueprintPure)
-	FORCEINLINE TArray<APlayerCharacterController*> GetControllers() { return Controllers; }
+	TArray<APlayerCharacterController*> GetControllers() { return Controllers; }
 
 	UFUNCTION(BlueprintPure)
-	FORCEINLINE bool HasAnyPlayerJoined() { return NumJoinedPlayers != 0; }
+	bool HasAnyPlayerJoined() { return NumJoinedPlayers != 0; }
 
 protected:
 	void BeginPlay() override;

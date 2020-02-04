@@ -24,7 +24,7 @@ namespace btd
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
     }
     
-	FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
+    FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
     }
