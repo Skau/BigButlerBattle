@@ -101,12 +101,12 @@ public:
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 */
-	FORCEINLINE bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime) const;
+	bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime) const;
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 * Parameter overload that doesn't calculate bMovingBackwards for you.
 	 */
-	FORCEINLINE bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const;
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const;
 
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
