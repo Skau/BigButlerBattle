@@ -143,13 +143,19 @@ protected:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
-	float CameraRotationSpeed = 400.f;
+	float CameraRotationSpeed = 10.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Snapback Speed"))
-	float CameraSnapbackSpeed = 200.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Dead Zone"))
+	float CameraRotationDeadZone = 0.1f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Max Rotation Offset", ShortTooltip = "In angles"))
-	float MaxCameraRotationOffset = 89.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Yaw Angle"))
+	float CameraRotationYawAngle = 120.f;
+
+	/**
+	 * Both the pitch rotation of the camera but as the camera also moves up/down from the character this also controls the height.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Pitch Height"))
+	float CameraRotationPitchHeight = 1.2f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
 	float CustomSpringArmLength = 450.f;
@@ -160,13 +166,19 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent *SpringArm;
 
-	float CameraYaw = 0.f;
-	float CameraPitch = 0.f;
+	// The target rotation set by the player
+	FVector2D DesiredCameraRotation = {};
+	// The current actual rotation
+	FVector2D CameraRotation = {};
+
+	float DefaultSpringArmLength;
 
 public:
 	void SetCustomSpringArmLength();
 
 protected:
+	void UpdateCameraRotation(float DeltaTime);
+
 	void LookUp(float Value);
 
 	void LookRight(float Value);
@@ -207,8 +219,6 @@ public:
 	bool IsSocketsValid() const;
 
 protected:
-	void UpdateCameraRotation(float DeltaTime);
-
 	void UpdateSkateboardRotation(float DeltaTime);
 
 	FQuat GetDesiredRotation(FVector DestinationNormal) const;
