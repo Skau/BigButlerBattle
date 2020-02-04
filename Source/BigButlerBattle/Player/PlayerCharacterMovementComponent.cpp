@@ -19,6 +19,7 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
+	MaxAcceleration = 40000.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }

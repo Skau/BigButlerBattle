@@ -70,9 +70,13 @@ protected:
 
 
 
+
+
 /// ==================================== Anim =================================================
 private:
 	UCharacterAnimInstance* AnimInstance = nullptr;
+
+
 
 
 /// ==================================== Ragdoll =================================================
@@ -113,15 +117,6 @@ public:
 	/// ==================================== Movement =================================================
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationGroundSpeed = 0.16f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationAirSpeed = 0.08f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	bool bDebugMovement = false;
-
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent *Movement = nullptr;
 
@@ -192,6 +187,15 @@ protected:
 	const USkeletalMeshSocket *LinetraceSocketBack = nullptr;
 
 	FSkateboardTraceResult LastTraceResult;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationGroundSpeed = 0.16f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationAirSpeed = 0.08f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation")
+	bool bDebugMovement = false;
 
 public:
 	UFUNCTION(BlueprintPure)
