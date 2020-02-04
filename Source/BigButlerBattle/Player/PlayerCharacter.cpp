@@ -89,6 +89,8 @@ void APlayerCharacter::BeginPlay()
 
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
+
+	DefaultSpringArmLength = SpringArm->TargetArmLength;
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -232,41 +234,45 @@ void APlayerCharacter::HandbrakeDisable()
 
 void APlayerCharacter::SetCustomSpringArmLength()
 {
-	SpringArm->TargetArmLength = CustomSpringArmLength;
+	DefaultSpringArmLength = SpringArm->TargetArmLength = CustomSpringArmLength;
 }
 
 void APlayerCharacter::LookUp(float Value)
 {
-	if (Value != 0)
-	{
-		CameraPitch += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
-	}
-	else
-	{
-		if (FMath::Abs(CameraPitch) <= .1f)
-			CameraPitch -= FMath::Sign(CameraPitch) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
-		else
-			CameraPitch = 0;
-	}
+	DesiredCameraRotation.Y = Value != 0 ? Value * CameraRotationPitchHeight : 0.f;
 }
 
 void APlayerCharacter::LookRight(float Value)
 {
-	if (Value != 0)
-	{
-		CameraYaw += Value * CameraRotationSpeed * GetWorld()->GetDeltaSeconds();
-	}
-	else
-	{
-		if (FMath::Abs(CameraYaw) <= .1f)
-			CameraYaw -= FMath::Sign(CameraYaw) * CameraSnapbackSpeed * GetWorld()->GetDeltaSeconds();
-		else
-			CameraYaw = 0;
-	}
+	DesiredCameraRotation.X = Value != 0 ? Value * CameraRotationYawAngle : 0.f;
 }
 
+void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
+{
+	// Clamp rotation
+	DesiredCameraRotation.X = FMath::Clamp(DesiredCameraRotation.X, -CameraRotationYawAngle, CameraRotationYawAngle);
+	DesiredCameraRotation.Y = FMath::Clamp(DesiredCameraRotation.Y, -CameraRotationPitchHeight, CameraRotationPitchHeight);
+
+	// Find camera lerp factor
+	const float lerpFactor = FMath::Clamp(CameraRotationSpeed * DeltaTime, 0.f, 1.f);
 
 
+	// Find new rotation
+	const bool bXNearZero = FMath::Abs(DesiredCameraRotation.X - CameraRotation.X) < CameraRotationDeadZone;
+	const bool bYNearZero = FMath::Abs(DesiredCameraRotation.Y - CameraRotation.Y) < CameraRotationDeadZone;
+
+	CameraRotation.X = bXNearZero ? DesiredCameraRotation.X : FMath::Lerp(CameraRotation.X, DesiredCameraRotation.X, lerpFactor);
+	CameraRotation.Y = bYNearZero ? DesiredCameraRotation.Y : FMath::Lerp(CameraRotation.Y, DesiredCameraRotation.Y, lerpFactor);
+
+
+	// Set rotation of camera 
+	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraRotation.X - 180.f, 0.f) + FVector{0.f, 0.f, CameraRotation.Y};
+	FVector Direction = FVector(0, 0, 0) - point;
+	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
+
+	SpringArm->SetRelativeRotation(NewLocalRot);
+	SpringArm->TargetArmLength = DefaultSpringArmLength * Direction.Size();
+}
 
 
 
@@ -319,18 +325,6 @@ bool APlayerCharacter::IsSocketsValid() const
 		return false;
 	}
 	return true;
-}
-
-void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
-{
-	CameraPitch = FMath::Clamp(CameraPitch, -MaxCameraRotationOffset, MaxCameraRotationOffset);
-	CameraYaw = FMath::Clamp(CameraYaw, -MaxCameraRotationOffset, MaxCameraRotationOffset);
-
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraYaw - 180.f, CameraPitch + 5.f);
-	FVector Direction = FVector(0, 0, 0) - point;
-	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
-
-	SpringArm->SetRelativeRotation(NewLocalRot);
 }
 
 void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
