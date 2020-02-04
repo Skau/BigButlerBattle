@@ -6,7 +6,7 @@
 #include "PlayerCharacter.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "Tasks/BaseTask.h"
+#include "Tasks/Task.h"
 #include "King/King.h"
 #include "Tasks/TaskObject.h"
 
@@ -17,6 +17,8 @@ APlayerCharacterController::APlayerCharacterController()
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bShowMouseCursor = false;
 
 	// Add in-game UI if we're actually in the game and not main menu
 	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
@@ -54,9 +56,11 @@ void APlayerCharacterController::PauseGamePressed()
 	OnPausedGame.ExecuteIfBound(ID);
 }
 
-void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UBaseTask*, ETaskState>>& Tasks)
+void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks)
 {
 	PlayerTasks = Tasks;
+
+	PlayerWidget->InitializeTaskWidgets(Tasks);
 
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
@@ -76,32 +80,62 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 	PlayerWidget->UpdateTaskState(Index, NewState);
 }
 
-void APlayerCharacterController::OnPlayerPickedUpObject(UBaseTask* TaskIn)
+void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
+{
+	UpdatePlayerTasks();
+}
+
+void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
+{
+	UpdatePlayerTasks();
+
+	Object->OnTaskObjectDelivered.BindUObject(this, &APlayerCharacterController::OnTaskObjectDelivered);
+}
+
+void APlayerCharacterController::UpdatePlayerTasks()
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
-		if (PlayerTasks[i].Value == ETaskState::NotPresent)
+		if(PlayerTasks[i].Value != ETaskState::Finished)
+			SetPlayerTaskState(i, ETaskState::NotPresent);
+	}
+
+	auto Inventory = PlayerCharacter->GetInventory();
+	TArray<int> IndicesFound;
+	for (int i = 0; i < Inventory.Num(); ++i)
+	{
+		if (auto Obj = Inventory[i])
 		{
-			if (PlayerTasks[i].Key->IsEqual(TaskIn))
+			auto TaskData = Obj->GetTaskData();
+
+			for (int j = 0; j < PlayerTasks.Num(); ++j)
 			{
-				PlayerTasks[i].Value = ETaskState::Present;
-				SetPlayerTaskState(i, ETaskState::Present);
-				break;
+				if (IndicesFound.Find(j) == INDEX_NONE)
+				{
+					auto PlayerTask = PlayerTasks[j];
+					if (PlayerTask.Value != ETaskState::Finished && TaskData->IsEqual(PlayerTask.Key))
+					{
+						SetPlayerTaskState(j, ETaskState::Present);
+						IndicesFound.Add(j);
+						break;
+					}
+				}
 			}
 		}
 	}
 }
 
-void APlayerCharacterController::OnPlayerDroppedObject(UBaseTask* TaskIn)
+void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
-		if (PlayerTasks[i].Value == ETaskState::Present)
+		auto PlayerTask = PlayerTasks[i];
+		if (PlayerTask.Value == ETaskState::NotPresent)
 		{
-			if (PlayerTasks[i].Key->IsEqual(TaskIn))
+			if (PlayerTask.Key->IsEqual(Object->GetTaskData()))
 			{
-				PlayerTasks[i].Value = ETaskState::NotPresent;
-				SetPlayerTaskState(i, ETaskState::NotPresent);
+				SetPlayerTaskState(i, ETaskState::Finished);
+				Object->Destroy();
 				break;
 			}
 		}

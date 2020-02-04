@@ -2,12 +2,14 @@
 
 
 #include "MainMenuPlayerWidget.h"
+#include "MainMenuPlayWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/CheckBox.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/Button.h"
 #include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
+#include "MainMenuGameModeBase.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -15,19 +17,17 @@ UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectIni
 
 bool UMainMenuPlayerWidget::Initialize()
 {
-	bool bInitialized =  Super::Initialize();
-
-	CheckBox->OnCheckStateChanged.AddDynamic(this, &UMainMenuPlayerWidget::OnCheckStateChanged);
+	bool bInit =  Super::Initialize();
 
 	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinClicked);
 	Buttons.Add(Button_Join);
 
-	Button_Leave->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnLeaveClicked);
-	Buttons.Add(Button_Leave);
+	Button_ToggleReady->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnToggledReady);
+	Buttons.Add(Button_ToggleReady);
 
 	DefaultWidgetToFocus = Button_Join;
 
-	return bInitialized;
+	return bInit;
 }
 
 void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
@@ -35,41 +35,53 @@ void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
 	UpdatePlayerName();
 }
 
+void UMainMenuPlayerWidget::OnBackButtonPressed()
+{
+	if (bIsReady)
+	{
+		OnToggledReady();
+	}
+	else if (bHasJoined)
+	{
+		if (bIsReady)
+			OnToggledReady();
+
+		bHasJoined = false;
+
+		Switcher->SetActiveWidgetIndex(0);
+		auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+		OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ID);
+		FocusWidget(OwningCharacterController, Button_Join);
+	}
+	else
+	{
+		auto GameMode = Cast<AMainMenuGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+		if (GameMode && !GameMode->HasAnyPlayerJoined())
+			MainPlayWidget->BackToMainMenu();
+	}
+}
+
 void UMainMenuPlayerWidget::OnJoinClicked()
 {
 	Switcher->SetActiveWidgetIndex(1);
 	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
 	OnToggleJoinedGame.ExecuteIfBound(true, ID);
-	FocusWidget(OwningCharacterController, CheckBox);
+	FocusWidget(OwningCharacterController, Button_ToggleReady);
+	bHasJoined = true;
 }
 
-void UMainMenuPlayerWidget::OnCheckStateChanged(bool NewCheckState)
+void UMainMenuPlayerWidget::OnToggledReady()
 {
 	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	if (NewCheckState)
-	{
-		CheckBox->SetCheckedState(ECheckBoxState::Checked);
-		OnToggleReadyGame.ExecuteIfBound(true, ID);
-	}
-	else
-	{
-		CheckBox->SetCheckedState(ECheckBoxState::Unchecked);
-		OnToggleReadyGame.ExecuteIfBound(false, ID);
-	}
+	bIsReady = !bIsReady;
+	UpdateToggledReady();
 }
 
-void UMainMenuPlayerWidget::OnLeaveClicked()
+void UMainMenuPlayerWidget::UpdateToggledReady()
 {
-	if (CheckBox->GetCheckedState() == ECheckBoxState::Checked)
-	{
-		OnCheckStateChanged(false);
-	}
-
 	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-
-	Switcher->SetActiveWidgetIndex(0);
-	OnToggleJoinedGame.ExecuteIfBound(false, ID);
-	FocusWidget(OwningCharacterController, Button_Join);
+	OnToggleReadyGame.ExecuteIfBound(bIsReady, ID);
+	ButtonReadyText->SetText(FText::FromString(bIsReady ? "Ready" : "Not ready"));
 }
 
 void UMainMenuPlayerWidget::UpdatePlayerName()

@@ -9,20 +9,24 @@
 #include "Engine/EngineTypes.h"
 #include "PlayerCharacter.generated.h"
 
+// Forward declarations
 class ABigButlerBattleGameModeBase;
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
+class UCharacterAnimInstance;
 class UCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
 class UBoxComponent;
 class ATaskObject;
-class UBaseTask;
+class UTask;
 
-DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, UBaseTask*);
-DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, UBaseTask*);
+// Delegates
+DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
+DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
+// Structs
 USTRUCT(BlueprintType)
 struct FSkateboardTraceResult
 {
@@ -38,20 +42,174 @@ public:
 	{}
 };
 
+
+/** Main player class
+ * ACharacter class used by all players.
+ */
 UCLASS()
 class BIGBUTLERBATTLE_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	ABigButlerBattleGameModeBase* GameMode;
+
 public:
-	APlayerCharacter(const FObjectInitializer& ObjectInitializer);
+	APlayerCharacter(const FObjectInitializer &ObjectInitializer);
 
+	UFUNCTION(BlueprintCallable)
+	void AddForwardInput();
+
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+
+	virtual void Tick(float DeltaTime) override;
+
+
+
+
+
+/// ==================================== Anim =================================================
+private:
+	UCharacterAnimInstance* AnimInstance = nullptr;
+
+
+
+
+/// ==================================== Ragdoll =================================================
+
+protected:
+	bool bEnabledRagdoll = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Can Fall Off"))
+	bool bCanFall = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
+	float SidewaysForceFallOffThreshold = 4000.f;
+
+public:
 	void EnableRagdoll();
+	bool HasEnabledRagdoll() const { return bEnabledRagdoll; }
+	bool CanFall() const { return bCanFall; }
+	float GetSidewaysForceFallOffThreshold() const { return SidewaysForceFallOffThreshold; }
 
-	bool HasEnabledRagdoll() { return bEnabledRagdoll; }
-	bool CanFall() { return bCanFall; }
-	float GetSidewaysForceFallOffThreshold() { return SidewaysForceFallOffThreshold; }
 
+
+
+
+/// ==================================== IK =================================================
+
+public:
+	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
+	FTransform GetCharacterBoneTransform(FName BoneName) const;
+	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform &localToWorld) const;
+	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
+	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform &localToWorld) const;
+
+
+
+
+
+
+	/// ==================================== Movement =================================================
+
+protected:
+	UPROPERTY(VisibleAnywhere)
+	UPlayerCharacterMovementComponent *Movement = nullptr;
+
+public:
+	JumpEventSignature OnJumpEvent;
+
+	void StartJump();
+
+protected:
+	void MoveForward(float Value);
+
+	void MoveRight(float Value);
+
+	void HandbrakeEnable();
+
+	void HandbrakeDisable();
+
+
+
+
+
+
+	/// ==================================== Camera =================================================
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
+	float CameraRotationSpeed = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Dead Zone"))
+	float CameraRotationDeadZone = 0.1f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Yaw Angle"))
+	float CameraRotationYawAngle = 120.f;
+
+	/**
+	 * Both the pitch rotation of the camera but as the camera also moves up/down from the character this also controls the height.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Pitch Height"))
+	float CameraRotationPitchHeight = 1.2f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	float CustomSpringArmLength = 450.f;
+
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent *Camera;
+
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent *SpringArm;
+
+	// The target rotation set by the player
+	FVector2D DesiredCameraRotation = {};
+	// The current actual rotation
+	FVector2D CameraRotation = {};
+
+	float DefaultSpringArmLength;
+
+public:
+	void SetCustomSpringArmLength();
+
+protected:
+	void UpdateCameraRotation(float DeltaTime);
+
+	void LookUp(float Value);
+
+	void LookRight(float Value);
+
+
+
+
+
+
+/// ==================================== Skateboard rotation =================================================
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	USkeletalMeshComponent* SkateboardMesh;
+
+	const USkeletalMeshSocket *LinetraceSocketFront = nullptr;
+
+	const USkeletalMeshSocket *LinetraceSocketBack = nullptr;
+
+	FSkateboardTraceResult LastTraceResult;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationGroundSpeed = 0.16f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationAirSpeed = 0.08f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation")
+	bool bDebugMovement = false;
+
+public:
 	UFUNCTION(BlueprintPure)
 	FSkateboardTraceResult GetSkateboardTraceResults() const { return LastTraceResult;  }
 
@@ -60,121 +218,45 @@ public:
 
 	bool IsSocketsValid() const;
 
-	JumpEventSignature OnJumpEvent;
-	void Jump() override;
-
-	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
-
-	FTransform GetCharacterBoneTransform(FName BoneName) const;
-	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const;
-	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
-	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform& localToWorld) const;
-
-	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
-	FTaskObjectDroppedSignature OnTaskObjectDropped;
-
-	void SetCustomSpringArmLength();
-
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbrake Rotation"))
-	float HandbrakeRotationFactor = 300.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Handbreake Velocity Threshold"))
-	float HandbreakeVelocityThreshold = 300.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Can Fall Off"))
-	bool bCanFall = false;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
-	float SidewaysForceFallOffThreshold = 4000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard Ground Rotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationGroundSpeed = 0.16f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (DisplayName = "Skateboard AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
-	float SkateboardRotationAirSpeed = 0.08f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	bool bDebugMovement = false;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
-	float CameraRotationSpeed = 400.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Snapback Speed"))
-	float CameraSnapbackSpeed = 200.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Max Rotation Offset", ShortTooltip = "In angles"))
-	float MaxCameraRotationOffset = 89.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-	float CustomSpringArmLength = 450.f;
-
-	virtual void BeginPlay() override;
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
-
-	virtual void Tick(float DeltaTime) override;
-
-	bool bAllowBrakingWhileHandbraking = false;
-
-	void MoveForward(float Value);
-
-	void MoveRight(float Value);
-
-	void LookUp(float Value);
-
-	void LookRight(float Value);
-
-	void Handbrake();
-
-	void LetGoHandBrake();
-
-	UPROPERTY(VisibleAnywhere)
-	UPlayerCharacterMovementComponent* Movement;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	USkeletalMeshComponent* SkateboardMesh;
-
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* Tray;
-
-	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* Camera;
-
-	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* SpringArm;
-
-	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
-
-	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
-
-	UPROPERTY(BlueprintReadOnly)
-	ABigButlerBattleGameModeBase* GameMode;
-
-	FTimerHandle HandbrakeHandle;
-	FTimerDelegate HandbrakeTimerCallback;
-	bool bCurrentlyHandbraking = false;
-
-	bool bCurrentlyHoldingHandbrake = false;
-	float RightAxis = 0.0f;
-
-	bool bEnabledRagdoll = false;
-
-	float CameraYaw = 0.f;
-	float CameraPitch = 0.f;
-
-	FSkateboardTraceResult LastTraceResult;
-
-	void UpdateCameraRotation(float DeltaTime);
-
 	void UpdateSkateboardRotation(float DeltaTime);
 
 	FQuat GetDesiredRotation(FVector DestinationNormal) const;
 
-	/** Task Stuff */
 
+
+
+
+
+
+/// ==================================== Tasks =================================================
+
+public:
+	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
+	FTaskObjectDroppedSignature OnTaskObjectDropped;
+
+protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* ObjectPickupCollision;
+	TArray<ATaskObject *> Inventory;
+	TArray<ATaskObject *> PickupBlacklist;
+	TArray<FName> TraySlotNames;
+
+	int CurrentItemIndex = 0;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* Tray;
+
+public:
+	TArray<ATaskObject*>& GetInventory() { return Inventory; }
+
+protected:
+	void OnObjectPickedUp(ATaskObject* Object);
+
+	void DropCurrentObject();
+
+	void IncrementCurrentItemIndex();
+	void DecrementCurrentItemIndex();
 
 	UFUNCTION()
 	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -182,22 +264,4 @@ protected:
 	UFUNCTION()
 	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-public:
-	TArray<ATaskObject*>& GetInventory() { return Inventory; }
-
-protected:
-	TArray<ATaskObject*> Inventory;
-
-	TArray<ATaskObject*> PickupBlacklist;
-
-	TArray<FName> TraySlotNames;
-
-	void OnObjectPickedUp(ATaskObject* Object);
-
-	void DropCurrentObject();
-
-	int CurrentItemIndex = 0;
-
-	void IncrementCurrentItemIndex();
-	void DecrementCurrentItemIndex();
 };

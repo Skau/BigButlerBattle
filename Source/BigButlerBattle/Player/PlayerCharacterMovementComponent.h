@@ -30,6 +30,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
+	/**
+	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Acceleration Velocity"))
+	float CustomMaxAccelerationVelocity = 1800.f;
+
 	bool bStandstill = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
@@ -54,12 +60,32 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
 	float SlopeGravityMultiplier = 2048.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Rotation"))
+	float HandbrakeRotationFactor = 300.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Velocity Threshold"))
+	float HandbrakeVelocityThreshold = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
+	bool bAllowBrakingWhileHandbraking = false;
+
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference;
 
 	float SplinePos = -1.f;
 	int SplineDir = 1;
+
+	UPROPERTY(BlueprintReadOnly)
+	APlayerCharacter* PlayerCharacter = nullptr;
+
+	FVector InputDir;
+	float SidewaysForce = 0.0f;
+
+	bool bBraking = false;
+
+public:
+	bool bHandbrake = false;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -71,6 +97,28 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
+
+	/**
+	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 */
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime = 0.f) const;
+	/**
+	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 * Parameter overload that doesn't calculate bMovingBackwards for you.
+	 */
+	FORCEINLINE bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime = 0.f) const;
+
+	/** Calculates the total acceleration in world space.
+	 * @brief Calculates the total acceleration in world space.
+	 */
+	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut);
+	FVector GetInputAcceleration(float ForwardInput, bool &bBrakingOut, bool &bMovingBackwardsOut);
+	/**
+	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
+	 */
+	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f);
+	FVector GetClampedInputAcceleration(float ForwardInput, bool &bBreakingOut, float DeltaTime = 0.f);
 
 protected:
 	void BeginPlay() override;
@@ -90,26 +138,19 @@ protected:
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* PlayerCharacter = nullptr;
+	void PerformSickAssHandbraking(float DeltaTime);
 
-private:
-	FVector InputDir;
-	float SidewaysForce = 0.0f;
+	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
-	void CalcSkateboardVelocity(float DeltaTime);
+	bool ShouldFallOff() const;
 
-	void AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime);
+	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
+	FORCEINLINE FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
-	/** Calculates the forward/backwards acceleration in world space.
-	 * @brief Calculates the forward/backwards acceleration in world space.
-	 * @return Forward / backwards acceleration vector in world space.
-	 */
-	FORCEINLINE FVector CalcAcceleration() const;
 	FORCEINLINE float CalcRotation() const;
+	FORCEINLINE float CalcHandbrakeRotation() const;
 
-	
 };

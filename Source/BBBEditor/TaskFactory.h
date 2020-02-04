@@ -19,7 +19,7 @@ public:
 
 private:
     UPROPERTY(EditAnywhere, Category = Task)
-    TSubclassOf<class UBaseTask> TaskClass;
+    TSubclassOf<class UTask> TaskClass;
     
     virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
     virtual bool ConfigureProperties() override;

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Tasks/BaseTask.h"
 #include "King.generated.h"
 
 class UBoxComponent;

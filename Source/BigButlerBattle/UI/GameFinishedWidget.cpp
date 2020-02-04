@@ -7,7 +7,7 @@
 
 bool UGameFinishedWidget::Initialize()
 {
-	bool bInitialized = Super::Initialize();
+	bool bInit = Super::Initialize();
 
 	SetVisibility(ESlateVisibility::Hidden);
 
@@ -17,7 +17,7 @@ bool UGameFinishedWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Quit;
 
-	return bInitialized;
+	return bInit;
 }
 
 void UGameFinishedWidget::SetWonText(FString Text)

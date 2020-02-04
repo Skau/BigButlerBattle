@@ -17,6 +17,11 @@ class BIGBUTLERBATTLE_API UCharacterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
+public:
+	void JumpAnim();
+
+	void ForwardKick();
+
 protected:
 	void NativeBeginPlay() override;
 
@@ -37,6 +42,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* JumpMontage;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
+	UAnimMontage* ForwardMontage;
+
 	// UFUNCTION(BlueprintPure)
 	// TPair<FVector, FVector> GetFeetLocations() const;
 	
@@ -45,9 +53,6 @@ protected:
 
 	UFUNCTION(BlueprintPure)
 	FVector GetFootRightLocation(APlayerCharacter* character) const;
-
-	UFUNCTION()
-	void JumpAnim();
 
 private:
 	FQuat PelvisStartRotation;

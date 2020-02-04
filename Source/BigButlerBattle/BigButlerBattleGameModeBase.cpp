@@ -13,7 +13,7 @@
 #include "Tasks/TaskObject.h"
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
-#include "Tasks/BaseTask.h"
+#include "Tasks/Task.h"
 #include "King/King.h"
 #include "Utils/btd.h"
 #include "GameFramework/PlayerStart.h"
@@ -196,17 +196,17 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	RemainingTasksToCreate = TotalTasks;
 
 	// The actual tasks to generate player tasks from
-	TArray<UBaseTask*> Tasks;
+	TArray<UTask*> Tasks;
 
 	// Putting the ranges in a map for an easier/optimal algorithm.
 	TMap<EObjectType, FIntRange> Ranges
 	{
-		{EObjectType::Wine, WineRange},
+		{EObjectType::Drink, WineRange},
 		{EObjectType::Food, FoodRange}
 	};
 
 	// Get all tasks available in the world
-	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData = GetWorldTaskData();
+	TMap<EObjectType, TArray<UTask*>> WorldTaskData = GetWorldTaskData();
 	if (!WorldTaskData.Num())
 	{
 		EndTaskGeneration(Tasks);
@@ -271,7 +271,7 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	while (RemainingTasksToCreate > 0)
 	{
 		// Get the tasks
-		auto TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
+		TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
 
 		// Append them
 		Tasks += TasksCreated;
@@ -288,9 +288,9 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	EndTaskGeneration(Tasks);
 }
 
-TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData()
+TMap<EObjectType, TArray<UTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData()
 {
-	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
+	TMap<EObjectType, TArray<UTask*>> WorldTaskData;
 
 	// Get all actors that are task objects
 	for (TActorIterator<ATaskObject> itr(GetWorld()); itr; ++itr)
@@ -306,7 +306,7 @@ TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTask
 		{
 			// [] operator on TMaps doesn't automatically add, so we do it manually
 			if (!WorldTaskData.Find(Task->Type))
-				WorldTaskData.Add(Task->Type, TArray<UBaseTask*>());
+				WorldTaskData.Add(Task->Type, TArray<UTask*>());
 
 			// Add the task to the types TArray of tasks
 			WorldTaskData[Task->Type].Add(Task);
@@ -316,9 +316,9 @@ TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTask
 	return WorldTaskData;
 }
 
-TArray<UBaseTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UBaseTask*>>& WorldTaskData, bool bShouldGenerateMinTasks)
+TArray<UTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UTask*>>& WorldTaskData, bool bShouldGenerateMinTasks)
 {
-	TArray<UBaseTask*> Tasks;
+	TArray<UTask*> Tasks;
 
 	int MinToCreate, MaxToCreate;
 
@@ -370,9 +370,9 @@ TArray<UBaseTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObj
 	return Tasks;
 }
 
-TArray<UBaseTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UBaseTask*>& TaskData, const FRandomStream& Stream, int Min, int Max)
+TArray<UTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UTask*>& TaskData, const FRandomStream& Stream, int Min, int Max)
 {
-	TArray<UBaseTask*> Tasks;
+	TArray<UTask*> Tasks;
 
 	int TasksToAdd = Stream.RandRange(Min, Max);
 
@@ -396,7 +396,7 @@ TArray<UBaseTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UBaseT
 	return Tasks;
 }
 
-void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UBaseTask*> Tasks)
+void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UTask*> Tasks)
 {
 	if (!Tasks.Num())
 	{
@@ -418,15 +418,15 @@ void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UBaseTask*> Tasks)
 	UE_LOG(LogTemp, Warning, TEXT("Task generation finished. Total time used: %f"), TaskGenerationEndTime - TaskGenerationStartTime);
 }
 
-void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
+void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UTask*> Tasks)
 {
 	for (auto& Controller : Controllers)
 	{
 		auto ID = UGameplayStatics::GetPlayerControllerID(Controller);
-		TArray<TPair<UBaseTask*, ETaskState>> PlayerTasks;
+		TArray<TPair<UTask*, ETaskState>> PlayerTasks;
 		for (auto& Task : Tasks)
 		{
-			PlayerTasks.Add(TPair<UBaseTask*, ETaskState>(Task, ETaskState::NotPresent));
+			PlayerTasks.Add(TPair<UTask*, ETaskState>(Task, ETaskState::NotPresent));
 		}
 		Controller->SetPlayerTasks(PlayerTasks);
 	}

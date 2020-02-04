@@ -10,16 +10,16 @@ UENUM(BlueprintType)
 enum class EObjectType : uint8
 {
     None,
-    Wine,
+    Drink,
     Food
 };
 
 USTRUCT(BlueprintType)
-struct FBaseTableData : public FTableRowBase
+struct FTaskTableData : public FTableRowBase
 {
     GENERATED_BODY()
 
-    FBaseTableData()
+    FTaskTableData()
     : Type(EObjectType::None)
     , Mesh(nullptr)
     , Material(nullptr)
@@ -34,34 +34,6 @@ struct FBaseTableData : public FTableRowBase
     UPROPERTY(EditAnywhere)
     class UMaterialInterface* Material;
 };
-
-USTRUCT(BlueprintType)
-struct FWineTableData : public FBaseTableData
-{
-    GENERATED_BODY()
-
-    FWineTableData()
-    : Year(0)
-    {}
-
-    UPROPERTY(EditAnywhere)
-    int Year;
-};
-
-
-USTRUCT(BlueprintType)
-struct FFoodTableData : public FBaseTableData
-{
-    GENERATED_BODY()
-
-    FFoodTableData()
-    : Temperature(0)
-    {}
-
-    UPROPERTY(EditAnywhere)
-    int Temperature;
-};
-
 
 USTRUCT(BlueprintType)
 struct FBezierPoint : public FTableRowBase

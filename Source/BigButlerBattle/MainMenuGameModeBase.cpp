@@ -3,6 +3,7 @@
 
 #include "MainMenuGameModeBase.h"
 #include "UI/MainMenuWidget.h"
+#include "UI/MainMenuPlayWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/PlayerCharacterController.h"
 #include "UI/MainMenuWidget.h"
@@ -43,25 +44,32 @@ void AMainMenuGameModeBase::BeginPlay()
 			return UGameplayStatics::GetPlayerControllerID(&p1) < UGameplayStatics::GetPlayerControllerID(&p2);
 	});
 
+	if (!MainMenuWidgetClass || !MainMenuPlayWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Subclasses not setup in Menu Gamemode!"));
+		return;
+	}
+
 	Controllers[0]->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(true);
 	MainMenuWidgetInstance = CreateWidget<UMainMenuWidget>(Controllers[0], MainMenuWidgetClass);
 	MainMenuWidgetInstance->AddToViewport();
+	MainMenuWidgetInstance->FocusWidget(Controllers[0]);
 
-	MainMenuWidgetInstance->PlayerWidget_0->FocusWidget(Controllers[0]);
-	MainMenuWidgetInstance->PlayerWidget_0->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
-	MainMenuWidgetInstance->PlayerWidget_0->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
-
-	MainMenuWidgetInstance->PlayerWidget_1->FocusWidget(Controllers[1]);
-	MainMenuWidgetInstance->PlayerWidget_1->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
-	MainMenuWidgetInstance->PlayerWidget_1->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
-
-	MainMenuWidgetInstance->PlayerWidget_2->FocusWidget(Controllers[2]);
-	MainMenuWidgetInstance->PlayerWidget_2->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
-	MainMenuWidgetInstance->PlayerWidget_2->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
-
-	MainMenuWidgetInstance->PlayerWidget_3->FocusWidget(Controllers[3]);
-	MainMenuWidgetInstance->PlayerWidget_3->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
-	MainMenuWidgetInstance->PlayerWidget_3->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+	MainMenuPlayWidgetInstance = CreateWidget<UMainMenuPlayWidget>(Controllers[0], MainMenuPlayWidgetClass);
+	MainMenuPlayWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+	MainMenuPlayWidgetInstance->AddToViewport();
+	
+	MainMenuWidgetInstance->PlayWidget = MainMenuPlayWidgetInstance;
+	MainMenuWidgetInstance->Controllers = Controllers;
+	
+	MainMenuPlayWidgetInstance->PlayerWidget_0->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuPlayWidgetInstance->PlayerWidget_0->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+	MainMenuPlayWidgetInstance->PlayerWidget_1->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuPlayWidgetInstance->PlayerWidget_1->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+	MainMenuPlayWidgetInstance->PlayerWidget_2->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuPlayWidgetInstance->PlayerWidget_2->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+	MainMenuPlayWidgetInstance->PlayerWidget_3->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
+	MainMenuPlayWidgetInstance->PlayerWidget_3->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
 }
 
 void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
@@ -77,9 +85,9 @@ void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
 		PlayerNotJoinedIDs.Add(ID);
 	}
 
-	if (MainMenuWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
+	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
 	{
-		MainMenuWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
+		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
 	}
 	GetWorldTimerManager().ClearTimer(HandleStartGame);
 	ElapsedCountdownTime = 0.0f;
@@ -89,9 +97,9 @@ void AMainMenuGameModeBase::OnPlayerToggledReady(bool Value, int ID)
 {
 	Value ? NumReadiedPlayers++ : NumReadiedPlayers--;
 
-	if (MainMenuWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
+	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
 	{
-		MainMenuWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
+		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
 	}
 	GetWorldTimerManager().ClearTimer(HandleStartGame);
 	ElapsedCountdownTime = 0.0f;
@@ -103,9 +111,9 @@ void AMainMenuGameModeBase::OnPlayerToggledReady(bool Value, int ID)
 
 void AMainMenuGameModeBase::GameStartCountdown()
 {
-	if (MainMenuWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Visible)
+	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Visible)
 	{
-		MainMenuWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Visible);
+		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Visible);
 	}
 
 	ElapsedCountdownTime += GetWorldTimerManager().GetTimerElapsed(HandleStartGame);
@@ -126,7 +134,7 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	}
 	else
 	{
-		MainMenuWidgetInstance->GameStartTime->SetText(FText::FromString(FString::FromInt(TimeLeft)));
+		MainMenuPlayWidgetInstance->GameStartTime->SetText(FText::FromString(FString::FromInt(TimeLeft)));
 	}
 	
 }

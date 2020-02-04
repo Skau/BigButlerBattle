@@ -4,6 +4,7 @@
 #include "BaseUserWidget.h"
 #include "Player/PlayerCharacterController.h"
 #include "Components/Button.h"
+#include "Application/SlateApplication.h"
 
 UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -11,9 +12,9 @@ UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 
 bool UBaseUserWidget::Initialize()
 {
-	bool bInitialized = Super::Initialize();
+	bool bInit = Super::Initialize();
 
-	return bInitialized;
+	return bInit;
 }
 
 void UBaseUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -49,9 +50,18 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 		else
 			ActualWidgetToFocus = WidgetToFocus;
 
-		FInputModeUIOnly Mode;
+		WidgetFocusedLast = ActualWidgetToFocus;
+
+		FInputModeGameAndUI Mode;
+		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 		Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
+		
 		Controller->SetInputMode(Mode);
+		Controller->CurrentMouseCursor = EMouseCursor::None;
+		Controller->bShowMouseCursor = false;
+		Controller->bEnableClickEvents = false;
+		Controller->bEnableMouseOverEvents = false;
+		FSlateApplication::Get().OnCursorSet();
 
 		OwningCharacterController = Controller;
 		OnPlayerCharacterControllerSet();
@@ -60,4 +70,16 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 
 void UBaseUserWidget::OnPlayerCharacterControllerSet()
 {
+}
+
+void UBaseUserWidget::OnBackButtonPressed()
+{
+}
+
+void UBaseUserWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
+{
+	// In case we want to use this function in blueprint too
+	Super::NativeOnRemovedFromFocusPath(InFocusEvent);
+
+	FocusWidget(OwningCharacterController, WidgetFocusedLast);
 }
