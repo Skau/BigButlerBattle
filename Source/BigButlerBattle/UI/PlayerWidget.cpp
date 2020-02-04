@@ -16,12 +16,6 @@
 
 void UPlayerWidget::InitializeTaskWidgets(const TArray<TPair<UTask*, ETaskState>>& Tasks)
 {
-	if (TaskBox->GetChildrenCount())
-		TaskBox->ClearChildren();
-
-	if (TaskWidgets.Num())
-		TaskWidgets.Empty();
-
 	if (!TaskWidgetClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("TaskWidget Subclass not set in PlayerWidget"));

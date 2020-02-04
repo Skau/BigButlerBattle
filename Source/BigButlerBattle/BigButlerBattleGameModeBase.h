@@ -124,4 +124,6 @@ private:
 
 	double TaskGenerationStartTime = 0;
 
+	void GenerateExtraTask();
+
 };
