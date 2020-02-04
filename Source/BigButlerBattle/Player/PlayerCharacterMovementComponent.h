@@ -34,7 +34,7 @@ protected:
 	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Acceleration Velocity"))
-	float CustomMaxAccelerationVelocity = 2048.f;
+	float CustomMaxAccelerationVelocity = 1800.f;
 
 	bool bStandstill = false;
 
@@ -98,6 +98,28 @@ public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
 
+	/**
+	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 */
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime = 0.f) const;
+	/**
+	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 * Parameter overload that doesn't calculate bMovingBackwards for you.
+	 */
+	FORCEINLINE bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime = 0.f) const;
+
+	/** Calculates the total acceleration in world space.
+	 * @brief Calculates the total acceleration in world space.
+	 */
+	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut);
+	FVector GetInputAcceleration(float ForwardInput, bool &bBrakingOut, bool &bMovingBackwardsOut);
+	/**
+	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
+	 */
+	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f);
+	FVector GetClampedInputAcceleration(float ForwardInput, bool &bBreakingOut, float DeltaTime = 0.f);
+
 protected:
 	void BeginPlay() override;
 
@@ -128,10 +150,7 @@ protected:
 	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
 	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
-	/** Calculates the total acceleration in world space.
-	 * @brief Calculates the total acceleration in world space.
-	 */
-	void CalcInputAcceleration(float DeltaTime = 0.f);
 	FORCEINLINE float CalcRotation() const;
 	FORCEINLINE float CalcHandbrakeRotation() const;
+
 };
