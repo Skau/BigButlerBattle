@@ -496,8 +496,8 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInp
 {
 	const auto input = ForwardInput;
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
-	const bool bCanMoveVertically = !bHandbrake || (bAllowBrakingWhileHandbraking && InputDir.X < 0.f);
 	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
+	const bool bCanMoveVertically = !bHandbrake || (bAllowBrakingWhileHandbraking && input < 0.f);
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 
 	if (a.IsNearlyZero())
