@@ -500,7 +500,7 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInp
 	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 
-	if (a.IsZero())
+	if (a.IsNearlyZero())
 		a = FVector::ZeroVector;
 
 	bBreakingOut = FMath::IsNegativeFloat(FVector::DotProduct(a, GetOwner()->GetActorForwardVector()));
@@ -512,7 +512,7 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInp
 		a = -a;
 	}
 
-	if (a.IsZero())
+	if (a.IsNearlyZero())
 		a = FVector::ZeroVector;
 
 	return a;
