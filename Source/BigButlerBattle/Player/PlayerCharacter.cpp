@@ -23,6 +23,7 @@
 #include "King/King.h"
 #include "PlayerCharacterController.h"
 #include "CharacterAnimInstance.h"
+#include "Engine/World.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -201,7 +202,7 @@ void APlayerCharacter::MoveForward(float Value)
 		AddMovementInput(FVector::ForwardVector * Value);
 	}
 	// // Forward kick
-	else if (Value != 0 && Movement->CanAccelerate(acceleration, bBraking, bMovingBackwards, UGameplayStatics::GetWorldDeltaSeconds(this)) && AnimInstance)
+	else if (Value != 0 && Movement->CanAccelerate(acceleration, bBraking, bMovingBackwards, GetWorld()->GetDeltaSeconds()) && AnimInstance)
 	{
 		AnimInstance->ForwardKick();
 	}
