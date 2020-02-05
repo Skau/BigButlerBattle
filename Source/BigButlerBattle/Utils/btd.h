@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "UObject/Object.h"
 
 /**
  * 
@@ -27,6 +30,14 @@ namespace btd
     FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
+    }
+
+    FORCEINLINE static void Delay(UObject* Context, float Seconds, TFunction<void(void)> lambda)
+    {
+        FTimerDelegate TimerCallback;
+        TimerCallback.BindLambda(lambda);
+        FTimerHandle Handle;
+        Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
     }
 
     /**
