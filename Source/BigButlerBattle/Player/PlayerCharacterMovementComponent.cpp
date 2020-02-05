@@ -19,7 +19,7 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
-	MaxAcceleration = 32000.f;
+	MaxAcceleration = 700.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
@@ -37,7 +37,10 @@ bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector& Acceleratio
 
 bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const
 {
-	return bMovingBackwards || !bBrakingIn && (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity));
+	return !bHandbrake
+	&& (bMovingBackwards
+		|| !bBrakingIn && (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity))
+	);
 }
 
 void UPlayerCharacterMovementComponent::BeginPlay()
@@ -520,7 +523,7 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInp
 
 FVector UPlayerCharacterMovementComponent::GetInputAccelerationTimeNormalized(const FVector &a, bool bBrakingIn, float DeltaTime) const
 {
-	return (bBrakingIn || DeltaTime < MIN_TICK_TIME) ? a : a * (SkateboardKickingLength / DeltaTime);
+	return (bBrakingIn || DeltaTime < MIN_TICK_TIME) ? a : a * (1.f / DeltaTime);
 }
 
 FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime)

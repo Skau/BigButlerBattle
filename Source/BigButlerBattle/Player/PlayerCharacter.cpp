@@ -202,9 +202,14 @@ void APlayerCharacter::MoveForward(float Value)
 		AddMovementInput(FVector::ForwardVector * Value);
 	}
 	// // Forward kick
-	else if (Value != 0 && Movement->CanAccelerate(acceleration, bBraking, bMovingBackwards, GetWorld()->GetDeltaSeconds()) && AnimInstance)
+	else if (Value != 0)
 	{
-		AnimInstance->ForwardKick();
+		// Normalize with time
+		const float deltaTime = GetWorld()->GetDeltaSeconds();
+		acceleration = Movement->GetInputAccelerationTimeNormalized(acceleration, bBraking, deltaTime);
+		
+		if (Movement->CanAccelerate(acceleration, bBraking, bMovingBackwards, deltaTime) && AnimInstance)
+			AnimInstance->ForwardKick();
 	}
 }
 

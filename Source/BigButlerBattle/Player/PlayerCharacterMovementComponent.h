@@ -69,12 +69,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
 	bool bAllowBrakingWhileHandbraking = false;
 
-	/**
-	 * Kicking length defines the amount in seconds that a "kick" will apply acceleration to the skateboard.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Kicking Length"))
-	float SkateboardKickingLength = 0.02f;
-
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference;
