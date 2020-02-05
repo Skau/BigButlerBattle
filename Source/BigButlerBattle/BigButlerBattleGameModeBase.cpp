@@ -416,6 +416,15 @@ void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UTask*> Tasks)
 	double TaskGenerationEndTime = FPlatformTime::Seconds();
 
 	UE_LOG(LogTemp, Warning, TEXT("Task generation finished. Total time used: %f"), TaskGenerationEndTime - TaskGenerationStartTime);
+
+	//FTimerDelegate TimerCallback;
+	//TimerCallback.BindLambda([&]
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Generating Extra Task"));
+	//		GenerateExtraTask();
+	//	});
+	//FTimerHandle Handle;
+	//GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 3.f, true);
 }
 
 void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UTask*> Tasks)
@@ -430,4 +439,18 @@ void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UTask*> Tasks)
 		}
 		Controller->SetPlayerTasks(PlayerTasks);
 	}
+}
+
+void ABigButlerBattleGameModeBase::GenerateExtraTask()
+{
+	auto TaskData = GetWorldTaskData();
+	TArray<EObjectType> Types;
+	TaskData.GetKeys(Types);
+
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FRandomStream Stream;
+	Stream.Initialize(Instance->GetCurrentRandomSeed());
+
+	auto Tasks = ProcessWorldTasks(TaskData[Types[FMath::RandRange(0, Types.Num() - 1)]], Stream, 1, 1);
+	GeneratePlayerTasks(Tasks);
 }

@@ -107,13 +107,12 @@ public:
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 */
-	UFUNCTION(BlueprintPure)
-	FORCEINLINE bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime = 0.f) const;
+	bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime) const;
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 * Parameter overload that doesn't calculate bMovingBackwards for you.
 	 */
-	FORCEINLINE bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime = 0.f) const;
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const;
 
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
