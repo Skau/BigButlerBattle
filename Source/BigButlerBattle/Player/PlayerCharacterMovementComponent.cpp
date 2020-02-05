@@ -19,7 +19,7 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
-	MaxAcceleration = 40000.f;
+	MaxAcceleration = 32000.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
@@ -518,10 +518,16 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInp
 	return a;
 }
 
+FVector UPlayerCharacterMovementComponent::GetInputAccelerationTimeNormalized(const FVector &a, bool bBrakingIn, float DeltaTime) const
+{
+	return (bBrakingIn || DeltaTime < MIN_TICK_TIME) ? a : a * (SkateboardKickingLength / DeltaTime);
+}
+
 FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime)
 {
 	bool bMovingBackwards;
 	auto a = GetInputAcceleration(bBrakingOut, bMovingBackwards);
+	a = GetInputAccelerationTimeNormalized(a, bBrakingOut, DeltaTime);
 	return CanAccelerate(a, bBrakingOut, bMovingBackwards, DeltaTime) ? a : FVector::ZeroVector;
 }
 
@@ -529,6 +535,7 @@ FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(float For
 {
 	bool bMovingBackwards;
 	auto a = GetInputAcceleration(ForwardInput, bBrakingOut, bMovingBackwards);
+	a = GetInputAccelerationTimeNormalized(a, bBrakingOut, DeltaTime);
 	return CanAccelerate(a, bBrakingOut, bMovingBackwards, DeltaTime) ? a : FVector::ZeroVector;
 }
 

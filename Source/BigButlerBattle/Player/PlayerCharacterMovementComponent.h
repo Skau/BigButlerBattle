@@ -69,6 +69,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
 	bool bAllowBrakingWhileHandbraking = false;
 
+	/**
+	 * Kicking length defines the amount in seconds that a "kick" will apply acceleration to the skateboard.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Kicking Length"))
+	float SkateboardKickingLength = 0.02f;
+
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference;
@@ -114,6 +120,12 @@ public:
 	 */
 	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut);
 	FVector GetInputAcceleration(float ForwardInput, bool &bBrakingOut, bool &bMovingBackwardsOut);
+
+	/**
+	 * Multiplies kicking acceleration with a factor to make up for different tick speeds.
+	 */
+	FVector GetInputAccelerationTimeNormalized(const FVector& a, bool bBrakingIn, float DeltaTime) const;
+
 	/**
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
