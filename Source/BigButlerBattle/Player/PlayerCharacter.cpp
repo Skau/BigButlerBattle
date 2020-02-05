@@ -46,8 +46,25 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	ObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
 	ObjectPickupCollision->SetupAttachment(RootComponent);
 
+	// Default values
+
 	ObjectPickupCollision->SetGenerateOverlapEvents(true);
 	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
+
+	ObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
+	ObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
+
+	CapsuleObjectCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
+	CapsuleObjectCollision->SetupAttachment(Camera);
+
+	// Default values
+
+	CapsuleObjectCollision->SetGenerateOverlapEvents(true);
+	CapsuleObjectCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
+
+	CapsuleObjectCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
+	CapsuleObjectCollision->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
+	CapsuleObjectCollision->InitCapsuleSize(128.f, 256.f);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
@@ -93,6 +110,9 @@ void APlayerCharacter::BeginPlay()
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
 
+	CapsuleObjectCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnCapsuleObjectCollisionOverlap);
+	CapsuleObjectCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnCapsuleObjectCollisionEndOverlap);
+
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
 }
 
@@ -123,6 +143,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	UpdateCameraRotation(DeltaTime);
 	UpdateSkateboardRotation(DeltaTime);
+
+	UpdateClosestTaskObject();
 }
 
 
@@ -483,18 +505,33 @@ void APlayerCharacter::DropCurrentObject()
 		// Scale (scale it back up)
 		transform.SetScale3D(transform.GetScale3D() / 0.3f);
 
-		// Direction to throw object
-		auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
+		UE_LOG(LogTemp, Warning, TEXT("Currently holding throw: %i"), bCurrentlyHoldingThrow);
 
-		// Position to spawn object
-		auto SpawnPos = GetActorLocation() + (Dir * 200.f);
+		FVector SpawnPos = FVector::ZeroVector;
+		FVector FinalVelocity = FVector::ZeroVector;
+
+		if (bCurrentlyHoldingThrow)
+		{
+			auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
+			auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
+			SpawnPos = GetActorLocation() + (Dir * 200.f);
+			FinalVelocity = VelProject + (Dir * ThrowStrength);
+		}
+		else
+		{
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			if (GetWorld()->LineTraceSingleByProfile(HitResult, GetActorLocation() + (GetActorForwardVector() * -100.f), GetActorUpVector() * -1000.f, "WorldStatic", Params))
+			{
+				SpawnPos = HitResult.ImpactPoint;
+			}
+
+		}
+
 		transform.SetLocation(SpawnPos);
 
-		// Velocity to add to throw (based on current velocity)
-		auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
-
 		// Set velocity
-		Spawned->LaunchVelocity = bCurrentlyHoldingThrow ? VelProject + (Dir * ThrowStrength) : VelProject;
+		Spawned->LaunchVelocity = FinalVelocity;
 
 		// Finish
 		UGameplayStatics::FinishSpawningActor(Spawned, transform);
@@ -590,7 +627,7 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
-		if(PickupBlacklist.Find(TaskObject) == INDEX_NONE)
+		if(TaskObject->IsInPickupRange && PickupBlacklist.Find(TaskObject) == INDEX_NONE)
 		{
 			OnObjectPickedUp(TaskObject);
 		}
@@ -610,5 +647,50 @@ void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* Ov
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
 		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
+	}
+}
+
+void APlayerCharacter::OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (auto Object = Cast<ATaskObject>(OtherActor))
+	{
+		TaskObjectsInRange.Add(Object);
+	}
+}
+
+void APlayerCharacter::OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (auto Object = Cast<ATaskObject>(OtherActor))
+	{
+		if(Object->IsInPickupRange)
+			Object->SetSelected(false);
+
+		TaskObjectsInRange.RemoveSingle(Object);
+	}
+}
+
+void APlayerCharacter::UpdateClosestTaskObject()
+{
+	if (!TaskObjectsInRange.Num())
+		return;
+
+	float Closest = MAX_FLT;
+	int IndexClosest = -1;
+	for (int i = 0; i < TaskObjectsInRange.Num(); ++i)
+	{
+		if (TaskObjectsInRange[i]->IsInPickupRange)
+			TaskObjectsInRange[i]->SetSelected(false);
+
+		auto Distance = FVector::Distance(TaskObjectsInRange[i]->GetActorLocation(), GetActorLocation());
+		if (Distance < Closest)
+		{
+			Closest = Distance;
+			IndexClosest = i;
+		}
+	}
+
+	if (IndexClosest != -1)
+	{
+		TaskObjectsInRange[IndexClosest]->SetSelected(true);
 	}
 }

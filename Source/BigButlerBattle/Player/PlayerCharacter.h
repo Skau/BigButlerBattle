@@ -238,9 +238,15 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* ObjectPickupCollision;
+
+	UPROPERTY(VisibleAnywhere)
+	UCapsuleComponent* CapsuleObjectCollision;
+
 	TArray<ATaskObject *> Inventory;
 	TArray<ATaskObject *> PickupBlacklist;
 	TArray<FName> TraySlotNames;
+
+	TArray<ATaskObject*> TaskObjectsInRange;
 
 	UPROPERTY(EditDefaultsOnly)
 	float ThrowStrength = 2000.f;
@@ -272,4 +278,11 @@ protected:
 	UFUNCTION()
 	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	void UpdateClosestTaskObject();
 };
