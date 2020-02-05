@@ -29,20 +29,6 @@ bool UPlayerCharacterMovementComponent::IsMovingOnGround() const
 	return ((MovementMode == MOVE_Custom && CurrentCustomMovementMode == ECustomMovementType::MOVE_Skateboard) || (MovementMode == MOVE_Walking) || (MovementMode == MOVE_NavWalking)) && UpdatedComponent;
 }
 
-bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime) const
-{
-	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
-	return CanAccelerate(AccelerationIn, bBrakingIn, bMovingBackwards, DeltaTime);
-}
-
-bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const
-{
-	return !bHandbrake
-	&& (bMovingBackwards
-		|| !bBrakingIn && (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity))
-	);
-}
-
 void UPlayerCharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -489,15 +475,38 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
-FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool& bBreakingOut, bool &bMovingBackwardsOut)
+bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime) const
 {
-	const auto input = GetForwardInput();
-	return GetInputAcceleration(input, bBreakingOut, bMovingBackwardsOut);
+	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
+	return CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
 }
 
-FVector UPlayerCharacterMovementComponent::GetInputAcceleration(float ForwardInput, bool &bBreakingOut, bool &bMovingBackwardsOut)
+bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime, bool bMovingBackwards) const
 {
-	const auto input = ForwardInput;
+	return !bHandbrake && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
+}
+
+bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime) const
+{
+	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime);
+}
+
+bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime, bool bMovingBackwards) const
+{
+	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
+}
+
+FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBreakingOut, bool &bMovingBackwardsOut, float input)
+{
+	if (input == 0)
+	{
+		input = GetForwardInput();
+		if (input == 0)
+		{
+			return FVector::ZeroVector;
+		}
+	}
+
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
 	const bool bCanMoveVertically = !bHandbrake || (bAllowBrakingWhileHandbraking && input < 0.f);
 	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
@@ -526,20 +535,12 @@ FVector UPlayerCharacterMovementComponent::GetInputAccelerationTimeNormalized(co
 	return (bBrakingIn || DeltaTime < MIN_TICK_TIME) ? a : a * (1.f / DeltaTime);
 }
 
-FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime)
+FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime, float input)
 {
 	bool bMovingBackwards;
-	auto a = GetInputAcceleration(bBrakingOut, bMovingBackwards);
+	auto a = GetInputAcceleration(bBrakingOut, bMovingBackwards, input);
 	a = GetInputAccelerationTimeNormalized(a, bBrakingOut, DeltaTime);
-	return CanAccelerate(a, bBrakingOut, bMovingBackwards, DeltaTime) ? a : FVector::ZeroVector;
-}
-
-FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(float ForwardInput, bool &bBrakingOut, float DeltaTime)
-{
-	bool bMovingBackwards;
-	auto a = GetInputAcceleration(ForwardInput, bBrakingOut, bMovingBackwards);
-	a = GetInputAccelerationTimeNormalized(a, bBrakingOut, DeltaTime);
-	return CanAccelerate(a, bBrakingOut, bMovingBackwards, DeltaTime) ? a : FVector::ZeroVector;
+	return CanAccelerate(a, bBrakingOut, DeltaTime, bMovingBackwards) ? a : FVector::ZeroVector;
 }
 
 float UPlayerCharacterMovementComponent::CalcRotation() const

@@ -100,19 +100,21 @@ public:
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 * Only valid if not braking.
 	 */
-	bool CanAccelerate(const FVector& AccelerationIn, bool bBrakingIn, float DeltaTime) const;
+	bool CanForwardAccelerate(const FVector& AccelerationIn, float DeltaTime) const;
+	bool CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime, bool bMovingBackwards) const;
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
 	 * Parameter overload that doesn't calculate bMovingBackwards for you.
 	 */
-	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, bool bMovingBackwards, float DeltaTime) const;
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime) const;
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime, bool bMovingBackwards) const;
 
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
 	 */
-	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut);
-	FVector GetInputAcceleration(float ForwardInput, bool &bBrakingOut, bool &bMovingBackwardsOut);
+	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float input = 0.f);
 
 	/**
 	 * Multiplies kicking acceleration with a factor to make up for different tick speeds.
@@ -122,8 +124,7 @@ public:
 	/**
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
-	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f);
-	FVector GetClampedInputAcceleration(float ForwardInput, bool &bBreakingOut, float DeltaTime = 0.f);
+	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f, float input = 0.f);
 
 protected:
 	void BeginPlay() override;

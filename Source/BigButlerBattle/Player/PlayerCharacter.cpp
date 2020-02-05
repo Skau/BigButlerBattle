@@ -194,7 +194,7 @@ void APlayerCharacter::MoveForward(float Value)
 
 	bool bBraking = false;
 	bool bMovingBackwards = false;
-	auto acceleration = Movement->GetInputAcceleration(Value, bBraking, bMovingBackwards);
+	auto acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
 
 	// Brake
 	if (bBraking)
@@ -207,8 +207,7 @@ void APlayerCharacter::MoveForward(float Value)
 		// Normalize with time
 		const float deltaTime = GetWorld()->GetDeltaSeconds();
 		acceleration = Movement->GetInputAccelerationTimeNormalized(acceleration, bBraking, deltaTime);
-		
-		if (Movement->CanAccelerate(acceleration, bBraking, bMovingBackwards, deltaTime) && AnimInstance)
+		if (Movement->CanForwardAccelerate(acceleration, deltaTime, bMovingBackwards) && AnimInstance)
 			AnimInstance->ForwardKick();
 	}
 }
