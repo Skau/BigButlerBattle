@@ -627,7 +627,7 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
-		if(TaskObject->IsInPickupRange && PickupBlacklist.Find(TaskObject) == INDEX_NONE)
+		if(TaskObject == ClosestPickup && PickupBlacklist.Find(TaskObject) == INDEX_NONE)
 		{
 			OnObjectPickedUp(TaskObject);
 		}
@@ -662,9 +662,11 @@ void APlayerCharacter::OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* O
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
-		if(Object->IsInPickupRange)
+		if (Object == ClosestPickup)
+		{
 			Object->SetSelected(false);
-
+			ClosestPickup = nullptr;
+		}
 		TaskObjectsInRange.RemoveSingle(Object);
 	}
 }
@@ -675,22 +677,22 @@ void APlayerCharacter::UpdateClosestTaskObject()
 		return;
 
 	float Closest = MAX_FLT;
-	int IndexClosest = -1;
+	if (ClosestPickup)
+	{
+		ClosestPickup->SetSelected(false);
+		ClosestPickup = nullptr;
+	}
+
 	for (int i = 0; i < TaskObjectsInRange.Num(); ++i)
 	{
-		if (TaskObjectsInRange[i]->IsInPickupRange)
-			TaskObjectsInRange[i]->SetSelected(false);
-
 		auto Distance = FVector::Distance(TaskObjectsInRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{
 			Closest = Distance;
-			IndexClosest = i;
+			ClosestPickup = TaskObjectsInRange[i];
 		}
 	}
 
-	if (IndexClosest != -1)
-	{
-		TaskObjectsInRange[IndexClosest]->SetSelected(true);
-	}
+	if (ClosestPickup)
+		ClosestPickup->SetSelected(true);
 }

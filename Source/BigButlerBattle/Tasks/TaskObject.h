@@ -37,8 +37,6 @@ public:
 
 	void SetSelected(bool Value);
 
-	bool IsInPickupRange = false;
-
 protected:
 	void BeginPlay() override;
 

@@ -248,6 +248,9 @@ protected:
 
 	TArray<ATaskObject*> TaskObjectsInRange;
 
+	UPROPERTY()
+	ATaskObject* ClosestPickup;
+
 	UPROPERTY(EditDefaultsOnly)
 	float ThrowStrength = 2000.f;
 

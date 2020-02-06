@@ -43,7 +43,6 @@ ATaskObject::ATaskObject()
 
 void ATaskObject::SetSelected(bool Value)
 {
-	IsInPickupRange = Value;
 	DynamicMaterial->SetScalarParameterValue("Selected", (float)Value);
 }
 
