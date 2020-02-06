@@ -18,6 +18,7 @@ class APlayerCharacter;
 class ABigButlerBattleGameModeBase;
 class ATaskObject;
 class UTask;
+class APlayerStart;
 enum class ETaskState;
 
 /**
@@ -43,6 +44,8 @@ public:
 
 	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
 
+	void RespawnCharacter(APlayerStart* PlayerStart = nullptr);
+
 protected:
 	void BeginPlay() override;
 
@@ -57,9 +60,15 @@ protected:
 
 	UPlayerWidget* PlayerWidget = nullptr;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacter> PlayerCharacterClass = nullptr;
+
 	APlayerCharacter* PlayerCharacter = nullptr;
 
 	ABigButlerBattleGameModeBase* ButlerGameMode = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RespawnTime = 3.f;
 
 private:
 	TArray<TPair<UTask*, ETaskState>> PlayerTasks;
@@ -75,4 +84,8 @@ private:
 	void UpdatePlayerTasks();
 
 	void OnTaskObjectDelivered(ATaskObject* Object);
+
+	void OnCharacterFell();
+
+	FTransform SpawnTransform = FTransform::Identity;
 };

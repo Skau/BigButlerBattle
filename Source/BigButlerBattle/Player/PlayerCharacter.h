@@ -22,6 +22,7 @@ class ATaskObject;
 class UTask;
 
 // Delegates
+DECLARE_DELEGATE(FCharacterFellSignature);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
@@ -60,6 +61,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void AddForwardInput();
+
+	FCharacterFellSignature OnCharacterFell;
 
 protected:
 	virtual void BeginPlay() override;
@@ -270,6 +273,8 @@ protected:
 	void OnObjectPickedUp(ATaskObject* Object);
 
 	void DropCurrentObject();
+
+	void DetachObject(ATaskObject* Object, FVector SpawnLocation, FVector LaunchVelocity = FVector::ZeroVector);
 
 	void OnHoldingThrow();
 	void OnHoldThrowReleased();

@@ -7,7 +7,6 @@
 #include "Utils/DataTables.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
-class APlayerCharacter;
 class APlayerCharacterController;
 class UPauseWidget;
 class UTask;
@@ -48,9 +47,6 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 
 protected:
 	void BeginPlay() override;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPauseWidget> PauseWidgetClass;

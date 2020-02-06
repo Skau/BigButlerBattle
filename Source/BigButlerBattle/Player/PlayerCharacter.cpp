@@ -170,7 +170,6 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	GetMesh()->WakeAllRigidBodies();
-	GetMesh()->bBlendPhysics = true;
 
 	if (!Impulse.IsZero())
 	{
@@ -186,8 +185,7 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 	{
 		if (Obj)
 		{
-			Obj->SetEnable(true, true, true);
-			Obj->DetachFromActor(Rules);
+			DetachObject(Obj, Obj->GetActorLocation(), Movement->Velocity);
 		}
 	}
 
@@ -195,7 +193,6 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 
 	SkateboardMesh->SetAllBodiesSimulatePhysics(true);
 	SkateboardMesh->WakeAllRigidBodies();
-	SkateboardMesh->bBlendPhysics = true;
 
 	// Movement
 
@@ -203,6 +200,8 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 	Movement->SetComponentTickEnabled(false);
 
 	bEnabledRagdoll = true;
+
+	OnCharacterFell.ExecuteIfBound();
 }
 
 void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -546,21 +545,7 @@ void APlayerCharacter::DropCurrentObject()
 {
 	if (auto Obj = Inventory[CurrentItemIndex])
 	{
-		// Disable old object
-		Obj->SetEnable(false, false, false);
 		PickupBlacklist.RemoveSingle(Obj);
-		// Deferred spawn new
-		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
-		Spawned->SetTaskData(Obj->GetTaskData());
-		PickupBlacklist.Add(Spawned);
-
-		// Spawn transform
-		auto transform = Obj->GetTransform();
-
-		// Scale (scale it back up)
-		transform.SetScale3D(transform.GetScale3D() / 0.3f);
-
-		UE_LOG(LogTemp, Warning, TEXT("Currently holding throw: %i"), bCurrentlyHoldingThrow);
 
 		FVector SpawnPos = FVector::ZeroVector;
 		FVector FinalVelocity = FVector::ZeroVector;
@@ -580,24 +565,47 @@ void APlayerCharacter::DropCurrentObject()
 			{
 				SpawnPos = HitResult.ImpactPoint;
 			}
-
 		}
 
-		transform.SetLocation(SpawnPos);
-
-		// Set velocity
-		Spawned->LaunchVelocity = FinalVelocity;
-
-		// Finish
-		UGameplayStatics::FinishSpawningActor(Spawned, transform);
+		DetachObject(Obj, SpawnPos, FinalVelocity);
 
 		// Destroy old object
 		Obj->Destroy();
 		Inventory[CurrentItemIndex] = nullptr;
+	}
+}
+
+void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, FVector LaunchVelocity)
+{
+	if (Object)
+	{
+		// Disable old object
+		Object->SetEnable(false, false, false);
+		PickupBlacklist.RemoveSingle(Object);
+
+		// Deferred spawn new
+		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+		Spawned->SetTaskData(Object->GetTaskData());
+		PickupBlacklist.Add(Spawned);
+
+		// Spawn transform
+		auto transform = Object->GetTransform();
+
+		// Scale (scale it back up)
+		transform.SetScale3D(transform.GetScale3D() / 0.3f);
+
+		transform.SetLocation(SpawnLocation);
+
+		// Set velocity
+		Spawned->LaunchVelocity = LaunchVelocity;
+
+		// Finish
+		UGameplayStatics::FinishSpawningActor(Spawned, transform);
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 	}
 }
+
 
 void APlayerCharacter::OnHoldingThrow()
 {

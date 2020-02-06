@@ -9,6 +9,8 @@
 #include "Tasks/Task.h"
 #include "King/King.h"
 #include "Tasks/TaskObject.h"
+#include "GameFramework/PlayerStart.h"
+#include "Utils/btd.h"
 
 APlayerCharacterController::APlayerCharacterController() 
 {
@@ -142,6 +144,21 @@ void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 	}
 }
 
+void APlayerCharacterController::OnCharacterFell()
+{
+	btd::Delay(this, RespawnTime, [=]()
+	{
+		if (PlayerCharacter)
+		{
+			bAutoManageActiveCameraTarget = false;
+			UnPossess();
+			PlayerCharacter->Destroy();
+			PlayerCharacter = nullptr;
+		}
+		RespawnCharacter();
+	});
+}
+
 void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory)
 {
 	for (int i = 0; i < Inventory.Num(); ++i)
@@ -175,4 +192,26 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 
 	auto ID = UGameplayStatics::GetPlayerControllerID(this);
 	OnGameFinished.ExecuteIfBound(ID);
+}
+
+void APlayerCharacterController::RespawnCharacter(APlayerStart* PlayerStart)
+{
+	if (!PlayerCharacterClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player Controller: Player Character Class not set!"));
+		return;
+	}
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	if (PlayerStart)
+	{
+		SpawnTransform = PlayerStart->GetActorTransform();
+	}
+
+	PlayerCharacter = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params);
+	Possess(PlayerCharacter);
+	SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
+	PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
 }

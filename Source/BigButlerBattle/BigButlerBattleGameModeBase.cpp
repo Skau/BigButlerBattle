@@ -61,24 +61,11 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	for(int i = 0; i < Controllers.Num(); ++i)
 	{
-		// Spawn character and posess
-
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		FTransform SpawnTransform = FTransform::Identity;
-		if (auto PlayerStart = PlayerStarts[i])
-		{
-			SpawnTransform = PlayerStart->GetActorTransform();
-		}
-
-		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params);
-		Controllers[i]->Possess(Character);
-
+		// Spawn character
+		Controllers[i]->RespawnCharacter(PlayerStarts[i]);
 		Controllers[i]->SetInputMode(FInputModeGameOnly());
 
 		// Delegates
-
 		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
 		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
 	}
