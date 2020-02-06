@@ -128,9 +128,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
 	Input->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
-	//Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
-	Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
-	Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
+	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
+	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
 	Input->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
 
@@ -554,22 +554,22 @@ void APlayerCharacter::DropCurrentObject()
 		FVector SpawnPos = FVector::ZeroVector;
 		FVector FinalVelocity = FVector::ZeroVector;
 
-		if (bCurrentlyHoldingThrow)
-		{
+		//if (bCurrentlyHoldingThrow)
+		//{
 			auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
 			auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
 			SpawnPos = GetActorLocation() + (Dir * 200.f);
 			FinalVelocity = VelProject + (Dir * ThrowStrength);
-		}
-		else
-		{
-			FHitResult HitResult;
-			FCollisionQueryParams Params;
-			if (GetWorld()->LineTraceSingleByProfile(HitResult, GetActorLocation() + (GetActorForwardVector() * -100.f), GetActorUpVector() * -1000.f, "WorldStatic", Params))
-			{
-				SpawnPos = HitResult.ImpactPoint;
-			}
-		}
+		//}
+		//else
+		//{
+		//	FHitResult HitResult;
+		//	FCollisionQueryParams Params;
+		//	if (GetWorld()->LineTraceSingleByProfile(HitResult, GetActorLocation() + (GetActorForwardVector() * -100.f), GetActorUpVector() * -1000.f, "WorldStatic", Params))
+		//	{
+		//		SpawnPos = HitResult.ImpactPoint;
+		//	}
+		//}
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
 
