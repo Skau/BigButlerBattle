@@ -84,17 +84,19 @@ private:
 
 /// ==================================== Ragdoll =================================================
 
-protected:
+private:
 	bool bEnabledRagdoll = false;
 
+protected:
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Can Fall Off"))
-	bool bCanFall = false;
+	bool bCanFall = true;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
-	float SidewaysForceFallOffThreshold = 4000.f;
+	float SidewaysForceFallOffThreshold = 5000.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Velocity Fall Off Threshold"))
-	float CrashVelocityFallOffThreshold = 4000.f;
+	float CrashVelocityFallOffThreshold = 1000.f;
 	
 
 public:
