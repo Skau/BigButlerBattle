@@ -102,7 +102,7 @@ public:
 	bool HasEnabledRagdoll() const { return bEnabledRagdoll; }
 	bool CanFall() const { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() const { return SidewaysForceFallOffThreshold; }
-
+	float GetCrashVelocityFallOffThreshold() const { return CrashVelocityFallOffThreshold; }
 	UFUNCTION()
 	void OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 

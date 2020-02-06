@@ -126,6 +126,8 @@ public:
 	 */
 	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f, float input = 0.f);
 
+	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
+
 protected:
 	void BeginPlay() override;
 
@@ -158,5 +160,4 @@ protected:
 	float CalcSidewaysBreaking(const FVector& forward) const;
 	float CalcRotation() const;
 	float CalcHandbrakeRotation() const;
-
 };

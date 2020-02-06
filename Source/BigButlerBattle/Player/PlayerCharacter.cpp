@@ -161,6 +161,7 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 	if (!bCanFall || bEnabledRagdoll)
 		return;
 
+
 	// Capsule
 
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(false);
@@ -186,6 +187,7 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 		if (Obj)
 		{
 			DetachObject(Obj, Obj->GetActorLocation(), Movement->Velocity);
+
 		}
 	}
 
@@ -206,11 +208,13 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 
 void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Hit %s at a velocity of %s"), *OtherActor->GetName(), *Movement->Velocity.ToString());
-
-	if (Movement->Velocity.SizeSquared() > CrashVelocityFallOffThreshold)
+	if (auto Other = Cast<APlayerCharacter>(OtherActor))
 	{
-		EnableRagdoll(NormalImpulse, Hit.ImpactPoint);
+		if (Movement->Velocity.Size() > CrashVelocityFallOffThreshold)
+		{
+			EnableRagdoll();
+			Other->EnableRagdoll(NormalImpulse * Movement->Velocity, Hit.ImpactPoint);
+		}
 	}
 }
 
@@ -595,6 +599,11 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		transform.SetScale3D(transform.GetScale3D() / 0.3f);
 
 		transform.SetLocation(SpawnLocation);
+
+		if (LaunchVelocity != FVector::ZeroVector)
+		{
+			Spawned->bCanHit = true;
+		}
 
 		// Set velocity
 		Spawned->LaunchVelocity = LaunchVelocity;

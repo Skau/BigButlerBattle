@@ -13,6 +13,7 @@
 #include "Task.h"
 #include "King/King.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Player/PlayerCharacter.h"
 
 ATaskObject::ATaskObject()
 {
@@ -25,6 +26,7 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	MeshComponent->SetGenerateOverlapEvents(true);
+	MeshComponent->SetNotifyRigidBodyCollision(true);
 
 	ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
 	auto DrinksDataObject = DrinksDataTableDefinition.Object;
@@ -68,6 +70,7 @@ void ATaskObject::BeginPlay()
 	}
 
 	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &ATaskObject::OnCollisionBeginOverlap);
+	MeshComponent->OnComponentHit.AddDynamic(this, &ATaskObject::OnHit);
 
 	if (LaunchVelocity != FVector::ZeroVector)
 	{
@@ -274,6 +277,19 @@ void ATaskObject::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 			bRecordingTimeSinceThrown = false;
 		}
 	}
+}
+
+void ATaskObject::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (bCanHit)
+	{
+		if (auto Other = Cast<APlayerCharacter>(OtherActor))
+		{
+			Other->EnableRagdoll(NormalImpulse * GetVelocity(), Hit.ImpactPoint);
+		}
+	}
+
+	bCanHit = false;
 }
 
 void ATaskObject::SetDefault()

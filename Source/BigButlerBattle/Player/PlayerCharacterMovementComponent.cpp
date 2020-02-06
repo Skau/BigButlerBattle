@@ -548,6 +548,26 @@ FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBr
 	return CanAccelerate(a, bBrakingOut, DeltaTime, bMovingBackwards) ? a : FVector::ZeroVector;
 }
 
+void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, float TimeSlice, const FVector& MoveDelta)
+{
+	if (PlayerCharacter && Velocity.Size() > PlayerCharacter->GetCrashVelocityFallOffThreshold())
+	{
+		PlayerCharacter->EnableRagdoll();
+
+		if (auto Other = Cast<APlayerCharacter>(Hit.GetActor()))
+		{
+			if (Other->CanFall())
+			{
+				Other->EnableRagdoll();
+			}
+		}
+	}
+	else
+	{
+		Super::HandleImpact(Hit, TimeSlice, MoveDelta);
+	}
+}
+
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	// Remove horizontal input if handbraking and not in air.
