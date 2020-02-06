@@ -127,14 +127,11 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	// Wait a bit for task objects to finish
 
-	FTimerDelegate TimerCallback;
-	TimerCallback.BindLambda([&]
+	btd::Delay(this, 0.1f, [=]()
 	{
 		TaskGenerationStartTime = FPlatformTime::Seconds();
 		BeginTaskGeneration();
 	});
-	FTimerHandle Handle;
-	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.1f, false);
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(int ID)

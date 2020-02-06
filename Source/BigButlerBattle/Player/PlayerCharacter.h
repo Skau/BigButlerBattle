@@ -238,9 +238,23 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* ObjectPickupCollision;
+
+	UPROPERTY(VisibleAnywhere)
+	UCapsuleComponent* CapsuleObjectCollision;
+
 	TArray<ATaskObject *> Inventory;
 	TArray<ATaskObject *> PickupBlacklist;
 	TArray<FName> TraySlotNames;
+
+	TArray<ATaskObject*> TaskObjectsInRange;
+
+	UPROPERTY()
+	ATaskObject* ClosestPickup;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ThrowStrength = 2000.f;
+
+	bool bCurrentlyHoldingThrow = false;
 
 	int CurrentItemIndex = 0;
 
@@ -255,6 +269,9 @@ protected:
 
 	void DropCurrentObject();
 
+	void OnHoldingThrow();
+	void OnHoldThrowReleased();
+
 	void IncrementCurrentItemIndex();
 	void DecrementCurrentItemIndex();
 
@@ -264,4 +281,11 @@ protected:
 	UFUNCTION()
 	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	void UpdateClosestTaskObject();
 };

@@ -12,6 +12,7 @@
 #include "ButlerGameInstance.h"
 #include "Task.h"
 #include "King/King.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 ATaskObject::ATaskObject()
 {
@@ -38,6 +39,11 @@ ATaskObject::ATaskObject()
 	{
 		FoodDataTable = FoodDataObject;
 	}
+}
+
+void ATaskObject::SetSelected(bool Value)
+{
+	DynamicMaterial->SetScalarParameterValue("Selected", (float)Value);
 }
 
 void ATaskObject::BeginPlay()
@@ -69,6 +75,8 @@ void ATaskObject::BeginPlay()
 		MeshComponent->AddImpulse(LaunchVelocity);
 		bRecordingTimeSinceThrown = true;
 	}
+	
+	DynamicMaterial = MeshComponent->CreateDynamicMaterialInstance(0, MeshComponent->GetMaterial(0));
 }
 
 

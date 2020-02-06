@@ -96,7 +96,7 @@ public:
 	bool IsMovingOnGround() const override;
 
 	UFUNCTION(BlueprintPure)
-	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
+	float GetRotationInput() const { return InputDir.Y; }
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
@@ -152,11 +152,11 @@ protected:
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
-	FORCEINLINE FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
-	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
-	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
-	FORCEINLINE float CalcRotation() const;
-	FORCEINLINE float CalcHandbrakeRotation() const;
+	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
+	float GetForwardInput() const { return InputDir.X; }
+	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	float CalcSidewaysBreaking(const FVector& forward) const;
+	float CalcRotation() const;
+	float CalcHandbrakeRotation() const;
 
 };

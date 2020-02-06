@@ -35,6 +35,8 @@ public:
 
 	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
 
+	void SetSelected(bool Value);
+
 protected:
 	void BeginPlay() override;
 
@@ -59,6 +61,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task")
 	UMaterialInterface* DefaultMaterial = nullptr;
+
+	UMaterialInstanceDynamic* DynamicMaterial = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
 	EObjectType TaskType = EObjectType::None;
