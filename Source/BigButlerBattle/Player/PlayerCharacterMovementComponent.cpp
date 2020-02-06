@@ -112,8 +112,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 			PerformSickAssHandbraking(TimeTick);
 
 		// Check if player should fall off
-		if (ShouldFallOff())
-			PlayerCharacter->EnableRagdoll();
+		TryFallOff();
 
 		// Compute move parameters
 		const FVector MoveVelocity = Velocity;
@@ -377,9 +376,15 @@ void UPlayerCharacterMovementComponent::PerformSickAssHandbraking(float DeltaTim
 		UpdatedComponent->AddLocalRotation({0.f, CalcHandbrakeRotation() * DeltaTime, 0.f});	
 }	
 
-bool UPlayerCharacterMovementComponent::ShouldFallOff() const
+void UPlayerCharacterMovementComponent::TryFallOff()
 {
-	return PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold();
+	if (!PlayerCharacter || !PlayerCharacter->CanFall())
+		return;
+		
+	if (SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
+	{
+		PlayerCharacter->EnableRagdoll();
+	}
 }
 
 void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime)

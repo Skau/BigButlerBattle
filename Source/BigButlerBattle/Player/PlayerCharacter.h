@@ -90,13 +90,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Sideways Force Fall Off Threshold"))
 	float SidewaysForceFallOffThreshold = 4000.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Velocity Fall Off Threshold"))
+	float CrashVelocityFallOffThreshold = 4000.f;
+	
+
 public:
-	void EnableRagdoll();
+	void EnableRagdoll(FVector Impulse = FVector::ZeroVector, FVector HitLocation = FVector::ZeroVector);
 	bool HasEnabledRagdoll() const { return bEnabledRagdoll; }
 	bool CanFall() const { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() const { return SidewaysForceFallOffThreshold; }
 
-
+	UFUNCTION()
+	void OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 
 
@@ -133,9 +138,6 @@ protected:
 	void HandbrakeEnable();
 
 	void HandbrakeDisable();
-
-
-
 
 
 

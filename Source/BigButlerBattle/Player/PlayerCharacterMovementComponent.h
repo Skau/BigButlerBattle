@@ -148,7 +148,7 @@ protected:
 
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
-	bool ShouldFallOff() const;
+	void TryFallOff();
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 

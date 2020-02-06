@@ -37,6 +37,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GetMesh()->SetRelativeLocation(FVector{0.f, 0.f, -110.f});
 
 	GetCapsuleComponent()->SetCapsuleHalfHeight(100.f);
+	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
@@ -108,6 +109,8 @@ void APlayerCharacter::BeginPlay()
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(GameMode != nullptr);
 
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
+
 	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
 	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
 
@@ -153,17 +156,64 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 
 
-void APlayerCharacter::EnableRagdoll()
+void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 {
 	if (!bCanFall || bEnabledRagdoll)
 		return;
 
+	// Capsule
+
+	GetCapsuleComponent()->SetNotifyRigidBodyCollision(false);
+
+	// Butler mesh
+
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
-	//bEnabledRagdoll = true;
+	GetMesh()->WakeAllRigidBodies();
+	GetMesh()->bBlendPhysics = true;
+
+	if (!Impulse.IsZero())
+	{
+		GetMesh()->AddImpulseAtLocation(Impulse, HitLocation);
+	}
+
+	// Tray
+
+	Tray->SetSimulatePhysics(true);
+	Tray->DetachFromParent(true);
+	FDetachmentTransformRules Rules(EDetachmentRule::KeepWorld, true);
+	for (auto& Obj : Inventory)
+	{
+		if (Obj)
+		{
+			Obj->SetEnable(true, true, true);
+			Obj->DetachFromActor(Rules);
+		}
+	}
+
+	// Skateboard
+
+	SkateboardMesh->SetAllBodiesSimulatePhysics(true);
+	SkateboardMesh->WakeAllRigidBodies();
+	SkateboardMesh->bBlendPhysics = true;
+
+	// Movement
+
+	Movement->DisableMovement();
+	Movement->SetComponentTickEnabled(false);
+
+	bEnabledRagdoll = true;
 }
 
+void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Hit %s at a velocity of %s"), *OtherActor->GetName(), *Movement->Velocity.ToString());
 
+	if (Movement->Velocity.SizeSquared() > CrashVelocityFallOffThreshold)
+	{
+		EnableRagdoll(NormalImpulse, Hit.ImpactPoint);
+	}
+}
 
 
 
