@@ -21,22 +21,31 @@ void APlayerCharacterController::BeginPlay()
 	Super::BeginPlay();
 
 	bShowMouseCursor = false;
-
-	// Add in-game UI if we're actually in the game and not main menu
-	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
-	if (PlayerCharacter && PlayerWidgetType)
-	{
-		PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
-		PlayerWidget->AddToPlayerScreen();
-
-		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(this, &APlayerCharacterController::OnPlayerPickedUpObject);
-		PlayerCharacter->OnTaskObjectDropped.BindUObject(this, &APlayerCharacterController::OnPlayerDroppedObject);
-	}
 }
 
 void APlayerCharacterController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+	if (PlayerCharacter)
+	{
+		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(this, &APlayerCharacterController::OnPlayerPickedUpObject);
+		PlayerCharacter->OnTaskObjectDropped.BindUObject(this, &APlayerCharacterController::OnPlayerDroppedObject);
+		PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
+
+		if (!PlayerWidget && PlayerWidgetType)
+		{
+			PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
+			PlayerWidget->AddToPlayerScreen();
+		}
+		SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
+
+		UpdatePlayerTasks();
+
+		if (PlayerWidget->Visibility == ESlateVisibility::Hidden)
+			PlayerWidget->SetVisibility(ESlateVisibility::Visible);
+	}
 }
 
 void APlayerCharacterController::Tick(float DeltaTime)
@@ -198,15 +207,7 @@ void APlayerCharacterController::RespawnCharacter(APlayerStart* PlayerStart)
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	if (PlayerStart)
-	{
 		SpawnTransform = PlayerStart->GetActorTransform();
-	}
 
-	PlayerCharacter = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params);
-	Possess(PlayerCharacter);
-	SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
-	PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
-	UpdatePlayerTasks();
-	if(PlayerWidget)
-		PlayerWidget->SetVisibility(ESlateVisibility::Visible);
+	Possess(GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params));
 }
