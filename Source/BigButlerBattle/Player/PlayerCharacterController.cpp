@@ -97,30 +97,20 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 void APlayerCharacterController::UpdatePlayerTasks()
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
-	{
-		if(PlayerTasks[i].Value != ETaskState::Finished)
+		if(PlayerTasks[i].Value == ETaskState::Present)
 			SetPlayerTaskState(i, ETaskState::NotPresent);
-	}
 
-	auto Inventory = PlayerCharacter->GetInventory();
-	TArray<int> IndicesFound;
-	for (int i = 0; i < Inventory.Num(); ++i)
+	for (auto& InventoryObject : PlayerCharacter->GetInventory())
 	{
-		if (auto Obj = Inventory[i])
+		if (IsValid(InventoryObject))
 		{
-			auto TaskData = Obj->GetTaskData();
-
-			for (int j = 0; j < PlayerTasks.Num(); ++j)
+			for (int i = 0; i < PlayerTasks.Num(); ++i)
 			{
-				if (IndicesFound.Find(j) == INDEX_NONE)
+				if (PlayerTasks[i].Value == ETaskState::NotPresent && InventoryObject->GetTaskData()->IsEqual(PlayerTasks[i].Key))
 				{
-					auto PlayerTask = PlayerTasks[j];
-					if (PlayerTask.Value != ETaskState::Finished && TaskData->IsEqual(PlayerTask.Key))
-					{
-						SetPlayerTaskState(j, ETaskState::Present);
-						IndicesFound.Add(j);
-						break;
-					}
+					UE_LOG(LogTemp, Warning, TEXT("%s matches"), *PlayerTasks[i].Key->Name);
+					SetPlayerTaskState(i, ETaskState::Present);
+					break;
 				}
 			}
 		}
@@ -146,6 +136,7 @@ void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 
 void APlayerCharacterController::OnCharacterFell()
 {
+	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
 	btd::Delay(this, RespawnTime, [=]()
 	{
 		if (PlayerCharacter)
@@ -156,6 +147,7 @@ void APlayerCharacterController::OnCharacterFell()
 			PlayerCharacter = nullptr;
 		}
 		RespawnCharacter();
+
 	});
 }
 
@@ -214,4 +206,7 @@ void APlayerCharacterController::RespawnCharacter(APlayerStart* PlayerStart)
 	Possess(PlayerCharacter);
 	SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
 	PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
+	UpdatePlayerTasks();
+	if(PlayerWidget)
+		PlayerWidget->SetVisibility(ESlateVisibility::Visible);
 }

@@ -41,6 +41,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->SetRelativeLocation(FVector(0, 0, 50.f));
+	SpringArm->SetRelativeRotation(FRotator(-10.f, 0, 0));
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
@@ -70,6 +72,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
+	Tray->SetRelativeLocation(FVector(60.f, -50.f, 184.f));
+	Tray->SetRelativeRotation(FRotator{0, -90.f, -10.f});
+	Tray->SetRelativeScale3D(FVector(2.5f, 2.5f, 2.5f));
 
 
 	check(Tray != nullptr);
@@ -165,6 +170,7 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 	// Capsule
 
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(false);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Butler mesh
 
@@ -187,9 +193,11 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 		if (Obj)
 		{
 			DetachObject(Obj, Obj->GetActorLocation(), Movement->Velocity);
-
 		}
 	}
+
+	Camera->DetachFromParent(true);
+	
 
 	// Skateboard
 
@@ -198,8 +206,8 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 
 	// Movement
 
-	Movement->DisableMovement();
-	Movement->SetComponentTickEnabled(false);
+	//Movement->DisableMovement();
+	//Movement->SetComponentTickEnabled(false);
 
 	bEnabledRagdoll = true;
 
@@ -572,10 +580,6 @@ void APlayerCharacter::DropCurrentObject()
 		//}
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
-
-		// Destroy old object
-		Obj->Destroy();
-		Inventory[CurrentItemIndex] = nullptr;
 	}
 }
 
@@ -612,6 +616,10 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		UGameplayStatics::FinishSpawningActor(Spawned, transform);
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
+
+		// Destroy old object
+		Object->Destroy();
+		Inventory[CurrentItemIndex] = nullptr;
 	}
 }
 
@@ -671,8 +679,6 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 			break;
 		}
 	} while (i != CurrentItemIndex);
-
-	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
 }
 
 void APlayerCharacter::DecrementCurrentItemIndex()
@@ -690,8 +696,6 @@ void APlayerCharacter::DecrementCurrentItemIndex()
 			break;
 		}
 	} while (i != CurrentItemIndex);
-
-	UE_LOG(LogTemp, Warning, TEXT("New index: %i, rotated tray %f degrees"), CurrentItemIndex, DeltaYaw);
 }
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
