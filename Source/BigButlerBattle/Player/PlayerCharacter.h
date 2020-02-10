@@ -97,6 +97,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Velocity Fall Off Threshold"))
 	float CrashVelocityFallOffThreshold = 1000.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Angle Factor"))
+	float CrashAngleFactor = 3.f;
 	
 
 public:
@@ -105,6 +108,7 @@ public:
 	bool CanFall() const { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() const { return SidewaysForceFallOffThreshold; }
 	float GetCrashVelocityFallOffThreshold() const { return CrashVelocityFallOffThreshold; }
+	float GetCrashAngleFactor() const { return CrashAngleFactor; }
 	UFUNCTION()
 	void OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 

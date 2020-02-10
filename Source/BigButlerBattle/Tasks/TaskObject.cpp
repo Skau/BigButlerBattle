@@ -27,6 +27,8 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetNotifyRigidBodyCollision(true);
+	MeshComponent->SetSimulatePhysics(true);
+
 
 	ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
 	auto DrinksDataObject = DrinksDataTableDefinition.Object;

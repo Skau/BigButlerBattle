@@ -6,7 +6,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SplineComponent.h"
-
+#include "Tasks/TaskObject.h"
 #include "PlayerCharacter.h"
 
 UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
@@ -550,7 +550,12 @@ FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBr
 
 void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, float TimeSlice, const FVector& MoveDelta)
 {
-	if (PlayerCharacter && Velocity.Size() > PlayerCharacter->GetCrashVelocityFallOffThreshold())
+	if (Hit.GetActor()->IsA(ATaskObject::StaticClass()))
+		Super::HandleImpact(Hit, TimeSlice, MoveDelta);
+
+	auto dot = FMath::Abs(FVector::DotProduct(Velocity.GetSafeNormal(), Hit.ImpactNormal));
+	auto AngleFactor = UKismetMathLibrary::MapRangeClamped(dot, 0, 1, PlayerCharacter->GetCrashAngleFactor(), 1);
+	if (PlayerCharacter && Velocity.Size() > PlayerCharacter->GetCrashVelocityFallOffThreshold() * AngleFactor)
 	{
 		PlayerCharacter->EnableRagdoll();
 
