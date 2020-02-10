@@ -117,7 +117,6 @@ void APlayerCharacterController::UpdatePlayerTasks()
 			{
 				if (PlayerTasks[i].Value == ETaskState::NotPresent && InventoryObject->GetTaskData()->IsEqual(PlayerTasks[i].Key))
 				{
-					UE_LOG(LogTemp, Warning, TEXT("%s matches"), *PlayerTasks[i].Key->Name);
 					SetPlayerTaskState(i, ETaskState::Present);
 					break;
 				}
@@ -203,11 +202,14 @@ void APlayerCharacterController::RespawnCharacter(APlayerStart* PlayerStart)
 		return;
 	}
 
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
 	if (PlayerStart)
 		SpawnTransform = PlayerStart->GetActorTransform();
 
-	Possess(GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params));
+	PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+	
+	PlayerCharacter->SetCustomSpringArmLength();
+
+	UGameplayStatics::FinishSpawningActor(PlayerCharacter, SpawnTransform);
+
+	Possess(PlayerCharacter);
 }

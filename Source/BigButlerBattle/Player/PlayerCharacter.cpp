@@ -5,7 +5,7 @@
 #include "PlayerCharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
+#include "PlayerCameraComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -44,7 +44,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SpringArm->SetRelativeLocation(FVector(0, 0, 50.f));
 	SpringArm->SetRelativeRotation(FRotator(-10.f, 0, 0));
 
-	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
 	ObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
@@ -332,12 +332,16 @@ void APlayerCharacter::SetCustomSpringArmLength()
 
 void APlayerCharacter::LookUp(float Value)
 {
-	DesiredCameraRotation.Y = Value != 0 ? Value * CameraRotationPitchHeight : 0.f;
+	DesiredCameraRotation.Y = Value != 0 ? -Value * CameraRotationPitchHeight : 0.f;
+	if (CameraInvertY)
+		DesiredCameraRotation.Y = -DesiredCameraRotation.Y;
 }
 
 void APlayerCharacter::LookRight(float Value)
 {
-	DesiredCameraRotation.X = Value != 0 ? Value * CameraRotationYawAngle : 0.f;
+	DesiredCameraRotation.X = Value != 0 ? -Value * CameraRotationYawAngle : 0.f;
+	if (CameraInvertX)
+		DesiredCameraRotation.X = -DesiredCameraRotation.X;
 }
 
 void APlayerCharacter::UpdateCameraRotation(float DeltaTime)

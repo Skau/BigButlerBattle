@@ -32,6 +32,16 @@ namespace btd
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
     }
 
+    /*
+    * Really fast version of acos.
+    * Maximum error of 0.18 rad.
+    * @ref https://stackoverflow.com/questions/3380628/fast-arc-cos-algorithm
+    */
+    FORCEINLINE static float FastAcos(float rad) 
+    {
+        return (-0.69813170079773212 * rad * rad - 0.87266462599716477) * rad + 1.5707963267948966;
+    }
+
     FORCEINLINE static void Delay(UObject* Context, float Seconds, TFunction<void(void)> lambda)
     {
         FTimerDelegate TimerCallback;

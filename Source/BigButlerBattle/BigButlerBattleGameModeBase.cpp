@@ -59,6 +59,17 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		return;
 	}
 
+	switch (Controllers.Num())
+	{
+	case 2:
+		Controllers[0]->bUseCustomSpringArmLength = true;
+		Controllers[1]->bUseCustomSpringArmLength = true;
+		break;
+	case 3:
+		Controllers[0]->bUseCustomSpringArmLength = true;
+		break;
+	}
+
 	for(int i = 0; i < Controllers.Num(); ++i)
 	{
 		// Spawn character
@@ -71,16 +82,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	}
 
 
-	switch (Controllers.Num())
-	{
-	case 2:
-		Cast<APlayerCharacter>(Controllers[0]->GetCharacter())->SetCustomSpringArmLength();
-		Cast<APlayerCharacter>(Controllers[1]->GetCharacter())->SetCustomSpringArmLength();
-		break;
-	case 3:
-		Cast<APlayerCharacter>(Controllers[0]->GetCharacter())->SetCustomSpringArmLength();
-		break;
-	}
+
 
 
 	// Pause widget setup
