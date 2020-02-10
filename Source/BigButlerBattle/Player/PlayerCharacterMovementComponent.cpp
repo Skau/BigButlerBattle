@@ -6,20 +6,21 @@
 #include "Components/PrimitiveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SplineComponent.h"
-
+#include "Tasks/TaskObject.h"
 #include "PlayerCharacter.h"
+#include "Utils/btd.h"
 
 UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 {
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
 	DefaultWaterMovementMode = EMovementMode::MOVE_Custom;
-	MaxAcceleration = 2048.f;
 	MaxCustomMovementSpeed = 4196.f;
-	JumpZVelocity = 600.f;
+	JumpZVelocity = 1600.f;
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
-	MaxAcceleration = 700.f;
+	MaxAcceleration = 1400.f;
+	GravityScale = 3.0f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
@@ -550,7 +551,15 @@ FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBr
 
 void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, float TimeSlice, const FVector& MoveDelta)
 {
-	if (PlayerCharacter && Velocity.Size() > PlayerCharacter->GetCrashVelocityFallOffThreshold())
+	if (Hit.GetActor()->IsA(ATaskObject::StaticClass()))
+	{
+		Super::HandleImpact(Hit, TimeSlice, MoveDelta);
+		return;
+	}
+
+	auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(Velocity.GetSafeNormal(), Hit.ImpactNormal))));
+
+	if (PlayerCharacter && angle < PlayerCharacter->GetCrashAngleThreshold () && Velocity.Size() > PlayerCharacter->GetCrashVelocityFallOffThreshold())
 	{
 		PlayerCharacter->EnableRagdoll();
 

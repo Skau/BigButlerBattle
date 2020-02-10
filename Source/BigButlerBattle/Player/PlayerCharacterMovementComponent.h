@@ -26,6 +26,9 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 {
 	GENERATED_BODY()
 
+public:
+	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
@@ -34,7 +37,7 @@ protected:
 	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Acceleration Velocity"))
-	float CustomMaxAccelerationVelocity = 1800.f;
+	float CustomMaxAccelerationVelocity = 3600.f;
 
 	bool bStandstill = false;
 

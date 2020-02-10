@@ -46,6 +46,8 @@ public:
 
 	void RespawnCharacter(APlayerStart* PlayerStart = nullptr);
 
+	bool bUseCustomSpringArmLength = false;
+
 protected:
 	void BeginPlay() override;
 

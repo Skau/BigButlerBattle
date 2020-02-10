@@ -14,7 +14,7 @@ class ABigButlerBattleGameModeBase;
 class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
 class UCharacterAnimInstance;
-class UCameraComponent;
+class UPlayerCameraComponent;
 class USpringArmComponent;
 class USkeletalMeshSocket;
 class UBoxComponent;
@@ -97,6 +97,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Velocity Fall Off Threshold"))
 	float CrashVelocityFallOffThreshold = 1000.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Angle Threshold"))
+	float CrashAngleThreshold = 45.f;
 	
 
 public:
@@ -105,6 +108,7 @@ public:
 	bool CanFall() const { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() const { return SidewaysForceFallOffThreshold; }
 	float GetCrashVelocityFallOffThreshold() const { return CrashVelocityFallOffThreshold; }
+	float GetCrashAngleThreshold() const { return CrashAngleThreshold; }
 	UFUNCTION()
 	void OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
@@ -119,7 +123,7 @@ public:
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform &localToWorld) const;
 
-
+	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() { return Movement; }
 
 
 
@@ -158,6 +162,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Yaw Angle"))
 	float CameraRotationYawAngle = 120.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert X"))
+	bool CameraInvertX = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Y"))
+	bool CameraInvertY = false;
+
 	/**
 	 * Both the pitch rotation of the camera but as the camera also moves up/down from the character this also controls the height.
 	 */
@@ -168,7 +178,7 @@ protected:
 	float CustomSpringArmLength = 450.f;
 
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent *Camera;
+	UPlayerCameraComponent* Camera;
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent *SpringArm;
