@@ -130,8 +130,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Super::SetupPlayerInputComponent(Input);
 
 	// Action Mappings
-	Input->BindAction("Handbrake", EInputEvent::IE_Pressed, this, &APlayerCharacter::HandbrakeEnable);
-	Input->BindAction("Handbrake", EInputEvent::IE_Released, this, &APlayerCharacter::HandbrakeDisable);
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
@@ -144,6 +142,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAxis("Right", this, &APlayerCharacter::MoveRight);
 	Input->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
 	Input->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
+	Input->BindAxis("Handbrake", this, &APlayerCharacter::UpdateHandbrake);
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -310,18 +309,10 @@ void APlayerCharacter::MoveRight(float Value)
 	AddMovementInput(FVector::RightVector * Value);
 }
 
-void APlayerCharacter::HandbrakeEnable()
+void APlayerCharacter::UpdateHandbrake(float Value)
 {
-	if (Movement) Movement->bHandbrake = true;
+	if (Movement) Movement->bHandbrakeValue = Value;
 }
-
-void APlayerCharacter::HandbrakeDisable()
-{
-	if (Movement) Movement->bHandbrake = false;
-}
-
-
-
 
 
 

@@ -88,7 +88,7 @@ protected:
 	bool bBraking = false;
 
 public:
-	bool bHandbrake = false;
+	float bHandbrakeValue = 0.f;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -156,6 +156,8 @@ protected:
 	void TryFallOff();
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
+
+	bool IsHandbraking() const { return bHandbrakeValue != 0; }
 
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	float GetForwardInput() const { return InputDir.X; }
