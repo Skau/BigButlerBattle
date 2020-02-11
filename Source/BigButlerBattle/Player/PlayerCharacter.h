@@ -42,6 +42,16 @@ public:
 	{}
 };
 
+struct FFeetTransform
+{
+	FTransform Left;
+	FTransform Right;
+
+	FFeetTransform(const FTransform& left, const FTransform& right)
+	 : Left{left}, Right{right}
+	{}
+};
+
 
 /** Main player class
  * ACharacter class used by all players.
@@ -103,11 +113,31 @@ public:
 /// ==================================== IK =================================================
 
 public:
-	TPair<FVector, FVector> GetSkateboardFeetLocations() const;
+	/**
+	 * Returns the locations of the skateboard feet sockets in world space.
+	 */
+	FFeetTransform GetSkateboardFeetTransform() const;
+	/**
+	 * Returns the locations of the skateboard feet sockets in component space.
+	 */
+	FFeetTransform GetComponentSkateboardFeetTransform() const;
+
+	FFeetTransform GetSkateboardFeetTransformInButlerSpace() const;
+	
 	FTransform GetCharacterBoneTransform(FName BoneName) const;
 	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform &localToWorld) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
 	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform &localToWorld) const;
+
+	/**
+	 * Does a recursive search upwards to find the world space transform of the reference bone.
+	 */
+	FTransform GetCharacterRefPoseBoneTransformRec(FName BoneName) const;
+	FTransform GetCharacterRefPoseBoneTransformRec(int32 BoneIndex) const;
+
+	FTransform LocalSkateboardToButler(const FTransform& trans) const;
+	FTransform LocalButlerToSkateboard(const FTransform& trans) const;
+
 
 
 
@@ -210,6 +240,8 @@ protected:
 	bool bDebugMovement = false;
 
 public:
+	FRotator GetSkateboardRotation() const;
+
 	UFUNCTION(BlueprintPure)
 	FSkateboardTraceResult GetSkateboardTraceResults() const { return LastTraceResult;  }
 
