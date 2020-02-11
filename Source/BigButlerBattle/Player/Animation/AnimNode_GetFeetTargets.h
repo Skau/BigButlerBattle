@@ -5,6 +5,8 @@
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
 #include "AnimNode_GetFeetTargets.generated.h"
 
+class APlayerCharacter;
+
 USTRUCT(BlueprintType)
 struct BIGBUTLERBATTLE_API FAnimNode_GetFeetTargets : public FAnimNode_Base
 {
@@ -29,7 +31,12 @@ public:
     virtual void EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output) override;
     // End of FAnimNode_Base interface
 
-// protected:
-//     virtual void EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output);
+protected:
+    FRotator GetSkateboardRotationOffset(APlayerCharacter *character);
+
+    FVector GetFootLocation(APlayerCharacter *character, FCSPose<FCompactPose>& pose, bool left = true);
+    FVector GetFootLocation(APlayerCharacter *character, FCSPose<FCompactPose>& pose, FQuat feetRotationOffset, bool left = true);
+    // protected:
+    //     virtual void EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output);
 
 };
