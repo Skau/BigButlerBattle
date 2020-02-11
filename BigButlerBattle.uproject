@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"UMG",
-				"CoreUObject"
+				"CoreUObject",
+				"AnimGraphRuntime"
 			]
 		},
 		{
@@ -19,7 +20,9 @@
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
 			"AdditionalDependencies": [
-				"UnrealEd"
+				"UnrealEd",
+				"AnimGraph",
+				"BlueprintGraph"
 			]
 		}
 	],

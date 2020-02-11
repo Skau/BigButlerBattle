@@ -2,8 +2,8 @@
 
 
 #include "CharacterAnimInstance.h"
-#include "PlayerCharacter.h"
-#include "PlayerCharacterMovementComponent.h"
+#include "Player/PlayerCharacter.h"
+#include "Player/PlayerCharacterMovementComponent.h"
 
 void UCharacterAnimInstance::NativeBeginPlay()
 {
@@ -33,22 +33,22 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
 	Super::NativeUpdateAnimation(DeltaTime);
 
-	// Same tick as Event Blueprint Update Animation in anim blueprint
-	auto character = Cast<APlayerCharacter>(TryGetPawnOwner());
+	// // Same tick as Event Blueprint Update Animation in anim blueprint
+	// auto character = Cast<APlayerCharacter>(TryGetPawnOwner());
 
-	if (!IsValid(character))
-		return;
+	// if (!IsValid(character))
+	// 	return;
 
-	if (!RefSkeletonBoneInfos.Num())
-	{
-		if (!GenerateRefSkeletonBoneTransforms(character))
-			UE_LOG(LogTemp, Error, TEXT("Failed to create reference bone hierarchy, in CharacterAnimInstance!"));
-	}
+	// if (!RefSkeletonBoneInfos.Num())
+	// {
+	// 	if (!GenerateRefSkeletonBoneTransforms(character))
+	// 		UE_LOG(LogTemp, Error, TEXT("Failed to create reference bone hierarchy, in CharacterAnimInstance!"));
+	// }
 
-	SkateboardRotationOffset = GetSkateboardRotationOffset(character);
+	// SkateboardRotationOffset = GetSkateboardRotationOffset(character);
 
-	LeftFootTarget = GetFootLocation(character, SkateboardRotationOffset.Quaternion(), true);
-	RightFootTarget = GetFootLocation(character, SkateboardRotationOffset.Quaternion(), false);
+	// LeftFootTarget = GetFootLocation(character, SkateboardRotationOffset.Quaternion(), true);
+	// RightFootTarget = GetFootLocation(character, SkateboardRotationOffset.Quaternion(), false);
 }
 
 void UCharacterAnimInstance::ForwardKick()

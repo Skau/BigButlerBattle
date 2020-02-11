@@ -22,11 +22,6 @@ public:
 
 	void ForwardKick();
 
-protected:
-	void NativeBeginPlay() override;
-
-	void NativeUpdateAnimation(float DeltaTime) override;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector LeftFootTarget;
 
@@ -42,6 +37,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator SkateboardRotationOffset;
 
+	UFUNCTION(BlueprintCallable, meta = (NotBlueprintThreadSafe))
+	FVector GetLeftFootTarget() const;
+
+	UFUNCTION(BlueprintCallable, meta = (NotBlueprintThreadSafe))
+	FVector GetRightFootTarget() const;
+	FVector GetFootLocation(APlayerCharacter* character, bool left = true) const;
+	FVector GetFootLocation(APlayerCharacter* character, FQuat feetRotationOffset, bool left = true) const;
+
+	FRotator GetSkateboardRotationOffset(APlayerCharacter* character) const;
+
+	FTransform GetSkeletonRefBoneTransform(FName BoneName) const;
+	bool GenerateRefSkeletonBoneTransforms(APlayerCharacter* character);
+	int32 GetRefBoneIndex(FName BoneName) const;
+
+protected:
+	void NativeBeginPlay() override;
+
+	void NativeUpdateAnimation(float DeltaTime) override;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* JumpMontage;
 
@@ -56,21 +70,6 @@ protected:
 
 	// UFUNCTION(BlueprintPure)
 	// TPair<FVector, FVector> GetFeetLocations() const;
-
-
-	UFUNCTION(BlueprintCallable, meta = (NotBlueprintThreadSafe))
-	FVector GetLeftFootTarget() const;
-
-	UFUNCTION(BlueprintCallable, meta = (NotBlueprintThreadSafe))
-	FVector GetRightFootTarget() const;
-	FVector GetFootLocation(APlayerCharacter* character, bool left = true) const;
-	FVector GetFootLocation(APlayerCharacter* character, FQuat feetRotationOffset, bool left = true) const;
-
-	FRotator GetSkateboardRotationOffset(APlayerCharacter* character) const;
-
-	FTransform GetSkeletonRefBoneTransform(FName BoneName) const;
-	bool GenerateRefSkeletonBoneTransforms(APlayerCharacter* character);
-	int32 GetRefBoneIndex(FName BoneName) const;
 
 private:
 	FQuat PelvisStartRotation;
