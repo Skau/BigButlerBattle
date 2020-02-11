@@ -144,10 +144,7 @@ protected:
 
 	void MoveRight(float Value);
 
-	void HandbrakeEnable();
-
-	void HandbrakeDisable();
-
+	void UpdateHandbrake(float Value);
 
 
 	/// ==================================== Camera =================================================

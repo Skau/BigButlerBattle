@@ -109,7 +109,7 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		CalcSkateboardVelocity(OldFloor.HitResult, TimeTick);
 		check(!Velocity.ContainsNaN());
 
-		if (bHandbrake)
+		if(IsHandbraking() && !IsFalling())
 			PerformSickAssHandbraking(TimeTick);
 
 		// Check if player should fall off
@@ -489,7 +489,7 @@ bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &Acce
 
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime, bool bMovingBackwards) const
 {
-	return !bHandbrake && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
+	return !IsHandbraking() && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
 }
 
 bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime) const
@@ -514,7 +514,7 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBreakingO
 	}
 
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
-	const bool bCanMoveVertically = !bHandbrake || (bAllowBrakingWhileHandbraking && input < 0.f);
+	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && input < 0.f);
 	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 
@@ -580,12 +580,11 @@ void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, floa
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	// Remove horizontal input if handbraking and not in air.
-	const bool bCanMoveHorizontally = !bHandbrake || IsFalling();
+	const bool bCanMoveHorizontally = !IsHandbraking() || IsFalling();
 	return bCanMoveHorizontally * SkateboardRotationSpeed * GetRotationInput();
 }
 
 float UPlayerCharacterMovementComponent::CalcHandbrakeRotation() const
 {
-	const bool bShouldHandbrake = bHandbrake && !IsFalling();
-	return bShouldHandbrake * HandbrakeRotationFactor * GetRotationInput();
+	return !IsFalling() * bHandbrakeValue * HandbrakeRotationFactor * GetRotationInput();
 }
