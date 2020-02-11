@@ -13,8 +13,8 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
-#include "CharacterAnimInstance.h"
-#include "SkateboardAnimInstance.h"
+#include "Animation/CharacterAnimInstance.h"
+#include "Animation/SkateboardAnimInstance.h"
 #include "Utils/btd.h"
 #include "Tasks/TaskObject.h"
 #include "Tasks/Task.h"
@@ -22,8 +22,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "King/King.h"
 #include "PlayerCharacterController.h"
-#include "CharacterAnimInstance.h"
-#include "Engine/World.h"
+#include "ReferenceSkeleton.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -229,9 +228,31 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 
 
 
-TPair<FVector, FVector> APlayerCharacter::GetSkateboardFeetLocations() const
+FFeetTransform APlayerCharacter::GetSkateboardFeetTransform() const
 {
-	return TPair<FVector, FVector>{SkateboardMesh->GetSocketLocation("FootLeft"), SkateboardMesh->GetSocketLocation("FootRight")};
+	return {SkateboardMesh->GetSocketTransform("FootLeft"), SkateboardMesh->GetSocketTransform("FootRight")};
+}
+
+FFeetTransform APlayerCharacter::GetComponentSkateboardFeetTransform() const
+{
+	return {
+		FTransform{
+			FRotator{},
+			SkateboardMesh->GetSocketTransform("FootLeft", ERelativeTransformSpace::RTS_Component).GetTranslation(),
+			FVector{1.f, 1.f, 1.f}
+		},
+		FTransform{
+			FRotator{},
+			SkateboardMesh->GetSocketTransform("FootRight", ERelativeTransformSpace::RTS_Component).GetTranslation(),
+			FVector{1.f, 1.f, 1.f}
+		}
+	};
+}
+
+FFeetTransform APlayerCharacter::GetSkateboardFeetTransformInButlerSpace() const
+{
+	auto feetTrans = GetComponentSkateboardFeetTransform();	
+	return {LocalSkateboardToButler(feetTrans.Left), LocalSkateboardToButler(feetTrans.Right)};
 }
 
 FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName) const
@@ -248,14 +269,60 @@ FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTr
 
 FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName) const
 {
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] : FTransform{};
+	return GetCharacterRefPoseBoneTransform(BoneName, GetMesh()->GetComponentTransform());
 }
 
 FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, const FTransform& localToWorld) const
 {
 	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
 	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransformRec(FName BoneName) const
+{
+	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
+	return GetCharacterRefPoseBoneTransformRec(boneIndex);
+}
+
+FTransform APlayerCharacter::GetCharacterRefPoseBoneTransformRec(int32 BoneIndex) const
+{
+	if (BoneIndex < 0)
+	{
+		return FTransform{};
+	}
+	// Short circuit evaluation
+	else if (BoneIndex == 0)
+	{
+		return GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[BoneIndex];
+	}
+	else
+	{
+		const auto& refSkeleton = GetMesh()->SkeletalMesh->RefSkeleton;
+		auto parentIndex = refSkeleton.GetParentIndex(BoneIndex);
+		if (parentIndex == 0)
+		{
+			return refSkeleton.GetRefBonePose()[BoneIndex];
+		}
+		else
+		{
+			return refSkeleton.GetRefBonePose()[BoneIndex] * GetCharacterRefPoseBoneTransformRec(parentIndex);
+		}
+	}
+}
+
+FTransform APlayerCharacter::LocalSkateboardToButler(const FTransform& trans) const
+{
+	const auto skateboardToMesh = SkateboardMesh->GetComponentTransform().GetRelativeTransform(GetMesh()->GetComponentTransform());
+	// UE_LOG(LogTemp, Warning, TEXT("skateboardToMesh: %s"), *skateboardToMesh.ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("matrix location: %s, scale: %s, rotation: %s"), *skateboardToMesh.GetLocation().ToString(), *skateboardToMesh.GetScale3D().ToString(), *skateboardToMesh.GetRotation().ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("Scaled: %s"), *(skateboardToMesh * trans).ToString());
+	return trans * skateboardToMesh;
+}
+
+FTransform APlayerCharacter::LocalButlerToSkateboard(const FTransform& trans) const
+{
+	const auto meshToSkateboard = SkateboardMesh->GetComponentTransform().GetRelativeTransformReverse(GetMesh()->GetComponentTransform());
+	return meshToSkateboard * trans;
 }
 
 
@@ -372,6 +439,12 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 }
 
 
+
+
+FRotator APlayerCharacter::GetSkateboardRotation() const
+{
+	return SkateboardMesh->GetRelativeRotation();
+}
 
 bool APlayerCharacter::TraceSkateboard()
 {

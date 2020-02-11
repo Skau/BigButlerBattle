@@ -2,8 +2,8 @@
 
 
 #include "SkateboardAnimInstance.h"
-#include "PlayerCharacterMovementComponent.h"
-#include "PlayerCharacter.h"
+#include "Player/PlayerCharacterMovementComponent.h"
+#include "Player/PlayerCharacter.h"
 
 void USkateboardAnimInstance::NativeBeginPlay()
 {
