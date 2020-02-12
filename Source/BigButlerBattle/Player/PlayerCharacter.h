@@ -43,16 +43,6 @@ public:
 	{}
 };
 
-struct FFeetTransform
-{
-	FTransform Left;
-	FTransform Right;
-
-	FFeetTransform(const FTransform& left, const FTransform& right)
-	 : Left{left}, Right{right}
-	{}
-};
-
 
 /** Main player class
  * ACharacter class used by all players.
@@ -124,37 +114,6 @@ public:
 
 
 
-/// ==================================== IK =================================================
-
-public:
-	/**
-	 * Returns the locations of the skateboard feet sockets in world space.
-	 */
-	FFeetTransform GetSkateboardFeetTransform() const;
-	/**
-	 * Returns the locations of the skateboard feet sockets in component space.
-	 */
-	FFeetTransform GetComponentSkateboardFeetTransform() const;
-
-	FFeetTransform GetSkateboardFeetTransformInButlerSpace() const;
-
-	FTransform GetCharacterBoneTransform(FName BoneName) const;
-	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform &localToWorld) const;
-	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
-	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform &localToWorld) const;
-
-	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() { return Movement; }
-	/**
-	 * Does a recursive search upwards to find the world space transform of the reference bone.
-	 */
-	FTransform GetCharacterRefPoseBoneTransformRec(FName BoneName) const;
-	FTransform GetCharacterRefPoseBoneTransformRec(int32 BoneIndex) const;
-
-	FTransform LocalSkateboardToButler(const FTransform& trans) const;
-	FTransform LocalButlerToSkateboard(const FTransform& trans) const;
-
-
-
 
 
 	/// ==================================== Movement =================================================
@@ -168,12 +127,16 @@ public:
 
 	void StartJump();
 
+	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() { return Movement; }
+
 protected:
 	void MoveForward(float Value);
 
 	void MoveRight(float Value);
 
 	void UpdateHandbrake(float Value);
+
+
 
 
 	/// ==================================== Camera =================================================
@@ -253,6 +216,8 @@ protected:
 	bool bDebugMovement = false;
 
 public:
+	USkeletalMeshComponent* GetSkateboardMesh() { return SkateboardMesh; }
+
 	FRotator GetSkateboardRotation() const;
 
 	UFUNCTION(BlueprintPure)
