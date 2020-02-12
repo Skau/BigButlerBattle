@@ -24,26 +24,6 @@ void FAnimNode_GetFeetTargets::Update_AnyThread(const FAnimationUpdateContext &C
     GetEvaluateGraphExposedInputs().Execute(Context);
     //***************************************
 
-    // //Try Again if not found
-    // if (!OwningActor)
-    //     OwningActor =
-    //         Context.AnimInstanceProxy->GetSkelMeshComponent()->GetOwner();
-
-    // //Not found
-    // if (!OwningActor)
-    // {
-    //     UE_LOG(LogAnimation, Warning,
-    //             TEXT("FAnimNode_GetFeetTargets::Update() Owning Actor was not found"));
-    //     return;
-    //     //~
-    // }
-
-    //Do Stuff Based On Actor Owner
-
-    // Do Updates
-
-    //Try To Update As Few of the Inputs As You Can
-
     //************************************************
     // FPoseLinkBase::Update Active Pose - this is what makes
     //the glowing line thing happen and animations loop
@@ -62,49 +42,70 @@ void FAnimNode_GetFeetTargets::EvaluateComponentSpace_AnyThread(FComponentSpaceP
         auto character = Cast<APlayerCharacter>(animInstance->TryGetPawnOwner());
         if (IsValid(character))
         {
-            animInstance->SkateboardRotationOffset = GetSkateboardRotationOffset(character);
+            const auto& butlerMesh = character->GetMesh();
+            const auto& skateboardMesh = character->GetSkateboardMesh();
 
-            animInstance->LeftFootTarget = GetFootLocation(character, Output.Pose, animInstance->SkateboardRotationOffset.Quaternion(), true);
-            animInstance->RightFootTarget = GetFootLocation(character, Output.Pose, animInstance->SkateboardRotationOffset.Quaternion(), false);
+            const bool bMeshValid = IsValid(butlerMesh) && IsValid(skateboardMesh);
+            
+            // Get rotation offset
+            auto rotationOffset = animInstance->SkateboardRotationOffset = bMeshValid ? GetSkateboardRotationOffset(*skateboardMesh) : FRotator{};
+
+            // Get left and right foot targets
+            animInstance->LeftFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*butlerMesh, *skateboardMesh, true) : FVector{}, Output.Pose, rotationOffset.Quaternion(), true);
+            animInstance->RightFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*butlerMesh, *skateboardMesh, false) : FVector{}, Output.Pose, rotationOffset.Quaternion(), false);
         }
     }
-
-    
-    // Output.AnimInstanceProxy->GetSkelMeshComponent()->GetBoneIndex()
-
-    //Evaluate is returning the Output to this function,
-    //which is returning the Output to the rest of the Anim Graph
-
-    //In this case, we are passing the Output out variable into the Pose
-
-    //Basically saying, give us back the unmodified Base Pose
-
-    //i.e, the bulk of your anim tree.
 }
 
-FRotator FAnimNode_GetFeetTargets::GetSkateboardRotationOffset(APlayerCharacter *character)
+FFeetTransform FAnimNode_GetFeetTargets::GetSkateboardFeetTransform(const USkeletalMeshComponent& skateboardMesh) const
 {
-    return IsValid(character) ? character->GetSkateboardRotation() : FRotator{};
+	return {skateboardMesh.GetSocketTransform("FootLeft"), skateboardMesh.GetSocketTransform("FootRight")};
 }
 
-FVector FAnimNode_GetFeetTargets::GetFootLocation(APlayerCharacter *character, FCSPose<FCompactPose>& pose, bool left)
+FFeetTransform FAnimNode_GetFeetTargets::GetComponentSkateboardFeetTransform(const USkeletalMeshComponent& skateboardMesh) const
 {
-    return GetFootLocation(character, pose, GetSkateboardRotationOffset(character).Quaternion(), left);
+	return {
+		FTransform{
+			FRotator{},
+			skateboardMesh.GetSocketTransform("FootLeft", ERelativeTransformSpace::RTS_Component).GetTranslation(),
+			FVector{1.f, 1.f, 1.f}
+		},
+		FTransform{
+			FRotator{},
+			skateboardMesh.GetSocketTransform("FootRight", ERelativeTransformSpace::RTS_Component).GetTranslation(),
+			FVector{1.f, 1.f, 1.f}
+		}
+	};
 }
 
-FVector FAnimNode_GetFeetTargets::GetFootLocation(APlayerCharacter *character, FCSPose<FCompactPose>& pose, FQuat feetRotationOffset, bool left)
+FFeetTransform FAnimNode_GetFeetTargets::GetSkateboardFeetTransformInButlerSpace(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh) const
 {
-    FVector socketPos = FVector::ZeroVector;
-    if (IsValid(character))
-    {
-        auto trans = left ? character->GetComponentSkateboardFeetTransform().Left : character->GetComponentSkateboardFeetTransform().Right;
-        trans = character->LocalSkateboardToButler(trans);
-        socketPos = trans.GetTranslation();
-        // socketPos = character->LocalSkateboardToButler(FTransform{}).GetTranslation();
+	auto feetTrans = GetComponentSkateboardFeetTransform(skateboardMesh);	
+	return {feetTrans.Left * GetLocalSkateboardToButlerTransform(butlerMesh, skateboardMesh), feetTrans.Right * GetLocalSkateboardToButlerTransform(butlerMesh, skateboardMesh)};
+}
 
-        // UE_LOG(LogTemp, Warning, TEXT("trans: %s"), *trans.ToString());
-    }
+FTransform FAnimNode_GetFeetTargets::GetLocalSkateboardToButlerTransform(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh) const
+{
+	return skateboardMesh.GetComponentTransform().GetRelativeTransform(butlerMesh.GetComponentTransform());
+}
 
+FTransform FAnimNode_GetFeetTargets::GetLocalButlerToSkateboardTransform(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh) const
+{
+    return skateboardMesh.GetComponentTransform().GetRelativeTransformReverse(butlerMesh.GetComponentTransform());
+}
+
+FRotator FAnimNode_GetFeetTargets::GetSkateboardRotationOffset(const USkeletalMeshComponent& skateboardMesh) const
+{
+    return skateboardMesh.GetRelativeRotation();
+}
+
+FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& socketPos, FCSPose<FCompactPose>& pose, const USkeletalMeshComponent& skateboardMesh, bool left) const
+{
+    return GetFootLocation(socketPos, pose, GetSkateboardRotationOffset(skateboardMesh).Quaternion(), left);
+}
+
+FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& socketPos, FCSPose<FCompactPose>& pose, FQuat feetRotationOffset, bool left) const
+{
     auto boneContainer = pose.GetPose().GetBoneContainer();
 
     FName footBone{left ? "ball_l" : "ball_r"};
@@ -122,8 +123,12 @@ FVector FAnimNode_GetFeetTargets::GetFootLocation(APlayerCharacter *character, F
     auto footDir = footPos - anklePos;
     // Rotate direction vector with displacement rotation.
     footDir = feetRotationOffset * footDir;
-    // socketPos += FVector{10.f, 0.f, 0.f};
-    // Scaled by 100 since skeleton is scaled by 100.
-    socketPos -= footDir;
-    return socketPos;
+    return socketPos - footDir;
+}
+
+FVector FAnimNode_GetFeetTargets::GetSocketPos(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh, bool left) const
+{
+    auto trans = left ? GetComponentSkateboardFeetTransform(skateboardMesh).Left : GetComponentSkateboardFeetTransform(skateboardMesh).Right;
+    trans = trans * GetLocalSkateboardToButlerTransform(butlerMesh, skateboardMesh);
+    return trans.GetTranslation();
 }
