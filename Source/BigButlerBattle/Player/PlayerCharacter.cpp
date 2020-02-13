@@ -672,6 +672,10 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 		{
 			OnObjectPickedUp(TaskObject);
 		}
+		else
+		{
+			TaskObjectsInPickupRange.Add(TaskObject);
+		}
 	}
 	else if(OtherActor->IsA(AKing::StaticClass()))
 	{
@@ -685,9 +689,11 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 
 void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
-		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
+		UE_LOG(LogTemp, Warning, TEXT("OnObjectPickupCollisionEndOverlap"))
+		PickupBlacklist.RemoveSingle(TaskObject);
+		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 	}
 }
 
@@ -695,7 +701,7 @@ void APlayerCharacter::OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* Over
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
-		TaskObjectsInRange.Add(Object);
+		TaskObjectsInCameraRange.Add(Object);
 	}
 }
 
@@ -708,13 +714,13 @@ void APlayerCharacter::OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* O
 			Object->SetSelected(false);
 			ClosestPickup = nullptr;
 		}
-		TaskObjectsInRange.RemoveSingle(Object);
+		TaskObjectsInCameraRange.RemoveSingle(Object);
 	}
 }
 
 void APlayerCharacter::UpdateClosestTaskObject()
 {
-	if (!TaskObjectsInRange.Num())
+	if (!TaskObjectsInCameraRange.Num())
 		return;
 
 	float Closest = MAX_FLT;
@@ -724,16 +730,21 @@ void APlayerCharacter::UpdateClosestTaskObject()
 		ClosestPickup = nullptr;
 	}
 
-	for (int i = 0; i < TaskObjectsInRange.Num(); ++i)
+	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
-		auto Distance = FVector::Distance(TaskObjectsInRange[i]->GetActorLocation(), GetActorLocation());
+		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{
 			Closest = Distance;
-			ClosestPickup = TaskObjectsInRange[i];
+			ClosestPickup = TaskObjectsInCameraRange[i];
 		}
 	}
 
 	if (ClosestPickup)
 		ClosestPickup->SetSelected(true);
+
+	if (TaskObjectsInPickupRange.Find(ClosestPickup) != INDEX_NONE)
+	{
+		OnObjectPickedUp(ClosestPickup);
+	}
 }

@@ -258,7 +258,8 @@ protected:
 	TArray<ATaskObject *> PickupBlacklist;
 	TArray<FName> TraySlotNames;
 
-	TArray<ATaskObject*> TaskObjectsInRange;
+	TArray<ATaskObject*> TaskObjectsInCameraRange;
+	TArray<ATaskObject*> TaskObjectsInPickupRange;
 
 	UPROPERTY()
 	ATaskObject* ClosestPickup;
