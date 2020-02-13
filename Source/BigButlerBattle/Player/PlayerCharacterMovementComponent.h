@@ -70,7 +70,7 @@ protected:
 	float HandbrakeVelocityThreshold = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
-	bool bAllowBrakingWhileHandbraking = false;
+	bool bAllowBrakingWhileHandbraking = true;
 
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))

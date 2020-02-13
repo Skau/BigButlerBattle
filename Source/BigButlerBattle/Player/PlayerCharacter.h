@@ -136,6 +136,8 @@ protected:
 
 	void UpdateHandbrake(float Value);
 
+	bool bBraking = false;
+
 
 
 
