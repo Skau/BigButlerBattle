@@ -134,7 +134,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
-	Input->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
 
 	// Axis Mappings
 	Input->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
@@ -548,6 +547,7 @@ void APlayerCharacter::DropCurrentObject()
 		//}
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
+		IncrementCurrentItemIndex();
 	}
 }
 
@@ -636,6 +636,7 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 {
 	float DeltaYaw = 0.0f;
 	int i = CurrentItemIndex;
+	bool Found = false;
 	do
 	{
 		DeltaYaw += 90.f;
@@ -644,26 +645,22 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 		{
 			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
 			CurrentItemIndex = i;
+			Found = true;
 			break;
 		}
 	} while (i != CurrentItemIndex);
+
+	if (!Found)
+		ResetItemIndex();
 }
 
-void APlayerCharacter::DecrementCurrentItemIndex()
+void APlayerCharacter::ResetItemIndex()
 {
-	float DeltaYaw = 0.0f;
-	int i = CurrentItemIndex;
-	do
+	if (CurrentItemIndex)
 	{
-		DeltaYaw -= 90.f;
-		i = (i ? i : Inventory.Num()) - 1;
-		if (Inventory[i] != nullptr)
-		{
-			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
-			CurrentItemIndex = i;
-			break;
-		}
-	} while (i != CurrentItemIndex);
+		CurrentItemIndex = 0;
+		Tray->SetRelativeRotation(FRotator(9, 0, 0));
+	}
 }
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
