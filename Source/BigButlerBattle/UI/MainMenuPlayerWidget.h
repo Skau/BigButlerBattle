@@ -72,12 +72,14 @@ private:
 	UFUNCTION()
 	void OnJoinPressed();
 
+	void UpdateJoinedStatus(bool bHasJoined);
+
 	UFUNCTION()
 	void OnReadyPressed();
 
-	void UpdateJoinedStatus(bool bHasJoined);
 	void UpdateReadyStatus(bool bIsReady);
 
+	UFUNCTION()
 	void OnCameraOptionsPressed();
 
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;

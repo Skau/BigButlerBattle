@@ -88,6 +88,12 @@ void UMainMenuPlayerWidget::OnJoinPressed()
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 }
 
+void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined)
+{
+	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ID);
+}
+
 void UMainMenuPlayerWidget::OnReadyPressed()
 {
 	if (CurrentIndex == EWidgetSwitcherIndex::Ready)
@@ -95,12 +101,6 @@ void UMainMenuPlayerWidget::OnReadyPressed()
 
 	UpdateReadyStatus(true);
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Ready);
-}
-
-void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined)
-{
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ID);
 }
 
 void UMainMenuPlayerWidget::UpdateReadyStatus(bool bIsReady)
@@ -111,5 +111,5 @@ void UMainMenuPlayerWidget::UpdateReadyStatus(bool bIsReady)
 
 void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 {
-
+	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::CameraOptions);
 }
