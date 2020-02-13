@@ -252,13 +252,13 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* ObjectPickupCollision;
+	UBoxComponent* TaskObjectPickupCollision;
 
 	UPROPERTY(VisibleAnywhere)
-	UCapsuleComponent* CapsuleObjectCollision;
+	UCapsuleComponent* TaskObjectCameraCollision;
 
-	TArray<ATaskObject *> Inventory;
-	TArray<ATaskObject *> PickupBlacklist;
+	TArray<ATaskObject*> Inventory;
+	TArray<ATaskObject*> PickupBlacklist;
 	TArray<FName> TraySlotNames;
 
 	TArray<ATaskObject*> TaskObjectsInCameraRange;
@@ -292,17 +292,22 @@ protected:
 
 	void ResetItemIndex();
 
-	UFUNCTION()
-	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UFUNCTION()
-	void OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 	void UpdateClosestTaskObject();
+
+	/* Delegates to handle actual pickup of tasks */
+
+	UFUNCTION()
+	void OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	/* Delegates to handle the ones in range based on camera */
+
+	UFUNCTION()
+	void OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+
 };

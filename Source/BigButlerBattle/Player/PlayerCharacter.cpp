@@ -46,28 +46,28 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
-	ObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
-	ObjectPickupCollision->SetupAttachment(RootComponent);
+	TaskObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
+	TaskObjectPickupCollision->SetupAttachment(RootComponent);
 
 	// Default values
 
-	ObjectPickupCollision->SetGenerateOverlapEvents(true);
-	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
+	TaskObjectPickupCollision->SetGenerateOverlapEvents(true);
+	TaskObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
-	ObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
-	ObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
+	TaskObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
+	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
 
-	CapsuleObjectCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
-	CapsuleObjectCollision->SetupAttachment(Camera);
+	TaskObjectCameraCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
+	TaskObjectCameraCollision->SetupAttachment(Camera);
 
 	// Default values
 
-	CapsuleObjectCollision->SetGenerateOverlapEvents(true);
-	CapsuleObjectCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
+	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
+	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
-	CapsuleObjectCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
-	CapsuleObjectCollision->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
-	CapsuleObjectCollision->InitCapsuleSize(128.f, 256.f);
+	TaskObjectCameraCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
+	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
+	TaskObjectCameraCollision->InitCapsuleSize(128.f, 256.f);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
@@ -115,11 +115,11 @@ void APlayerCharacter::BeginPlay()
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
 
-	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
-	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
+	TaskObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap);
+	TaskObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap);
 
-	CapsuleObjectCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnCapsuleObjectCollisionOverlap);
-	CapsuleObjectCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnCapsuleObjectCollisionEndOverlap);
+	TaskObjectCameraCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap);
+	TaskObjectCameraCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap);
 
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
 }
@@ -660,7 +660,7 @@ void APlayerCharacter::ResetItemIndex()
 	Tray->SetRelativeRotation(FRotator(0, 0, 0));
 }
 
-void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
@@ -684,7 +684,7 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 	}
 }
 
-void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
@@ -693,7 +693,7 @@ void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* Ov
 	}
 }
 
-void APlayerCharacter::OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
@@ -701,7 +701,7 @@ void APlayerCharacter::OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* Over
 	}
 }
 
-void APlayerCharacter::OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
