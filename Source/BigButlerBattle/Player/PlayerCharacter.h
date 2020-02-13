@@ -309,5 +309,25 @@ protected:
 	void OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 
+	/// ==================================== Tackling =================================================
 
+private:
+	TArray<APlayerCharacter*> PlayersInRange;
+
+	void TryTackle();
+
+protected:
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* PlayersInRangeCollision;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool CanTackle = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling")
+	float TackleStrength = 100.f;
+
+	UFUNCTION()
+	void OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

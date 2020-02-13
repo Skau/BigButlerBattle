@@ -88,6 +88,14 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	bUseControllerRotationYaw = false;
 
+	PlayersInRangeCollision = CreateDefaultSubobject<UBoxComponent>("Players In Range Collision");
+	PlayersInRangeCollision->SetupAttachment(RootComponent);
+
+	PlayersInRangeCollision->SetGenerateOverlapEvents(true);
+	PlayersInRangeCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	PlayersInRangeCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	PlayersInRangeCollision->SetRelativeLocation(FVector{ 0, 0, 32.f });
+	PlayersInRangeCollision->SetBoxExtent(FVector{ 128.f, 256.f, 128.f });
 }
 
 void APlayerCharacter::BeginPlay()
@@ -122,6 +130,9 @@ void APlayerCharacter::BeginPlay()
 	TaskObjectCameraCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap);
 
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
+
+	PlayersInRangeCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap);
+	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -134,6 +145,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
+	Input->BindAction("Tackle", EInputEvent::IE_Pressed, this, &APlayerCharacter::TryTackle);
 
 	// Axis Mappings
 	Input->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
@@ -711,6 +723,46 @@ void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent
 			ClosestPickup = nullptr;
 		}
 		TaskObjectsInCameraRange.RemoveSingle(Object);
+	}
+}
+
+void APlayerCharacter::TryTackle()
+{
+	if (!PlayersInRange.Num())
+		return;
+
+	float ClosestDistance = MAX_FLT;
+	int ClosestIndex = -1;
+	for (int i = 0; i < PlayersInRange.Num(); ++i)
+	{
+		auto Distance = FVector::Distance(GetActorLocation(), PlayersInRange[i]->GetActorLocation());
+		if (Distance < ClosestDistance)
+			ClosestIndex = i;
+	}
+
+	if (ClosestIndex >= 0)
+	{
+		if (auto ClosestPlayer = PlayersInRange[ClosestIndex])
+		{
+			auto Direction = (ClosestPlayer->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+			ClosestPlayer->EnableRagdoll(Direction * TackleStrength, ClosestPlayer->GetActorLocation());
+		}
+	}
+}
+
+void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (auto Other = Cast<APlayerCharacter>(OtherActor))
+	{
+		PlayersInRange.AddUnique(Other);
+	}
+}
+
+void APlayerCharacter::OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (auto Other = Cast<APlayerCharacter>(OtherActor))
+	{
+		PlayersInRange.RemoveSingle(Other);
 	}
 }
 
