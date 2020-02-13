@@ -19,11 +19,14 @@ bool UMainMenuPlayerWidget::Initialize()
 {
 	bool bInit =  Super::Initialize();
 
-	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinClicked);
+	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinPressed);
 	Buttons.Add(Button_Join);
 
-	Button_ToggleReady->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnToggledReady);
+	Button_ToggleReady->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnReadyPressed);
 	Buttons.Add(Button_ToggleReady);
+
+	Button_CameraOptions->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraOptionsPressed);
+	Buttons.Add(Button_CameraOptions);
 
 	DefaultWidgetToFocus = Button_Join;
 
@@ -32,60 +35,81 @@ bool UMainMenuPlayerWidget::Initialize()
 
 void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
 {
-	UpdatePlayerName();
+	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	PlayerNameText->SetText(FText::FromString("Player " + FString::FromInt(ID + 1)));
+}
+
+void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
+{
+	CurrentIndex = NewIndex;
+	Switcher->SetActiveWidgetIndex((int)CurrentIndex);
+
+	switch (CurrentIndex)
+	{
+	case EWidgetSwitcherIndex::Join:
+		FocusWidget(OwningCharacterController, Button_Join);
+		break;
+	case EWidgetSwitcherIndex::Main:
+		FocusWidget(OwningCharacterController, Button_ToggleReady);
+		break;
+	case EWidgetSwitcherIndex::CameraOptions:
+		break;
+	}
 }
 
 void UMainMenuPlayerWidget::OnBackButtonPressed()
 {
-	if (bIsReady)
+	switch (CurrentIndex)
 	{
-		OnToggledReady();
-	}
-	else if (bHasJoined)
-	{
-		if (bIsReady)
-			OnToggledReady();
-
-		bHasJoined = false;
-
-		Switcher->SetActiveWidgetIndex(0);
-		auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-		OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ID);
-		FocusWidget(OwningCharacterController, Button_Join);
-	}
-	else
+	case EWidgetSwitcherIndex::Join:
 	{
 		auto GameMode = Cast<AMainMenuGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 		if (GameMode && !GameMode->HasAnyPlayerJoined())
 			MainPlayWidget->BackToMainMenu();
 	}
+		break;
+	case EWidgetSwitcherIndex::Ready:
+		UpdateReadyStatus(false);
+		SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
+		break;
+	case EWidgetSwitcherIndex::Main:
+		UpdateJoinedStatus(false);
+		SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Join);
+		break;
+	case EWidgetSwitcherIndex::CameraOptions:
+		SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
+		break;
+	}
 }
 
-void UMainMenuPlayerWidget::OnJoinClicked()
+void UMainMenuPlayerWidget::OnJoinPressed()
 {
-	Switcher->SetActiveWidgetIndex(1);
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	OnToggleJoinedGame.ExecuteIfBound(true, ID);
-	FocusWidget(OwningCharacterController, Button_ToggleReady);
-	bHasJoined = true;
+	UpdateJoinedStatus(true);
+	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 }
 
-void UMainMenuPlayerWidget::OnToggledReady()
+void UMainMenuPlayerWidget::OnReadyPressed()
+{
+	if (CurrentIndex == EWidgetSwitcherIndex::Ready)
+		return;
+
+	UpdateReadyStatus(true);
+	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Ready);
+}
+
+void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined)
 {
 	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	bIsReady = !bIsReady;
-	UpdateToggledReady();
+	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ID);
 }
 
-void UMainMenuPlayerWidget::UpdateToggledReady()
+void UMainMenuPlayerWidget::UpdateReadyStatus(bool bIsReady)
 {
 	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
 	OnToggleReadyGame.ExecuteIfBound(bIsReady, ID);
-	ButtonReadyText->SetText(FText::FromString(bIsReady ? "Ready" : "Not ready"));
 }
 
-void UMainMenuPlayerWidget::UpdatePlayerName()
+void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	PlayerNameText->SetText(FText::FromString("Player " + FString::FromInt(ID + 1)));
+
 }

@@ -15,6 +15,14 @@ class UTextBlock;
 class UCheckBox;
 class UMainMenuPlayWidget;
 
+enum class EWidgetSwitcherIndex
+{
+	Join = 0,
+	Main,
+	CameraOptions, 
+	Ready
+};
+
 /**
  * 
  */
@@ -45,6 +53,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTextBlock* ButtonReadyText;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraOptions;
+
 	UMainMenuPlayWidget* MainPlayWidget;
 
 protected:
@@ -56,16 +67,18 @@ protected:
 	void OnBackButtonPressed() override;
 
 private:
-	void UpdatePlayerName();
+	void SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex);
 
 	UFUNCTION()
-	void OnJoinClicked();
+	void OnJoinPressed();
 
 	UFUNCTION()
-	void OnToggledReady();
+	void OnReadyPressed();
 
-	void UpdateToggledReady();
+	void UpdateJoinedStatus(bool bHasJoined);
+	void UpdateReadyStatus(bool bIsReady);
 
-	bool bIsReady = false;
-	bool bHasJoined = false;
+	void OnCameraOptionsPressed();
+
+	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
 };
