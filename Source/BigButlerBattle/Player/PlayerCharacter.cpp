@@ -691,7 +691,6 @@ void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* Ov
 {
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OnObjectPickupCollisionEndOverlap"))
 		PickupBlacklist.RemoveSingle(TaskObject);
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 	}
@@ -744,7 +743,5 @@ void APlayerCharacter::UpdateClosestTaskObject()
 		ClosestPickup->SetSelected(true);
 
 	if (TaskObjectsInPickupRange.Find(ClosestPickup) != INDEX_NONE)
-	{
 		OnObjectPickedUp(ClosestPickup);
-	}
 }
