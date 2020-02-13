@@ -247,6 +247,9 @@ public:
 	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	FTaskObjectDroppedSignature OnTaskObjectDropped;
 
+	int GetCurrentItemIndex() { return CurrentItemIndex; }
+	void IncrementCurrentItemIndex();
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* ObjectPickupCollision;
@@ -287,7 +290,6 @@ protected:
 	void OnHoldingThrow();
 	void OnHoldThrowReleased();
 
-	void IncrementCurrentItemIndex();
 	void ResetItemIndex();
 
 	UFUNCTION()

@@ -656,11 +656,8 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 
 void APlayerCharacter::ResetItemIndex()
 {
-	if (CurrentItemIndex)
-	{
-		CurrentItemIndex = 0;
-		Tray->SetRelativeRotation(FRotator(9, 0, 0));
-	}
+	CurrentItemIndex = 0;
+	Tray->SetRelativeRotation(FRotator(0, 0, 0));
 }
 
 void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
