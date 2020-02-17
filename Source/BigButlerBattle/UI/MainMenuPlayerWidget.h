@@ -49,7 +49,7 @@ public:
 	UTextBlock* PlayerNameText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_ToggleReady;
+	UButton* Button_Ready;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTextBlock* ButtonReadyText;

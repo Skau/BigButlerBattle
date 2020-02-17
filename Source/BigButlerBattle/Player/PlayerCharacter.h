@@ -154,7 +154,7 @@ protected:
 	float CameraRotationYawAngle = 100.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Yaw"))
-	bool CameraInvertYaw = true;
+	bool CameraInvertYaw = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Pitch"))
 	bool CameraInvertPitch = false;

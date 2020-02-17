@@ -23,8 +23,8 @@ bool UMainMenuPlayerWidget::Initialize()
 	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinPressed);
 	Buttons.Add(Button_Join);
 
-	Button_ToggleReady->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnReadyPressed);
-	Buttons.Add(Button_ToggleReady);
+	Button_Ready->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnReadyPressed);
+	Buttons.Add(Button_Ready);
 
 	Button_CameraOptions->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraOptionsPressed);
 	Buttons.Add(Button_CameraOptions);
@@ -68,7 +68,7 @@ void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex N
 		FocusWidget(OwningCharacterController, Button_Join);
 		break;
 	case EWidgetSwitcherIndex::Main:
-		FocusWidget(OwningCharacterController, Button_CameraOptions);
+		FocusWidget(OwningCharacterController, Button_Ready);
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
 		FocusWidget(OwningCharacterController, Button_Back);

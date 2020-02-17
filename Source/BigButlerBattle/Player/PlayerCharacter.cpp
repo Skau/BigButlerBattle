@@ -301,7 +301,7 @@ void APlayerCharacter::SetCustomSpringArmLength()
 
 void APlayerCharacter::LookUp(float Value)
 {
-	DesiredCameraRotation.Y = Value != 0 ? -Value * CameraRotationPitchHeight : 0.f;
+	DesiredCameraRotation.Y = Value != 0 ? Value * CameraRotationPitchHeight : 0.f;
 	if (CameraInvertPitch)
 		DesiredCameraRotation.Y = -DesiredCameraRotation.Y;
 }
