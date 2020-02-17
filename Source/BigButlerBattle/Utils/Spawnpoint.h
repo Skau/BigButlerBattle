@@ -9,9 +9,9 @@
 UENUM(BlueprintType)
 enum class ERoomSpawn : uint8
 {
-	Room_MainHall,
-	Room_Kitchen,
-	Room_SquareHall
+	Room_MainHall		UMETA(DisplayName = "Main Hall"),
+	Room_Kitchen		UMETA(DisplayName = "Kitchen"),
+	Room_SquareHall		UMETA(DisplayName = "SquareHall")
 };
 
 /**

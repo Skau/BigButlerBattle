@@ -220,7 +220,7 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 
 	bEnabledRagdoll = true;
 
-	OnCharacterFell.ExecuteIfBound();
+	OnCharacterFell.ExecuteIfBound(CurrentRoom);
 }
 
 void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)

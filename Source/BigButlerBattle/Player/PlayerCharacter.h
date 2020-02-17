@@ -7,6 +7,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
 #include "Engine/EngineTypes.h"
+#include "Utils/Spawnpoint.h"
 #include "PlayerCharacter.generated.h"
 
 // Forward declarations
@@ -22,7 +23,7 @@ class ATaskObject;
 class UTask;
 
 // Delegates
-DECLARE_DELEGATE(FCharacterFellSignature);
+DECLARE_DELEGATE_OneParam(FCharacterFellSignature, ERoomSpawn);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
@@ -63,6 +64,8 @@ public:
 	void AddForwardInput();
 
 	FCharacterFellSignature OnCharacterFell;
+
+	ERoomSpawn CurrentRoom;
 
 protected:
 	virtual void BeginPlay() override;
