@@ -10,6 +10,7 @@
 #include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
+#include "ButlerGameInstance.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -41,7 +42,14 @@ bool UMainMenuPlayerWidget::Initialize()
 
 void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	check(GameInstance != nullptr);
+
+	ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+
+	auto Options = GameInstance->PlayerOptions[ID];
+	Text_Invert->SetText(FText::FromString((Options.InvertCamera) ? "Current Swivel: Inverted" : "Current Swivel: Regular"));
+
 	PlayerNameText->SetText(FText::FromString("Player " + FString::FromInt(ID + 1)));
 }
 
@@ -123,10 +131,9 @@ void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 
 void UMainMenuPlayerWidget::OnCameraToggleInvertPressed()
 {
-	CameraInvert = !CameraInvert;
-	Text_Invert->SetText(FText::FromString((CameraInvert) ? "Current Swivel: Inverted" : "Current Swivel: Regular"));
-
-	// Actually invert here
+	auto& Options = GameInstance->PlayerOptions[ID];
+	Options.InvertCamera = !Options.InvertCamera;
+	Text_Invert->SetText(FText::FromString((Options.InvertCamera) ? "Current Swivel: Inverted" : "Current Swivel: Regular"));
 }
 
 void UMainMenuPlayerWidget::OnBackPressed()

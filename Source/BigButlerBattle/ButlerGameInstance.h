@@ -6,6 +6,11 @@
 #include "Engine/GameInstance.h"
 #include "ButlerGameInstance.generated.h"
 
+struct FPlayerOptions
+{
+	bool InvertCamera = false;
+};
+
 /**
  * 
  */
@@ -18,6 +23,8 @@ public:
     void Init() override;
 
 	int GetCurrentRandomSeed() { return Seed; }
+
+	TArray<FPlayerOptions> PlayerOptions;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")

@@ -184,6 +184,8 @@ protected:
 public:
 	void SetCustomSpringArmLength();
 
+	void SetCameraInvertY(bool Value) { CameraInvertY = Value; }
+
 protected:
 	void UpdateCameraRotation(float DeltaTime);
 

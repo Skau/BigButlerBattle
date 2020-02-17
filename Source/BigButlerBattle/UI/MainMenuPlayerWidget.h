@@ -14,6 +14,7 @@ class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
 class UMainMenuPlayWidget;
+class UButlerGameInstance;
 
 enum class EWidgetSwitcherIndex
 {
@@ -94,10 +95,12 @@ private:
 	UFUNCTION()
 	void OnCameraToggleInvertPressed();
 
-	bool CameraInvert = false;
-
 	UFUNCTION()
 	void OnBackPressed();
 
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
+
+	int ID = -1;
+	UButlerGameInstance* GameInstance;
+
 };

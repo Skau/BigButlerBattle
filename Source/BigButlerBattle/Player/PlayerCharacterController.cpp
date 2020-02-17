@@ -11,6 +11,7 @@
 #include "Tasks/TaskObject.h"
 #include "GameFramework/PlayerStart.h"
 #include "Utils/btd.h"
+#include "ButlerGameInstance.h"
 
 APlayerCharacterController::APlayerCharacterController() 
 {
@@ -45,6 +46,10 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 
 		if (PlayerWidget->Visibility == ESlateVisibility::Hidden)
 			PlayerWidget->SetVisibility(ESlateVisibility::Visible);
+
+		auto GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		check(GameInstance != nullptr);
+		PlayerCharacter->SetCameraInvertY(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCamera);
 	}
 }
 
