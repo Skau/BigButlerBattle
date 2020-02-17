@@ -58,10 +58,16 @@ public:
 	UButton* Button_CameraOptions;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_CameraToggleInvert;
+	UButton* Button_CameraToggleInvertYaw;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UTextBlock* Text_Invert;
+	UTextBlock* Text_InvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertPitch;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_Back;
@@ -93,7 +99,10 @@ private:
 	void OnCameraOptionsPressed();
 
 	UFUNCTION()
-	void OnCameraToggleInvertPressed();
+	void OnCameraToggleInvertYawPressed();
+
+	UFUNCTION()
+	void OnCameraToggleInvertPitchPressed();
 
 	UFUNCTION()
 	void OnBackPressed();

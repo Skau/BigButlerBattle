@@ -29,8 +29,11 @@ bool UMainMenuPlayerWidget::Initialize()
 	Button_CameraOptions->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraOptionsPressed);
 	Buttons.Add(Button_CameraOptions);
 
-	Button_CameraToggleInvert->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraToggleInvertPressed);
-	Buttons.Add(Button_CameraToggleInvert);
+	Button_CameraToggleInvertYaw->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraToggleInvertYawPressed);
+	Buttons.Add(Button_CameraToggleInvertYaw);
+
+	Button_CameraToggleInvertPitch->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraToggleInvertPitchPressed);
+	Buttons.Add(Button_CameraToggleInvertPitch);
 
 	Button_Back->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnBackPressed);
 	Buttons.Add(Button_Back);
@@ -48,7 +51,8 @@ void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
 	ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
 
 	auto Options = GameInstance->PlayerOptions[ID];
-	Text_Invert->SetText(FText::FromString((Options.InvertCamera) ? "Current Swivel: Inverted" : "Current Swivel: Regular"));
+	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
+	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
 
 	PlayerNameText->SetText(FText::FromString("Player " + FString::FromInt(ID + 1)));
 }
@@ -129,11 +133,18 @@ void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::CameraOptions);
 }
 
-void UMainMenuPlayerWidget::OnCameraToggleInvertPressed()
+void UMainMenuPlayerWidget::OnCameraToggleInvertYawPressed()
 {
 	auto& Options = GameInstance->PlayerOptions[ID];
-	Options.InvertCamera = !Options.InvertCamera;
-	Text_Invert->SetText(FText::FromString((Options.InvertCamera) ? "Current Swivel: Inverted" : "Current Swivel: Regular"));
+	Options.InvertCameraYaw = !Options.InvertCameraYaw;
+	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
+}
+
+void UMainMenuPlayerWidget::OnCameraToggleInvertPitchPressed()
+{
+	auto& Options = GameInstance->PlayerOptions[ID];
+	Options.InvertCameraPitch = !Options.InvertCameraPitch;
+	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
 }
 
 void UMainMenuPlayerWidget::OnBackPressed()

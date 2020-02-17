@@ -49,7 +49,8 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 
 		auto GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 		check(GameInstance != nullptr);
-		PlayerCharacter->SetCameraInvertY(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCamera);
+		PlayerCharacter->SetCameraInvertYaw(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraYaw);
+		PlayerCharacter->SetCameraInvertPitch(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraPitch);
 	}
 }
 

@@ -8,7 +8,8 @@
 
 struct FPlayerOptions
 {
-	bool InvertCamera = false;
+	bool InvertCameraYaw = true;
+	bool InvertCameraPitch = false;
 };
 
 /**

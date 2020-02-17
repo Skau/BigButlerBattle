@@ -302,14 +302,14 @@ void APlayerCharacter::SetCustomSpringArmLength()
 void APlayerCharacter::LookUp(float Value)
 {
 	DesiredCameraRotation.Y = Value != 0 ? -Value * CameraRotationPitchHeight : 0.f;
-	if (CameraInvertY)
+	if (CameraInvertPitch)
 		DesiredCameraRotation.Y = -DesiredCameraRotation.Y;
 }
 
 void APlayerCharacter::LookRight(float Value)
 {
 	DesiredCameraRotation.X = Value != 0 ? -Value * CameraRotationYawAngle : 0.f;
-	if (CameraInvertX)
+	if (CameraInvertYaw)
 		DesiredCameraRotation.X = -DesiredCameraRotation.X;
 }
 
@@ -324,8 +324,8 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 
 
 	// Find new rotation
-	const bool bXNearZero = FMath::Abs(DesiredCameraRotation.X - CameraRotation.X) < CameraRotationDeadZone;
-	const bool bYNearZero = FMath::Abs(DesiredCameraRotation.Y - CameraRotation.Y) < CameraRotationDeadZone;
+	const bool bXNearZero = FMath::Abs(DesiredCameraRotation.X - CameraRotation.X) / CameraRotationYawAngle < CameraRotationDeadZone;
+	const bool bYNearZero = FMath::Abs(DesiredCameraRotation.Y - CameraRotation.Y) / CameraRotationPitchHeight < CameraRotationDeadZone;
 
 	CameraRotation.X = bXNearZero ? DesiredCameraRotation.X : FMath::Lerp(CameraRotation.X, DesiredCameraRotation.X, lerpFactor);
 	CameraRotation.Y = bYNearZero ? DesiredCameraRotation.Y : FMath::Lerp(CameraRotation.Y, DesiredCameraRotation.Y, lerpFactor);
