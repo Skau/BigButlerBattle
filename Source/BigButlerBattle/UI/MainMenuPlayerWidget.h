@@ -56,6 +56,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_CameraOptions;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvert;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_Invert;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Back;
+
 	UMainMenuPlayWidget* MainPlayWidget;
 
 protected:
@@ -81,6 +90,14 @@ private:
 
 	UFUNCTION()
 	void OnCameraOptionsPressed();
+
+	UFUNCTION()
+	void OnCameraToggleInvertPressed();
+
+	bool CameraInvert = false;
+
+	UFUNCTION()
+	void OnBackPressed();
 
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
 };

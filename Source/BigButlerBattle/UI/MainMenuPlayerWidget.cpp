@@ -28,6 +28,12 @@ bool UMainMenuPlayerWidget::Initialize()
 	Button_CameraOptions->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraOptionsPressed);
 	Buttons.Add(Button_CameraOptions);
 
+	Button_CameraToggleInvert->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraToggleInvertPressed);
+	Buttons.Add(Button_CameraToggleInvert);
+
+	Button_Back->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnBackPressed);
+	Buttons.Add(Button_Back);
+
 	DefaultWidgetToFocus = Button_Join;
 
 	return bInit;
@@ -50,9 +56,10 @@ void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex N
 		FocusWidget(OwningCharacterController, Button_Join);
 		break;
 	case EWidgetSwitcherIndex::Main:
-		FocusWidget(OwningCharacterController, Button_ToggleReady);
+		FocusWidget(OwningCharacterController, Button_CameraOptions);
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
+		FocusWidget(OwningCharacterController, Button_Back);
 		break;
 	}
 }
@@ -112,4 +119,17 @@ void UMainMenuPlayerWidget::UpdateReadyStatus(bool bIsReady)
 void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 {
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::CameraOptions);
+}
+
+void UMainMenuPlayerWidget::OnCameraToggleInvertPressed()
+{
+	CameraInvert = !CameraInvert;
+	Text_Invert->SetText(FText::FromString((CameraInvert) ? "Current Swivel: Inverted" : "Current Swivel: Regular"));
+
+	// Actually invert here
+}
+
+void UMainMenuPlayerWidget::OnBackPressed()
+{
+	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 }
