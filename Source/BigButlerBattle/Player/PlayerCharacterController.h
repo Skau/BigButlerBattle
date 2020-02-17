@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Utils/Spawnpoint.h"
 #include "PlayerCharacterController.generated.h"
 
 // Broadcasted when the player presses pause
@@ -20,6 +21,7 @@ class ATaskObject;
 class UTask;
 class APlayerStart;
 enum class ETaskState;
+
 
 /**
  * 
@@ -44,7 +46,7 @@ public:
 
 	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
 
-	void RespawnCharacter(APlayerStart* PlayerStart = nullptr);
+	void RespawnCharacter(ASpawnpoint* Spawnpoint);
 
 	bool bUseCustomSpringArmLength = false;
 
@@ -87,7 +89,5 @@ private:
 
 	void OnTaskObjectDelivered(ATaskObject* Object);
 
-	void OnCharacterFell();
-
-	FTransform SpawnTransform = FTransform::Identity;
+	void OnCharacterFell(ERoomSpawn Room);
 };

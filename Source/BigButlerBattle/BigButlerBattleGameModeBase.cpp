@@ -18,6 +18,7 @@
 #include "Utils/btd.h"
 #include "GameFramework/PlayerStart.h"
 #include "UI/GameFinishedWidget.h"
+#include "Utils/Spawnpoint.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
@@ -47,11 +48,16 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	}
 
 	// Get player start locations
-	TArray<APlayerStart*> PlayerStarts;
-	for (TActorIterator<APlayerStart> iter(GetWorld()); iter; ++iter)
+	TArray<ASpawnpoint*> PlayerStarts;
+	for (TActorIterator<ASpawnpoint> iter(GetWorld()); iter; ++iter)
 	{
-		PlayerStarts.Add(*iter);
+		if(iter->bIsStartSpawn)
+			PlayerStarts.Add(*iter);
 	}
+
+	if(!PlayerStarts.Num())
+		UE_LOG(LogTemp, Error, TEXT("No spawnpoints found"));
+
 
 	if (!Controllers.Num())
 	{
@@ -81,10 +87,6 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
 	}
 
-
-
-
-
 	// Pause widget setup
 
 	if (!PauseWidgetClass)
@@ -113,6 +115,10 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 		GameFinishedWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
 	}
+
+	// Spawnpoints
+
+	SetupSpawnpoints();
 
 	// Wait a bit for task objects to finish
 
@@ -175,6 +181,17 @@ void ABigButlerBattleGameModeBase::OnPlayerQuit()
 
 
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
+}
+
+void ABigButlerBattleGameModeBase::SetupSpawnpoints()
+{
+	for (TActorIterator<ASpawnpoint> iter(GetWorld()); iter; ++iter)
+	{
+		if (!Spawnpoints.Find(iter->RoomSpawn))
+			Spawnpoints.Add(iter->RoomSpawn);
+
+		Spawnpoints[iter->RoomSpawn].Add(*iter);
+	}
 }
 
 void ABigButlerBattleGameModeBase::BeginTaskGeneration()
@@ -439,4 +456,15 @@ void ABigButlerBattleGameModeBase::GenerateExtraTask()
 
 	auto Tasks = ProcessWorldTasks(TaskData[Types[FMath::RandRange(0, Types.Num() - 1)]], Stream, 1, 1);
 	GeneratePlayerTasks(Tasks);
+}
+
+ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(ERoomSpawn Room)
+{
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FRandomStream Stream;
+	Stream.Initialize(Instance->GetCurrentRandomSeed());
+
+	auto Points = Spawnpoints[Room];
+
+	return Points[Stream.RandRange(0, Points.Num() - 1)];
 }
