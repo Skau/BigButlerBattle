@@ -10,6 +10,7 @@
 #include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
+#include "ButlerGameInstance.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -22,11 +23,20 @@ bool UMainMenuPlayerWidget::Initialize()
 	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinPressed);
 	Buttons.Add(Button_Join);
 
-	Button_ToggleReady->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnReadyPressed);
-	Buttons.Add(Button_ToggleReady);
+	Button_Ready->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnReadyPressed);
+	Buttons.Add(Button_Ready);
 
 	Button_CameraOptions->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraOptionsPressed);
 	Buttons.Add(Button_CameraOptions);
+
+	Button_CameraToggleInvertYaw->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraToggleInvertYawPressed);
+	Buttons.Add(Button_CameraToggleInvertYaw);
+
+	Button_CameraToggleInvertPitch->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnCameraToggleInvertPitchPressed);
+	Buttons.Add(Button_CameraToggleInvertPitch);
+
+	Button_Back->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnBackPressed);
+	Buttons.Add(Button_Back);
 
 	DefaultWidgetToFocus = Button_Join;
 
@@ -35,7 +45,15 @@ bool UMainMenuPlayerWidget::Initialize()
 
 void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	check(GameInstance != nullptr);
+
+	ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+
+	auto Options = GameInstance->PlayerOptions[ID];
+	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
+	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
+
 	PlayerNameText->SetText(FText::FromString("Player " + FString::FromInt(ID + 1)));
 }
 
@@ -50,9 +68,10 @@ void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex N
 		FocusWidget(OwningCharacterController, Button_Join);
 		break;
 	case EWidgetSwitcherIndex::Main:
-		FocusWidget(OwningCharacterController, Button_ToggleReady);
+		FocusWidget(OwningCharacterController, Button_Ready);
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
+		FocusWidget(OwningCharacterController, Button_Back);
 		break;
 	}
 }
@@ -112,4 +131,23 @@ void UMainMenuPlayerWidget::UpdateReadyStatus(bool bIsReady)
 void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 {
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::CameraOptions);
+}
+
+void UMainMenuPlayerWidget::OnCameraToggleInvertYawPressed()
+{
+	auto& Options = GameInstance->PlayerOptions[ID];
+	Options.InvertCameraYaw = !Options.InvertCameraYaw;
+	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
+}
+
+void UMainMenuPlayerWidget::OnCameraToggleInvertPitchPressed()
+{
+	auto& Options = GameInstance->PlayerOptions[ID];
+	Options.InvertCameraPitch = !Options.InvertCameraPitch;
+	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
+}
+
+void UMainMenuPlayerWidget::OnBackPressed()
+{
+	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 }

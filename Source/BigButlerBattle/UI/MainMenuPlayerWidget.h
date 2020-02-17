@@ -14,6 +14,7 @@ class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
 class UMainMenuPlayWidget;
+class UButlerGameInstance;
 
 enum class EWidgetSwitcherIndex
 {
@@ -48,13 +49,28 @@ public:
 	UTextBlock* PlayerNameText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_ToggleReady;
+	UButton* Button_Ready;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTextBlock* ButtonReadyText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_CameraOptions;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Back;
 
 	UMainMenuPlayWidget* MainPlayWidget;
 
@@ -82,5 +98,18 @@ private:
 	UFUNCTION()
 	void OnCameraOptionsPressed();
 
+	UFUNCTION()
+	void OnCameraToggleInvertYawPressed();
+
+	UFUNCTION()
+	void OnCameraToggleInvertPitchPressed();
+
+	UFUNCTION()
+	void OnBackPressed();
+
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
+
+	int ID = -1;
+	UButlerGameInstance* GameInstance;
+
 };

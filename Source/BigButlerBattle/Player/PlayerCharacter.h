@@ -143,19 +143,19 @@ protected:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
-	float CameraRotationSpeed = 10.f;
+	float CameraRotationSpeed = 2.8f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Dead Zone"))
-	float CameraRotationDeadZone = 0.1f;
+	float CameraRotationDeadZone = 0.001f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Yaw Angle"))
-	float CameraRotationYawAngle = 120.f;
+	float CameraRotationYawAngle = 100.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert X"))
-	bool CameraInvertX = true;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Yaw"))
+	bool CameraInvertYaw = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Y"))
-	bool CameraInvertY = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Pitch"))
+	bool CameraInvertPitch = false;
 
 	/**
 	 * Both the pitch rotation of the camera but as the camera also moves up/down from the character this also controls the height.
@@ -181,6 +181,10 @@ protected:
 
 public:
 	void SetCustomSpringArmLength();
+
+	void SetCameraInvertPitch(bool Value) { CameraInvertPitch = Value; }
+
+	void SetCameraInvertYaw(bool Value) { CameraInvertYaw = Value; }
 
 protected:
 	void UpdateCameraRotation(float DeltaTime);
