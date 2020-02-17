@@ -254,6 +254,7 @@ void APlayerCharacter::MoveForward(float Value)
 	if (HasEnabledRagdoll() || !Movement || (Movement->IsFalling()))
 		return;
 
+	bool bBraking = false;
 	bool bMovingBackwards = false;
 	auto acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
 
@@ -288,9 +289,10 @@ void APlayerCharacter::MoveRight(float Value)
 
 void APlayerCharacter::UpdateHandbrake(float Value)
 {
-	bBraking = !FMath::IsNearlyZero(Value);
-	if (Movement) Movement->bHandbrakeValue = Value;
+	AddMovementInput(FVector::BackwardVector * Value);
 }
+
+
 
 
 
@@ -339,6 +341,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	SpringArm->SetRelativeRotation(NewLocalRot);
 	SpringArm->TargetArmLength = DefaultSpringArmLength * Direction.Size();
 }
+
 
 
 

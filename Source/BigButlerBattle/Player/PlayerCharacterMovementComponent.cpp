@@ -502,7 +502,7 @@ bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &Acceleratio
 	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
 }
 
-FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBreakingOut, bool &bMovingBackwardsOut, float input)
+FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float input)
 {
 	if (input == 0)
 	{
@@ -513,19 +513,25 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBreakingO
 		}
 	}
 
+	// If input is negative, we are currently braking on the controller.
+	bBrakingOut = input < 0.f;
+	
+	// Scale braking with rotation, 0% rotation equals 100% braking
+	if (bBrakingOut)
+		input *= 1.f - FMath::Abs(GetRotationInput());
+
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
-	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && input < 0.f);
-	const float factor = bCanMoveVertically * input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
+	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && bBrakingOut);
+	const float factor = bCanMoveVertically * input * FMath::Abs(bBrakingOut ? SkateboardBreakingDeceleration : GetMaxAcceleration());
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 
 	if (a.IsNearlyZero())
 		a = FVector::ZeroVector;
 
-	bBreakingOut = FMath::IsNegativeFloat(FVector::DotProduct(a, GetOwner()->GetActorForwardVector()));
 	bMovingBackwardsOut = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
 
 	// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
-	if (bBreakingOut && bMovingBackwardsOut)
+	if (bBrakingOut && bMovingBackwardsOut)
 	{
 		a = -a;
 	}
@@ -586,5 +592,5 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 
 float UPlayerCharacterMovementComponent::CalcHandbrakeRotation() const
 {
-	return !IsFalling() * bHandbrakeValue * HandbrakeRotationFactor * GetRotationInput();
+	return !IsFalling() * GetHandbrakeAmount() * HandbrakeRotationFactor * GetRotationInput();
 }

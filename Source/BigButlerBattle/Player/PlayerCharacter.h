@@ -88,7 +88,6 @@ private:
 	bool bEnabledRagdoll = false;
 
 protected:
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Can Fall Off"))
 	bool bCanFall = true;
 
@@ -100,7 +99,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Angle Threshold"))
 	float CrashAngleThreshold = 45.f;
-
 
 public:
 	void EnableRagdoll(FVector Impulse = FVector::ZeroVector, FVector HitLocation = FVector::ZeroVector);
@@ -135,8 +133,8 @@ protected:
 	void MoveRight(float Value);
 
 	void UpdateHandbrake(float Value);
+	
 
-	bool bBraking = false;
 
 
 
