@@ -258,13 +258,7 @@ void APlayerCharacter::MoveForward(float Value)
 	bool bMovingBackwards = false;
 	auto acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
 
-	// Brake
-	if (bBraking)
-	{
-		AddMovementInput(FVector::ForwardVector * Value);
-	}
-	// // Forward kick
-	else if (Value != 0)
+	if (!bBraking && Value != 0)
 	{
 		// Normalize with time
 		const float deltaTime = GetWorld()->GetDeltaSeconds();

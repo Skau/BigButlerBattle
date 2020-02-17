@@ -109,9 +109,6 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		CalcSkateboardVelocity(OldFloor.HitResult, TimeTick);
 		check(!Velocity.ContainsNaN());
 
-		if(IsHandbraking() && !IsFalling())
-			PerformSickAssHandbraking(TimeTick);
-
 		// Check if player should fall off
 		TryFallOff();
 
@@ -298,11 +295,14 @@ void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Itera
 
 	// Apply rotation based on input
 	const auto rotAmount = CalcRotation() * deltaTime;
-	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
+	if (!FMath::IsNearlyZero(rotAmount))
+	{
+		GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 
-	// Set velocity to be facing same direction as forward dir.
-	if (!Velocity.IsNearlyZero())
-		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+		// Set velocity to be facing same direction as forward dir.
+		if (!Velocity.IsNearlyZero())
+			Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+	}
 }
 
 void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
@@ -373,8 +373,12 @@ void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float Del
 
 void UPlayerCharacterMovementComponent::PerformSickAssHandbraking(float DeltaTime)
 {
-	if (Velocity.Size() > HandbrakeVelocityThreshold && !IsFalling())
-		UpdatedComponent->AddLocalRotation({0.f, CalcHandbrakeRotation() * DeltaTime, 0.f});	
+	if (/* Velocity.Size() > HandbrakeVelocityThreshold && */ !IsFalling())
+	{
+		auto rot = CalcHandbrakeRotation();
+		UE_LOG(LogTemp, Warning, TEXT("Rotation is: %f"), rot);
+		UpdatedComponent->AddLocalRotation({0.f, rot * DeltaTime, 0.f});	
+	}
 }	
 
 void UPlayerCharacterMovementComponent::TryFallOff()
@@ -415,7 +419,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 		Velocity = OldVelocity.GetSafeNormal() * MaxSpeed;
 	}
 
-	const bool bIsStandstill = Velocity.Size() < StandstillThreshold;
+	bIsStandstill = Velocity.Size() < StandstillThreshold;
 	const bool bShouldStopCompletely = bBraking && bIsStandstill;
 
 	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
@@ -442,12 +446,17 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 
 	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
+
+	ApplyRotation(DeltaTime);
+}
+
+void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
+{
 	// Apply rotation based on input
-	auto forwardDir = GetOwner()->GetActorForwardVector();
-	const auto rotAmount = CalcRotation() * ((bIsStandstill) ? SkateboardStandstillRotationSpeed : 1.f) * DeltaTime;
+	const auto rotAmount = CalcRotation() * DeltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 	// Rotate velocity the same amount as forward dir.
-	if (!Velocity.IsNearlyZero())
+	if (!IsHandbraking() && !Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
 }
 
@@ -585,12 +594,21 @@ void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, floa
 
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
-	// Remove horizontal input if handbraking and not in air.
-	const bool bCanMoveHorizontally = !IsHandbraking() || IsFalling();
-	return bCanMoveHorizontally * SkateboardRotationSpeed * GetRotationInput();
-}
+	const float standstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
 
-float UPlayerCharacterMovementComponent::CalcHandbrakeRotation() const
-{
-	return !IsFalling() * GetHandbrakeAmount() * HandbrakeRotationFactor * GetRotationInput();
+	if (IsHandbraking() && !IsFalling())
+	{
+		float alpha = Velocity.Size() / HandbrakeVelocityThreshold;
+		const bool bWithinThreshold = alpha <= 1.f;
+		// If above threshold remember to clamp to threshold.
+		if (!bWithinThreshold)
+			alpha = 1.f;
+
+		const float rotSpeed = FMath::Lerp(standstillRotationSpeed, HandbrakeRotationFactor, alpha);
+		return GetHandbrakeAmount() * GetRotationInput() * rotSpeed;
+	}
+	else
+	{
+		return GetRotationInput() * (bIsStandstill ? standstillRotationSpeed : SkateboardRotationSpeed);
+	}
 }

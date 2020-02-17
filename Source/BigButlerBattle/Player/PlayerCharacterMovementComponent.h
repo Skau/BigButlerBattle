@@ -86,6 +86,7 @@ protected:
 	float SidewaysForce = 0.0f;
 
 	bool bBraking = false;
+	bool bIsStandstill = false;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -146,13 +147,14 @@ protected:
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
-	void PerformSickAssHandbraking(float DeltaTime);
-
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
 	void TryFallOff();
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
+
+	// Applies this frames current rotation multiplied by deltaTime
+	void ApplyRotation(float DeltaTime);
 
 	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
 
@@ -161,6 +163,10 @@ protected:
 	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
 	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	float CalcSidewaysBreaking(const FVector& forward) const;
+
+	/**
+	 * Returns current rotation amount.
+	 * Both normal rotation and handbraking rotation.
+	 */
 	float CalcRotation() const;
-	float CalcHandbrakeRotation() const;
 };
