@@ -124,7 +124,7 @@ public:
 	/**
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
-	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f, float input = 0.f);
+	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float input = 0.f);
 
 	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 
