@@ -88,9 +88,6 @@ protected:
 	bool bBraking = false;
 
 public:
-	float bHandbrakeValue = 0.f;
-
-public:
 	UPlayerCharacterMovementComponent();
 
 	UFUNCTION(BlueprintPure)
@@ -157,10 +154,11 @@ protected:
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
-	bool IsHandbraking() const { return bHandbrakeValue != 0; }
+	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
 
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	float GetForwardInput() const { return InputDir.X; }
+	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
 	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	float CalcSidewaysBreaking(const FVector& forward) const;
 	float CalcRotation() const;

@@ -586,5 +586,5 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 
 float UPlayerCharacterMovementComponent::CalcHandbrakeRotation() const
 {
-	return !IsFalling() * bHandbrakeValue * HandbrakeRotationFactor * GetRotationInput();
+	return !IsFalling() * GetHandbrakeAmount() * HandbrakeRotationFactor * GetRotationInput();
 }
