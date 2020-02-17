@@ -371,16 +371,6 @@ void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float Del
 	}
 }
 
-void UPlayerCharacterMovementComponent::PerformSickAssHandbraking(float DeltaTime)
-{
-	if (/* Velocity.Size() > HandbrakeVelocityThreshold && */ !IsFalling())
-	{
-		auto rot = CalcHandbrakeRotation();
-		UE_LOG(LogTemp, Warning, TEXT("Rotation is: %f"), rot);
-		UpdatedComponent->AddLocalRotation({0.f, rot * DeltaTime, 0.f});	
-	}
-}	
-
 void UPlayerCharacterMovementComponent::TryFallOff()
 {
 	if (!PlayerCharacter || !PlayerCharacter->CanFall())
