@@ -732,26 +732,30 @@ void APlayerCharacter::TryTackle()
 		return;
 
 	float ClosestDistance = MAX_FLT;
-	int ClosestIndex = -1;
+	APlayerCharacter* ClosestPlayer = nullptr;
+	FVector Direction = FVector::ZeroVector;
+
 	for (int i = 0; i < PlayersInRange.Num(); ++i)
 	{
-		auto Dir = (PlayersInRange[i]->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-		auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(GetActorForwardVector(), Dir))));
-		if (angle > TackleAngleThreshold)
+		auto OtherPlayer = PlayersInRange[i];
+		auto OtherPlayerLocation = OtherPlayer->GetActorLocation();
+
+		// Check angle
+		Direction = (OtherPlayerLocation - GetActorLocation()).GetSafeNormal();
+		auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(GetActorForwardVector(), Direction))));
+		if (angle < TackleAngleThreshold)
 			continue;
 
-		auto Distance = FVector::Distance(GetActorLocation(), PlayersInRange[i]->GetActorLocation());
+		// Check distance
+		auto Distance = FVector::Distance(GetActorLocation(), OtherPlayerLocation);
 		if (Distance < ClosestDistance)
-			ClosestIndex = i;
+			ClosestPlayer = OtherPlayer;
 	}
 
-	if (ClosestIndex >= 0)
+	if (ClosestPlayer)
 	{
-		if (auto ClosestPlayer = PlayersInRange[ClosestIndex])
-		{
-			auto Direction = (ClosestPlayer->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-			ClosestPlayer->EnableRagdoll(Direction * TackleStrength, ClosestPlayer->GetActorLocation());
-		}
+		ClosestPlayer->EnableRagdoll(Direction * TackleStrength, ClosestPlayer->GetActorLocation());
+		PlayersInRange.RemoveSingle(ClosestPlayer);
 	}
 }
 
