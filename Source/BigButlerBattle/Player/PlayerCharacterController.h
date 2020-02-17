@@ -89,5 +89,5 @@ private:
 
 	void OnTaskObjectDelivered(ATaskObject* Object);
 
-	void OnCharacterFell(ERoomSpawn Room);
+	void OnCharacterFell(ERoomSpawn Room, FVector Position);
 };

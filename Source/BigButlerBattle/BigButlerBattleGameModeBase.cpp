@@ -458,13 +458,20 @@ void ABigButlerBattleGameModeBase::GenerateExtraTask()
 	GeneratePlayerTasks(Tasks);
 }
 
-ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(ERoomSpawn Room)
+ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(ERoomSpawn Room, FVector Position)
 {
-	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	FRandomStream Stream;
-	Stream.Initialize(Instance->GetCurrentRandomSeed());
+	float ClosestDistance = MAX_FLT;
+	ASpawnpoint* ClosestSpawnpoint = nullptr;
+	
+	for (auto& Spawnpoint : Spawnpoints[Room])
+	{
+		auto Distance = FVector::Distance(Position, Spawnpoint->GetActorLocation());
+		if (Distance < ClosestDistance)
+		{
+			ClosestSpawnpoint = Spawnpoint;
+			ClosestDistance = Distance;
+		}
+	}
 
-	auto Points = Spawnpoints[Room];
-
-	return Points[Stream.RandRange(0, Points.Num() - 1)];
+	return ClosestSpawnpoint;
 }

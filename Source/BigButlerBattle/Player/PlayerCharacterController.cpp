@@ -150,7 +150,7 @@ void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 	}
 }
 
-void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room)
+void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, FVector Position)
 {
 	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
 	btd::Delay(this, RespawnTime, [=]()
@@ -169,7 +169,7 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room)
 			return;
 		}
 
-		auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room);
+		auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room, Position);
 		RespawnCharacter(Spawnpoint);
 	});
 }

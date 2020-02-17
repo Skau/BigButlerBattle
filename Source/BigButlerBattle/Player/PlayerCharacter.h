@@ -23,7 +23,7 @@ class ATaskObject;
 class UTask;
 
 // Delegates
-DECLARE_DELEGATE_OneParam(FCharacterFellSignature, ERoomSpawn);
+DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);

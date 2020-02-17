@@ -48,7 +48,7 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	ASpawnpoint* GetRandomSpawnpoint(ERoomSpawn Room);
+	ASpawnpoint* GetRandomSpawnpoint(ERoomSpawn Room, FVector Position);
 
 protected:
 	void BeginPlay() override;
