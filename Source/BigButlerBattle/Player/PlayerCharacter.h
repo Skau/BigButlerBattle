@@ -323,7 +323,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	bool CanTackle = true;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Angle Threshold"))
+	float TackleAngleThreshold = 45.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Strength"))
 	float TackleStrength = 100.f;
 
 	UFUNCTION()

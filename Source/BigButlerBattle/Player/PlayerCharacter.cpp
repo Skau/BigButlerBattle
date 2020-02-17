@@ -735,6 +735,11 @@ void APlayerCharacter::TryTackle()
 	int ClosestIndex = -1;
 	for (int i = 0; i < PlayersInRange.Num(); ++i)
 	{
+		auto Dir = (PlayersInRange[i]->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+		auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(GetActorForwardVector(), Dir))));
+		if (angle > TackleAngleThreshold)
+			continue;
+
 		auto Distance = FVector::Distance(GetActorLocation(), PlayersInRange[i]->GetActorLocation());
 		if (Distance < ClosestDistance)
 			ClosestIndex = i;
