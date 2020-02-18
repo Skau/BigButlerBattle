@@ -207,12 +207,13 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 
 		if (HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Grinding motion doesn't know how to manage root motion!"));
+			UE_LOG(LogTemp, Error, TEXT("Grinding motion doesn't know how to manage root motion! PANIC!!"));
 			return;
 		}
 
 		if (!IsValid(SkateboardSplineReference) || !IsValid(CharacterOwner))
 		{
+			UE_LOG(LogTemp, Error, TEXT("Skateboard spline reference or character owner is invalid!"));
 			return;
 		}
 		
@@ -221,6 +222,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		// If there's less than 2 points along the curve, curve cannot be traversed. Return to falling movement.
 		if (pointCount < 2)
 		{
+			UE_LOG(LogTemp, Error, TEXT("Not enough points for grinding movement!"));
 			SetMovementMode(EMovementMode::MOVE_Falling);
 			StartNewPhysics(remainingTime, Iterations);
 			return;
@@ -231,7 +233,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		if (SplinePos < 0.f)
 		{
 			SplinePos = SkateboardSplineReference->FindInputKeyClosestToWorldLocation(CharacterOwner->GetActorLocation());
-			UE_LOG(LogTemp, Warning, TEXT("Startpoint: %f"), SplinePos);
+			UE_LOG(LogTemp, Warning, TEXT("Started grinding movement! Startingpos: %f"), SplinePos);
 			extraVelocity = SkateboardSplineReference->GetLocationAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World) - CharacterOwner->GetActorLocation();
 			if (!Velocity.IsNearlyZero())
 			{

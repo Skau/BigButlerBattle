@@ -88,6 +88,10 @@ protected:
 	bool bIsStandstill = false;
 
 public:
+	/// Grinding movement:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
+	USplineComponent* SkateboardSplineReference = nullptr;
+
 	UPlayerCharacterMovementComponent();
 
 	UFUNCTION(BlueprintPure)

@@ -23,6 +23,8 @@
 #include "King/King.h"
 #include "PlayerCharacterController.h"
 #include "ReferenceSkeleton.h"
+#include "Utils/Railing.h"
+#include "Components/SplineComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -141,6 +143,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 
 	// Action Mappings
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
+	btd::BindActionLambda(Input, "Jump", EInputEvent::IE_Released, [&](){
+		bHoldingJump = false;
+	});
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
@@ -243,9 +248,13 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 
 void APlayerCharacter::StartJump()
 {
+	bHoldingJump = true;
+
 	if (Movement && !Movement->IsFalling())
 	{
 		OnJumpEvent.Broadcast();
+		
+		TryStartGrinding();
 	}
 }
 
@@ -822,5 +831,51 @@ void APlayerCharacter::OnRailsInRangeUpdated(ARailing* RailObject, bool Enter)
 	{
 		RailsInRange.RemoveAt(railIndex);
 	}
+	else
+	{
+		return;
+	}
+
+	TryStartGrinding();
 }
 
+bool APlayerCharacter::TryStartGrinding()
+{
+	if (RailsInRange.Num() < 1 || !Movement)
+		return false;
+
+	const bool bCanGrind = Movement->IsFalling() && bHoldingJump;
+	if (!bCanGrind)
+		return false;
+
+	const auto currentPos = GetActorLocation();
+	int closestIndex{-1};
+	float closestDistance{MAX_FLT};
+
+	// Find closest point on rail (and closest rail)
+	for (int i{0}; i < RailsInRange.Num(); ++i)
+	{
+		auto& railObj = RailsInRange[i];
+		// TODO: Remove
+		check(IsValid(railObj));
+
+		const auto splinePos = railObj->SplineComp->FindLocationClosestToWorldLocation(currentPos, ESplineCoordinateSpace::World);
+		const auto distance = (splinePos - currentPos).Size();
+		if (distance < RailDistanceThreshold && distance < closestDistance)
+		{
+			closestIndex = i;
+			closestDistance = distance;
+		}
+	}
+
+	// Start grinding
+	if (-1 < closestIndex && Movement->SkateboardSplineReference == nullptr)
+	{
+		Movement->SkateboardSplineReference = RailsInRange[closestIndex]->SplineComp;
+		Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
+		// Movement->CustomMovementMode = static_cast<uint8>(ECustomMovementType::MOVE_Grinding);
+		return true;
+	}
+
+	return false;
+}

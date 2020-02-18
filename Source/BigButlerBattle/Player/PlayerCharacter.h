@@ -124,6 +124,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent *Movement = nullptr;
 
+	bool bHoldingJump = false;
+
 public:
 	JumpEventSignature OnJumpEvent;
 
@@ -349,8 +351,17 @@ protected:
 
 /// ==================================== Grinding =================================================
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grinding", meta = (DisplayName = "Rail Distance Threshold"))
+	float RailDistanceThreshold = 100.f;
+
 	TArray<ARailing*> RailsInRange;
 
 public:
 	void OnRailsInRangeUpdated(ARailing* RailObject, bool Enter);
+
+	/**
+	 * Attempts to start to grind on the closest rail available
+	 * @return true if grinding was successfull, false otherwise
+	 */
+	bool TryStartGrinding();
 };
