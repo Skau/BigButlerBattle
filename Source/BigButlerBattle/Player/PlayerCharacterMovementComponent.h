@@ -47,6 +47,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardForwardGroundDeceleration = 100.f;
 
+	/**
+	 * How much current velocity will have an impact on acceleration
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Velocity Acceleration Multiplier", ClampMin = "0", UIMin = "0"))
+	float SkateboardFwrdVelAccMult = 0.4f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardSidewaysGroundDeceleration = 4096.f;
 
@@ -98,6 +104,8 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	float GetRotationInput() const { return InputDir.Y; }
+
+	float GetMaxForwardAcceleration() const;
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.

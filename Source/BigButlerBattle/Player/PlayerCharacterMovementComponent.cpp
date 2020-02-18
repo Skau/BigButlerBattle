@@ -19,7 +19,7 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
-	MaxAcceleration = 1400.f;
+	MaxAcceleration = 1800.f;
 	GravityScale = 3.0f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
@@ -480,6 +480,11 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
+float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
+{
+	return FMath::Max(FMath::Abs(GetMaxAcceleration()) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+}
+
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime) const
 {
 	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
@@ -521,7 +526,7 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBrakingOu
 
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
 	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && bBrakingOut);
-	const float factor = bCanMoveVertically * input * FMath::Abs(bBrakingOut ? SkateboardBreakingDeceleration : GetMaxAcceleration());
+	const float factor = bCanMoveVertically * input * (bBrakingOut ? FMath::Abs(SkateboardBreakingDeceleration) : GetMaxForwardAcceleration());
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
 
 	if (a.IsNearlyZero())
