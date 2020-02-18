@@ -215,15 +215,23 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		{
 			return;
 		}
+		
 
-		const int pointCount = SkateboardSplineReference->GetNumberOfSplinePoints() - 1;
-		if (pointCount < 1)
+		const auto pointCount = SkateboardSplineReference->GetNumberOfSplinePoints();
+		// If there's less than 2 points along the curve, curve cannot be traversed. Return to falling movement.
+		if (pointCount < 2)
+		{
+			SetMovementMode(EMovementMode::MOVE_Falling);
+			StartNewPhysics(remainingTime, Iterations);
 			return;
+		}
+
 
 		// If just entering the spline, do a setup.
 		if (SplinePos < 0.f)
 		{
 			SplinePos = SkateboardSplineReference->FindInputKeyClosestToWorldLocation(CharacterOwner->GetActorLocation());
+			UE_LOG(LogTemp, Warning, TEXT("Startpoint: %f"), SplinePos);
 			extraVelocity = SkateboardSplineReference->GetLocationAtSplineInputKey(SplinePos, ESplineCoordinateSpace::World) - CharacterOwner->GetActorLocation();
 			if (!Velocity.IsNearlyZero())
 			{

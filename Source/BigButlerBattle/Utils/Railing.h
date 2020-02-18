@@ -37,6 +37,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Tangent multiplier"))
 	float TangentMultiplier = 3.f;
 
+protected:
+	
+
+public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RailMesh;
 
@@ -56,6 +60,12 @@ protected:
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
+	UFUNCTION()
+	void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void BuildSpline();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -63,9 +73,5 @@ public:
 #if WITH_EDITOR
 	void PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent) override;
 #endif
-
-private:
-	UFUNCTION(BlueprintCallable)
-	void BuildSpline();
 
 };

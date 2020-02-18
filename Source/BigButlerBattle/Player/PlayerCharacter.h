@@ -21,6 +21,7 @@ class USkeletalMeshSocket;
 class UBoxComponent;
 class ATaskObject;
 class UTask;
+class ARailing;
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -314,6 +315,9 @@ protected:
 	void OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 
+
+
+
 	/// ==================================== Tackling =================================================
 
 private:
@@ -338,4 +342,15 @@ protected:
 	void OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+
+
+
+/// ==================================== Grinding =================================================
+protected:
+	TArray<ARailing*> RailsInRange;
+
+public:
+	void OnRailsInRangeUpdated(ARailing* RailObject, bool Enter);
 };

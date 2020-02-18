@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "btd.h"
 #include "Utils/DataTables.h"
+#include "Player/PlayerCharacter.h"
 
 /// ------------------------------- FBezierPoint -------------------------------
 
@@ -35,6 +36,7 @@ ARailing::ARailing()
 
 	RailOverlap = CreateDefaultSubobject<UBoxComponent>(TEXT("RailOverlap"));
 	RailOverlap->SetupAttachment(RootComponent);
+	RailOverlap->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
@@ -45,6 +47,7 @@ void ARailing::BeginPlay()
 	BuildSpline();
 
 	RailOverlap->OnComponentBeginOverlap.AddDynamic(this, &ARailing::OnBeginOverlap);
+	RailOverlap->OnComponentEndOverlap.AddDynamic(this, &ARailing::OnEndOverlap);
 }
 
 // Called every frame
@@ -54,21 +57,24 @@ void ARailing::Tick(float DeltaTime)
 
 }
 
-#if WITH_EDITOR
-void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
+void ARailing::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+								int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-    //Get the name of the property that was changed  
-    FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;  
-
-    // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name  
-    // in the future this will fail to compile and we can update it.  
-    if (PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) || PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier))
-        BuildSpline();
-
-    // Call the base class version  
-    Super::PostEditChangeProperty(PropertyChangedEvent);  
+	APlayerCharacter* pchar = Cast<APlayerCharacter>(OtherActor);
+	if (IsValid(pchar))
+	{
+		pchar->OnRailsInRangeUpdated(this, true);
+	}
 }
-#endif
+
+void ARailing::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	APlayerCharacter* pchar = Cast<APlayerCharacter>(OtherActor);
+	if (IsValid(pchar))
+	{
+		pchar->OnRailsInRangeUpdated(this, false);
+	}
+}
 
 void ARailing::BuildSpline()
 {
@@ -136,8 +142,18 @@ void ARailing::BuildSpline()
 	}
 }
 
-void ARailing::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-								int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+#if WITH_EDITOR
+void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
 {
-	
+    //Get the name of the property that was changed  
+    FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;  
+
+    // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name  
+    // in the future this will fail to compile and we can update it.  
+    if (PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) || PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier))
+        BuildSpline();
+
+    // Call the base class version  
+    Super::PostEditChangeProperty(PropertyChangedEvent);  
 }
+#endif

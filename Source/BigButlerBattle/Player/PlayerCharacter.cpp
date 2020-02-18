@@ -800,3 +800,27 @@ void APlayerCharacter::UpdateClosestTaskObject()
 	if (TaskObjectsInPickupRange.Find(ClosestPickup) != INDEX_NONE)
 		OnObjectPickedUp(ClosestPickup);
 }
+
+
+
+
+
+
+void APlayerCharacter::OnRailsInRangeUpdated(ARailing* RailObject, bool Enter)
+{
+	if (!IsValid(RailObject))
+		return;
+
+	int32 railIndex;
+	const bool bFoundInArray = RailsInRange.Find(RailObject, railIndex);
+
+	if (!bFoundInArray && Enter)
+	{
+		RailsInRange.Add(RailObject);
+	}
+	else if (bFoundInArray && !Enter)
+	{
+		RailsInRange.RemoveAt(railIndex);
+	}
+}
+

@@ -26,9 +26,6 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 {
 	GENERATED_BODY()
 
-public:
-	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
@@ -78,10 +75,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
 	bool bAllowBrakingWhileHandbraking = true;
 
-	/// Grinding movement:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
-	USplineComponent* SkateboardSplineReference;
-
 	float SplinePos = -1.f;
 	int SplineDir = 1;
 
@@ -106,6 +99,8 @@ public:
 	float GetRotationInput() const { return InputDir.Y; }
 
 	float GetMaxForwardAcceleration() const;
+
+	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
