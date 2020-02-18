@@ -13,6 +13,17 @@ class UButton;
 class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
+class UMainMenuPlayWidget;
+class UButlerGameInstance;
+
+enum class EWidgetSwitcherIndex
+{
+	Join = 0,
+	Main,
+	CameraOptions, 
+	Ready
+};
+
 /**
  * 
  */
@@ -24,8 +35,6 @@ class BIGBUTLERBATTLE_API UMainMenuPlayerWidget : public UBaseUserWidget
 
 public:
 	UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer);
-
-	FORCEINLINE bool getHasJoined() { return bHasJoined; }
 
 	ToggleJoinGameSignature OnToggleJoinedGame;
 	ToggleReadyGameSignature OnToggleReadyGame;
@@ -40,27 +49,67 @@ public:
 	UTextBlock* PlayerNameText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCheckBox* CheckBox;
+	UButton* Button_Ready;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_Leave;
+	UTextBlock* ButtonReadyText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraOptions;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Back;
+
+	UMainMenuPlayWidget* MainPlayWidget;
 
 protected:
 	bool Initialize() override;
 
 	virtual void OnPlayerCharacterControllerSet() override;
 
+	UFUNCTION(BlueprintCallable)
+	void OnBackButtonPressed() override;
+
 private:
-	void UpdatePlayerName();
+	void SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex);
 
 	UFUNCTION()
-	void OnJoinClicked();
+	void OnJoinPressed();
+
+	void UpdateJoinedStatus(bool bHasJoined);
 
 	UFUNCTION()
-	void OnCheckStateChanged(bool NewCheckState);
+	void OnReadyPressed();
+
+	void UpdateReadyStatus(bool bIsReady);
 
 	UFUNCTION()
-	void OnLeaveClicked();
+	void OnCameraOptionsPressed();
 
-	bool bHasJoined = false;
+	UFUNCTION()
+	void OnCameraToggleInvertYawPressed();
+
+	UFUNCTION()
+	void OnCameraToggleInvertPitchPressed();
+
+	UFUNCTION()
+	void OnBackPressed();
+
+	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
+
+	int ID = -1;
+	UButlerGameInstance* GameInstance;
+
 };

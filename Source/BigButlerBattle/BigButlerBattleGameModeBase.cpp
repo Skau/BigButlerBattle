@@ -13,11 +13,12 @@
 #include "Tasks/TaskObject.h"
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
-#include "Tasks/BaseTask.h"
+#include "Tasks/Task.h"
 #include "King/King.h"
 #include "Utils/btd.h"
 #include "GameFramework/PlayerStart.h"
 #include "UI/GameFinishedWidget.h"
+#include "Utils/Spawnpoint.h"
 
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
@@ -47,11 +48,16 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	}
 
 	// Get player start locations
-	TArray<APlayerStart*> PlayerStarts;
-	for (TActorIterator<APlayerStart> iter(GetWorld()); iter; ++iter)
+	TArray<ASpawnpoint*> PlayerStarts;
+	for (TActorIterator<ASpawnpoint> iter(GetWorld()); iter; ++iter)
 	{
-		PlayerStarts.Add(*iter);
+		if(iter->bIsStartSpawn)
+			PlayerStarts.Add(*iter);
 	}
+
+	if(!PlayerStarts.Num())
+		UE_LOG(LogTemp, Error, TEXT("No spawnpoints found"));
+
 
 	if (!Controllers.Num())
 	{
@@ -59,42 +65,27 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		return;
 	}
 
-	for(int i = 0; i < Controllers.Num(); ++i)
-	{
-		// Spawn character and posess
-
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		FTransform SpawnTransform = FTransform::Identity;
-		if (auto PlayerStart = PlayerStarts[i])
-		{
-			SpawnTransform = PlayerStart->GetActorTransform();
-		}
-
-		auto Character = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, Params);
-		Controllers[i]->Possess(Character);
-
-		Controllers[i]->SetInputMode(FInputModeGameOnly());
-
-		// Delegates
-
-		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
-		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
-	}
-
-
 	switch (Controllers.Num())
 	{
 	case 2:
-		Cast<APlayerCharacter>(Controllers[0]->GetCharacter())->SetCustomSpringArmLength();
-		Cast<APlayerCharacter>(Controllers[1]->GetCharacter())->SetCustomSpringArmLength();
+		Controllers[0]->bUseCustomSpringArmLength = true;
+		Controllers[1]->bUseCustomSpringArmLength = true;
 		break;
 	case 3:
-		Cast<APlayerCharacter>(Controllers[0]->GetCharacter())->SetCustomSpringArmLength();
+		Controllers[0]->bUseCustomSpringArmLength = true;
 		break;
 	}
 
+	for(int i = 0; i < Controllers.Num(); ++i)
+	{
+		// Spawn character
+		Controllers[i]->RespawnCharacter(PlayerStarts[i]);
+		Controllers[i]->SetInputMode(FInputModeGameOnly());
+
+		// Delegates
+		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
+		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
+	}
 
 	// Pause widget setup
 
@@ -125,16 +116,17 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		GameFinishedWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
 	}
 
+	// Spawnpoints
+
+	SetupSpawnpoints();
+
 	// Wait a bit for task objects to finish
 
-	FTimerDelegate TimerCallback;
-	TimerCallback.BindLambda([&]
+	btd::Delay(this, 0.1f, [=]()
 	{
 		TaskGenerationStartTime = FPlatformTime::Seconds();
 		BeginTaskGeneration();
 	});
-	FTimerHandle Handle;
-	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.1f, false);
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(int ID)
@@ -191,22 +183,33 @@ void ABigButlerBattleGameModeBase::OnPlayerQuit()
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 
+void ABigButlerBattleGameModeBase::SetupSpawnpoints()
+{
+	for (TActorIterator<ASpawnpoint> iter(GetWorld()); iter; ++iter)
+	{
+		if (!Spawnpoints.Find(iter->RoomSpawn))
+			Spawnpoints.Add(iter->RoomSpawn);
+
+		Spawnpoints[iter->RoomSpawn].Add(*iter);
+	}
+}
+
 void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 {
 	RemainingTasksToCreate = TotalTasks;
 
 	// The actual tasks to generate player tasks from
-	TArray<UBaseTask*> Tasks;
+	TArray<UTask*> Tasks;
 
 	// Putting the ranges in a map for an easier/optimal algorithm.
 	TMap<EObjectType, FIntRange> Ranges
 	{
-		{EObjectType::Wine, WineRange},
+		{EObjectType::Drink, WineRange},
 		{EObjectType::Food, FoodRange}
 	};
 
 	// Get all tasks available in the world
-	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData = GetWorldTaskData();
+	TMap<EObjectType, TArray<UTask*>> WorldTaskData = GetWorldTaskData();
 	if (!WorldTaskData.Num())
 	{
 		EndTaskGeneration(Tasks);
@@ -271,7 +274,7 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	while (RemainingTasksToCreate > 0)
 	{
 		// Get the tasks
-		auto TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
+		TasksCreated = GenerateTasks(Types, Ranges, Stream, WorldTaskData, false);
 
 		// Append them
 		Tasks += TasksCreated;
@@ -288,9 +291,9 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	EndTaskGeneration(Tasks);
 }
 
-TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData()
+TMap<EObjectType, TArray<UTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData()
 {
-	TMap<EObjectType, TArray<UBaseTask*>> WorldTaskData;
+	TMap<EObjectType, TArray<UTask*>> WorldTaskData;
 
 	// Get all actors that are task objects
 	for (TActorIterator<ATaskObject> itr(GetWorld()); itr; ++itr)
@@ -306,7 +309,7 @@ TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTask
 		{
 			// [] operator on TMaps doesn't automatically add, so we do it manually
 			if (!WorldTaskData.Find(Task->Type))
-				WorldTaskData.Add(Task->Type, TArray<UBaseTask*>());
+				WorldTaskData.Add(Task->Type, TArray<UTask*>());
 
 			// Add the task to the types TArray of tasks
 			WorldTaskData[Task->Type].Add(Task);
@@ -316,9 +319,9 @@ TMap<EObjectType, TArray<UBaseTask*>> ABigButlerBattleGameModeBase::GetWorldTask
 	return WorldTaskData;
 }
 
-TArray<UBaseTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UBaseTask*>>& WorldTaskData, bool bShouldGenerateMinTasks)
+TArray<UTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UTask*>>& WorldTaskData, bool bShouldGenerateMinTasks)
 {
-	TArray<UBaseTask*> Tasks;
+	TArray<UTask*> Tasks;
 
 	int MinToCreate, MaxToCreate;
 
@@ -370,9 +373,9 @@ TArray<UBaseTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObj
 	return Tasks;
 }
 
-TArray<UBaseTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UBaseTask*>& TaskData, const FRandomStream& Stream, int Min, int Max)
+TArray<UTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UTask*>& TaskData, const FRandomStream& Stream, int Min, int Max)
 {
-	TArray<UBaseTask*> Tasks;
+	TArray<UTask*> Tasks;
 
 	int TasksToAdd = Stream.RandRange(Min, Max);
 
@@ -396,7 +399,7 @@ TArray<UBaseTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UBaseT
 	return Tasks;
 }
 
-void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UBaseTask*> Tasks)
+void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UTask*> Tasks)
 {
 	if (!Tasks.Num())
 	{
@@ -416,18 +419,59 @@ void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UBaseTask*> Tasks)
 	double TaskGenerationEndTime = FPlatformTime::Seconds();
 
 	UE_LOG(LogTemp, Warning, TEXT("Task generation finished. Total time used: %f"), TaskGenerationEndTime - TaskGenerationStartTime);
+
+	//FTimerDelegate TimerCallback;
+	//TimerCallback.BindLambda([&]
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Generating Extra Task"));
+	//		GenerateExtraTask();
+	//	});
+	//FTimerHandle Handle;
+	//GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 3.f, true);
 }
 
-void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UBaseTask*> Tasks)
+void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UTask*> Tasks)
 {
 	for (auto& Controller : Controllers)
 	{
 		auto ID = UGameplayStatics::GetPlayerControllerID(Controller);
-		TArray<TPair<UBaseTask*, ETaskState>> PlayerTasks;
+		TArray<TPair<UTask*, ETaskState>> PlayerTasks;
 		for (auto& Task : Tasks)
 		{
-			PlayerTasks.Add(TPair<UBaseTask*, ETaskState>(Task, ETaskState::NotPresent));
+			PlayerTasks.Add(TPair<UTask*, ETaskState>(Task, ETaskState::NotPresent));
 		}
 		Controller->SetPlayerTasks(PlayerTasks);
 	}
+}
+
+void ABigButlerBattleGameModeBase::GenerateExtraTask()
+{
+	auto TaskData = GetWorldTaskData();
+	TArray<EObjectType> Types;
+	TaskData.GetKeys(Types);
+
+	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	FRandomStream Stream;
+	Stream.Initialize(Instance->GetCurrentRandomSeed());
+
+	auto Tasks = ProcessWorldTasks(TaskData[Types[FMath::RandRange(0, Types.Num() - 1)]], Stream, 1, 1);
+	GeneratePlayerTasks(Tasks);
+}
+
+ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(ERoomSpawn Room, FVector Position)
+{
+	float ClosestDistance = MAX_FLT;
+	ASpawnpoint* ClosestSpawnpoint = nullptr;
+	
+	for (auto& Spawnpoint : Spawnpoints[Room])
+	{
+		auto Distance = FVector::Distance(Position, Spawnpoint->GetActorLocation());
+		if (Distance < ClosestDistance)
+		{
+			ClosestSpawnpoint = Spawnpoint;
+			ClosestDistance = Distance;
+		}
+	}
+
+	return ClosestSpawnpoint;
 }

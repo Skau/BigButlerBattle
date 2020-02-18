@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "UObject/Object.h"
 
 /**
  * 
@@ -24,10 +27,55 @@ namespace btd
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
     }
     
-	FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
+    FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
     }
+
+    /*
+    * Really fast version of acos.
+    * Maximum error of 0.18 rad.
+    * @ref https://stackoverflow.com/questions/3380628/fast-arc-cos-algorithm
+    */
+    FORCEINLINE static float FastAcos(float rad) 
+    {
+        return (-0.69813170079773212 * rad * rad - 0.87266462599716477) * rad + 1.5707963267948966;
+    }
+
+    /*
+    * Waits before calling a lambda.
+    * @param Context object.
+    * @param How many seconds to wait before call.
+    * @param The lambda to call.
+    */
+    FORCEINLINE static FTimerHandle Delay(UObject* Context, float Seconds, TFunction<void(void)> lambda)
+    {
+        FTimerDelegate TimerCallback;
+        TimerCallback.BindLambda(lambda);
+        FTimerHandle Handle;
+        Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
+        return Handle;
+    }
+
+    /*
+    * Repeats a lambda.
+    * @param Context object.
+    * @param How many seconds between calls.
+    * @param How many iterations to call.
+    * @param The lambda to call.
+    */
+    FORCEINLINE static void Repeat(UObject* Context, float Seconds, int Iterations, TFunction<void(void)> Lambda)
+    {
+        if (Iterations <= 0)
+            return;
+
+        Delay(Context, Seconds, [=]()
+        {
+            Lambda();
+            Repeat(Context, Seconds, Iterations - 1, Lambda);
+        });
+    }
+
 
     /**
      * @brief Swaps the values of two elements.

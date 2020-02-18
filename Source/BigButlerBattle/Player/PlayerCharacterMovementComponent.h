@@ -26,9 +26,18 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 {
 	GENERATED_BODY()
 
+public:
+	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
+
+	/**
+	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Acceleration Velocity"))
+	float CustomMaxAccelerationVelocity = 3600.f;
 
 	bool bStandstill = false;
 
@@ -37,6 +46,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardForwardGroundDeceleration = 100.f;
+
+	/**
+	 * How much current velocity will have an impact on acceleration
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Velocity Acceleration Multiplier", ClampMin = "0", UIMin = "0"))
+	float SkateboardFwrdVelAccMult = 0.4f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardSidewaysGroundDeceleration = 4096.f;
@@ -54,12 +69,30 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
 	float SlopeGravityMultiplier = 2048.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Rotation"))
+	float HandbrakeRotationFactor = 300.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Velocity Threshold"))
+	float HandbrakeVelocityThreshold = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
+	bool bAllowBrakingWhileHandbraking = true;
+
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference;
 
 	float SplinePos = -1.f;
 	int SplineDir = 1;
+
+	UPROPERTY(BlueprintReadOnly)
+	APlayerCharacter* PlayerCharacter = nullptr;
+
+	FVector InputDir;
+	float SidewaysForce = 0.0f;
+
+	bool bBraking = false;
+	bool bIsStandstill = false;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -70,7 +103,39 @@ public:
 	bool IsMovingOnGround() const override;
 
 	UFUNCTION(BlueprintPure)
-	FORCEINLINE float GetRotationInput() const { return InputDir.Y; }
+	float GetRotationInput() const { return InputDir.Y; }
+
+	float GetMaxForwardAcceleration() const;
+
+	/**
+	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 * Only valid if not braking.
+	 */
+	bool CanForwardAccelerate(const FVector& AccelerationIn, float DeltaTime) const;
+	bool CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime, bool bMovingBackwards) const;
+	/**
+	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
+	 * Parameter overload that doesn't calculate bMovingBackwards for you.
+	 */
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime) const;
+	bool CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime, bool bMovingBackwards) const;
+
+	/** Calculates the total acceleration in world space.
+	 * @brief Calculates the total acceleration in world space.
+	 */
+	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float input = 0.f);
+
+	/**
+	 * Multiplies kicking acceleration with a factor to make up for different tick speeds.
+	 */
+	FVector GetInputAccelerationTimeNormalized(const FVector& a, bool bBrakingIn, float DeltaTime) const;
+
+	/**
+	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
+	 */
+	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float input = 0.f);
+
+	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 
 protected:
 	void BeginPlay() override;
@@ -90,26 +155,26 @@ protected:
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* PlayerCharacter = nullptr;
+	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
-private:
-	FVector InputDir;
-	float SidewaysForce = 0.0f;
+	void TryFallOff();
 
-	void CalcSkateboardVelocity(float DeltaTime);
+	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
-	void AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime);
+	// Applies this frames current rotation multiplied by deltaTime
+	void ApplyRotation(float DeltaTime);
 
-	FORCEINLINE float GetForwardInput() const { return InputDir.X; }
-	FORCEINLINE FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	FORCEINLINE float CalcSidewaysBreaking(const FVector& forward) const;
-	/** Calculates the forward/backwards acceleration in world space.
-	 * @brief Calculates the forward/backwards acceleration in world space.
-	 * @return Forward / backwards acceleration vector in world space.
+	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
+
+	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
+	float GetForwardInput() const { return InputDir.X; }
+	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
+	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	float CalcSidewaysBreaking(const FVector& forward) const;
+
+	/**
+	 * Returns current rotation amount.
+	 * Both normal rotation and handbraking rotation.
 	 */
-	FORCEINLINE FVector CalcAcceleration() const;
-	FORCEINLINE float CalcRotation() const;
-
-	
+	float CalcRotation() const;
 };

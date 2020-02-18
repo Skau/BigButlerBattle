@@ -3,19 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/BaseUserWidget.h"
 #include "MainMenuWidget.generated.h"
 
+
 class UWidgetSwitcher;
-class UMainMenuPlayerWidget;
-class UHorizontalBox;
-class UTextBlock;
+class UButton;
+class UMainMenuPlayWidget;
 
 /**
  * 
  */
 UCLASS()
-class BIGBUTLERBATTLE_API UMainMenuWidget : public UUserWidget
+class BIGBUTLERBATTLE_API UMainMenuWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 
@@ -23,25 +23,29 @@ public:
 	UMainMenuWidget(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UMainMenuPlayerWidget* PlayerWidget_0;
+	UButton* Button_Play;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UMainMenuPlayerWidget* PlayerWidget_1;
+	UButton* Button_Options;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UMainMenuPlayerWidget* PlayerWidget_2;
+	UButton* Button_Quit;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UMainMenuPlayerWidget* PlayerWidget_3;
+	UMainMenuPlayWidget* PlayWidget;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UHorizontalBox* GameTimerBox;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UTextBlock* GameStartTime;
-
+	TArray<APlayerCharacterController*> Controllers;
 protected:
 	void NativeConstruct() override;
 
 	bool Initialize() override;
+
+private:
+	UFUNCTION()
+	void OnPlayPressed();
+
+	UFUNCTION()
+	void OnOptionsPressed();
+
+	UFUNCTION()
+	void OnQuitPressed();
 };

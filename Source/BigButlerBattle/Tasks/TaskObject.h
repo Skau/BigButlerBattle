@@ -9,7 +9,10 @@
 
 class UBoxComponent;
 class UDataTable;
-class UBaseTask;
+class UTask;
+class APlayerCharacter;
+
+DECLARE_DELEGATE_OneParam(FTaskObjectDeliveredSignature, ATaskObject*);
 
 UCLASS()
 class BIGBUTLERBATTLE_API ATaskObject : public AActor
@@ -19,8 +22,8 @@ class BIGBUTLERBATTLE_API ATaskObject : public AActor
 public:	
 	ATaskObject();
 
-	UBaseTask* GetTaskData() { return TaskData; }
-	void SetTaskData(UBaseTask* Task) { TaskData = Task; }
+	UTask* GetTaskData() { return TaskData; }
+	void SetTaskData(UTask* Task) { TaskData = Task; }
 
 	void OnPickedUp();
 
@@ -29,6 +32,12 @@ public:
 	void Launch(FVector Direction, float Force);
 
 	FVector LaunchVelocity = FVector::ZeroVector;
+
+	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
+
+	void SetSelected(bool Value);
+
+	bool bCanHit = false;
 
 protected:
 	void BeginPlay() override;
@@ -46,7 +55,7 @@ private:
 	bool SetDataFromTable();
 	bool SetDataFromAssetData();
 
-	UDataTable* WineDataTable = nullptr;
+	UDataTable* DrinksDataTable = nullptr;
 	UDataTable* FoodDataTable = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task")
@@ -54,6 +63,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task")
 	UMaterialInterface* DefaultMaterial = nullptr;
+
+	UMaterialInstanceDynamic* DynamicMaterial = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
 	EObjectType TaskType = EObjectType::None;
@@ -64,8 +75,21 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Task")
 	float RespawnTime = 15.f;
 
+	UPROPERTY(EditAnywhere, Category = "Task")
+	float CountAsPlayerTaskThreshold = 10.f;
+
 	UPROPERTY(EditInstanceOnly, Category = "Task")
-	UBaseTask* TaskData = nullptr;
+	UTask* TaskData = nullptr;
+
+	UFUNCTION()
+	void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	void SetDefault();
+
+	float TimeSinceThrown = 0.0f;
+
+	bool bRecordingTimeSinceThrown = false;
 };

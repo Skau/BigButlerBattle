@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Utils/Spawnpoint.h"
 #include "PlayerCharacterController.generated.h"
 
 // Broadcasted when the player presses pause
@@ -17,8 +18,10 @@ class UPlayerWidget;
 class APlayerCharacter;
 class ABigButlerBattleGameModeBase;
 class ATaskObject;
-class UBaseTask;
+class UTask;
+class APlayerStart;
 enum class ETaskState;
+
 
 /**
  * 
@@ -34,14 +37,18 @@ public:
 	FPauseGameSignature OnPausedGame;
 	FGameFinishedSignature OnGameFinished;
 
-	void SetPlayerTasks(const TArray<TPair<UBaseTask*, ETaskState>>& Tasks);
+	void SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks);
 
-	TArray<TPair<UBaseTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
+	TArray<TPair<UTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
 
 	void SetPlayerTaskName(int Index, FString Name);
 	void SetPlayerTaskState(int Index, ETaskState NewState);
 
 	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
+
+	void RespawnCharacter(ASpawnpoint* Spawnpoint);
+
+	bool bUseCustomSpringArmLength = false;
 
 protected:
 	void BeginPlay() override;
@@ -57,18 +64,30 @@ protected:
 
 	UPlayerWidget* PlayerWidget = nullptr;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacter> PlayerCharacterClass = nullptr;
+
 	APlayerCharacter* PlayerCharacter = nullptr;
 
 	ABigButlerBattleGameModeBase* ButlerGameMode = nullptr;
 
+	UPROPERTY(EditDefaultsOnly)
+	float RespawnTime = 3.f;
+
 private:
-	TArray<TPair<UBaseTask*, ETaskState>> PlayerTasks;
+	TArray<TPair<UTask*, ETaskState>> PlayerTasks;
 
 	void PauseGamePressed();
 
 	UFUNCTION()
-	void OnPlayerPickedUpObject(UBaseTask* TaskIn);
+	void OnPlayerPickedUpObject(ATaskObject* Object);
 
 	UFUNCTION()
-	void OnPlayerDroppedObject(UBaseTask* TaskIn);
+	void OnPlayerDroppedObject(ATaskObject* Object);
+
+	void UpdatePlayerTasks();
+
+	void OnTaskObjectDelivered(ATaskObject* Object);
+
+	void OnCharacterFell(ERoomSpawn Room, FVector Position);
 };

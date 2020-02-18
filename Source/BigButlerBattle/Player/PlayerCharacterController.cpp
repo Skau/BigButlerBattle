@@ -6,9 +6,12 @@
 #include "PlayerCharacter.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "Tasks/BaseTask.h"
+#include "Tasks/Task.h"
 #include "King/King.h"
 #include "Tasks/TaskObject.h"
+#include "GameFramework/PlayerStart.h"
+#include "Utils/btd.h"
+#include "ButlerGameInstance.h"
 
 APlayerCharacterController::APlayerCharacterController() 
 {
@@ -18,21 +21,39 @@ void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Add in-game UI if we're actually in the game and not main menu
-	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
-	if (PlayerCharacter && PlayerWidgetType)
-	{
-		PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
-		PlayerWidget->AddToPlayerScreen();
+	bShowMouseCursor = false;
 
-		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(this, &APlayerCharacterController::OnPlayerPickedUpObject);
-		PlayerCharacter->OnTaskObjectDropped.BindUObject(this, &APlayerCharacterController::OnPlayerDroppedObject);
-	}
+	ButlerGameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 }
 
 void APlayerCharacterController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+	if (PlayerCharacter)
+	{
+		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(this, &APlayerCharacterController::OnPlayerPickedUpObject);
+		PlayerCharacter->OnTaskObjectDropped.BindUObject(this, &APlayerCharacterController::OnPlayerDroppedObject);
+		PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
+
+		if (!PlayerWidget && PlayerWidgetType)
+		{
+			PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
+			PlayerWidget->AddToPlayerScreen();
+		}
+		SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
+
+		UpdatePlayerTasks();
+
+		if (PlayerWidget->Visibility == ESlateVisibility::Hidden)
+			PlayerWidget->SetVisibility(ESlateVisibility::Visible);
+
+		auto GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		check(GameInstance != nullptr);
+		PlayerCharacter->SetCameraInvertYaw(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraYaw);
+		PlayerCharacter->SetCameraInvertPitch(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraPitch);
+	}
 }
 
 void APlayerCharacterController::Tick(float DeltaTime)
@@ -54,9 +75,11 @@ void APlayerCharacterController::PauseGamePressed()
 	OnPausedGame.ExecuteIfBound(ID);
 }
 
-void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UBaseTask*, ETaskState>>& Tasks)
+void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks)
 {
-	PlayerTasks = Tasks;
+	PlayerTasks += Tasks;
+
+	PlayerWidget->InitializeTaskWidgets(Tasks);
 
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
@@ -76,36 +99,79 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 	PlayerWidget->UpdateTaskState(Index, NewState);
 }
 
-void APlayerCharacterController::OnPlayerPickedUpObject(UBaseTask* TaskIn)
+void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
+{
+	UpdatePlayerTasks();
+}
+
+void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
+{
+	UpdatePlayerTasks();
+
+	Object->OnTaskObjectDelivered.BindUObject(this, &APlayerCharacterController::OnTaskObjectDelivered);
+}
+
+void APlayerCharacterController::UpdatePlayerTasks()
+{
+	for (int i = 0; i < PlayerTasks.Num(); ++i)
+		if(PlayerTasks[i].Value == ETaskState::Present)
+			SetPlayerTaskState(i, ETaskState::NotPresent);
+
+	for (auto& InventoryObject : PlayerCharacter->GetInventory())
+	{
+		if (IsValid(InventoryObject))
+		{
+			for (int i = 0; i < PlayerTasks.Num(); ++i)
+			{
+				if (PlayerTasks[i].Value == ETaskState::NotPresent && InventoryObject->GetTaskData()->IsEqual(PlayerTasks[i].Key))
+				{
+					SetPlayerTaskState(i, ETaskState::Present);
+					break;
+				}
+			}
+		}
+	}
+}
+
+void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
-		if (PlayerTasks[i].Value == ETaskState::NotPresent)
+		auto PlayerTask = PlayerTasks[i];
+		if (PlayerTask.Value == ETaskState::NotPresent)
 		{
-			if (PlayerTasks[i].Key->IsEqual(TaskIn))
+			if (PlayerTask.Key->IsEqual(Object->GetTaskData()))
 			{
-				PlayerTasks[i].Value = ETaskState::Present;
-				SetPlayerTaskState(i, ETaskState::Present);
+				SetPlayerTaskState(i, ETaskState::Finished);
+				Object->Destroy();
 				break;
 			}
 		}
 	}
 }
 
-void APlayerCharacterController::OnPlayerDroppedObject(UBaseTask* TaskIn)
+void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, FVector Position)
 {
-	for (int i = 0; i < PlayerTasks.Num(); ++i)
+	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
+	btd::Delay(this, RespawnTime, [=]()
 	{
-		if (PlayerTasks[i].Value == ETaskState::Present)
+		if (PlayerCharacter)
 		{
-			if (PlayerTasks[i].Key->IsEqual(TaskIn))
-			{
-				PlayerTasks[i].Value = ETaskState::NotPresent;
-				SetPlayerTaskState(i, ETaskState::NotPresent);
-				break;
-			}
+			bAutoManageActiveCameraTarget = false;
+			UnPossess();
+			PlayerCharacter->Destroy();
+			PlayerCharacter = nullptr;
 		}
-	}
+
+		if (!ButlerGameMode)
+		{
+			UE_LOG(LogTemp, Error, TEXT("APlayerCharacterController::RespawnCharacter: Wrong gamemode setup!"));
+			return;
+		}
+
+		auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room, Position);
+		RespawnCharacter(Spawnpoint);
+	});
 }
 
 void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory)
@@ -127,6 +193,9 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 						Inventory[i]->Destroy();
 						Inventory[i] = nullptr;
 						SetPlayerTaskState(j, ETaskState::Finished);
+
+						if(PlayerCharacter->GetCurrentItemIndex() == i)
+							PlayerCharacter->IncrementCurrentItemIndex();
 					}
 				}
 			}
@@ -141,4 +210,33 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 
 	auto ID = UGameplayStatics::GetPlayerControllerID(this);
 	OnGameFinished.ExecuteIfBound(ID);
+}
+
+void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
+{
+	if (!PlayerCharacterClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player Controller: Player Character Class not set!"));
+		return;
+	}
+	
+	
+	if (Spawnpoint)
+	{
+		auto SpawnTransform = Spawnpoint->GetTransform();
+
+		PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+
+		PlayerCharacter->SetCustomSpringArmLength();
+
+		PlayerCharacter->CurrentRoom = Spawnpoint->RoomSpawn;
+
+		UGameplayStatics::FinishSpawningActor(PlayerCharacter, SpawnTransform);
+
+		Possess(PlayerCharacter);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player Controller: Null spawnpoint provided!"));
+	}
 }

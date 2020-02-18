@@ -10,25 +10,31 @@
 #include "Math/RandomStream.h"
 #include "TimerManager.h"
 #include "ButlerGameInstance.h"
-#include "WineTask.h"
-#include "FoodTask.h"
-
+#include "Task.h"
+#include "King/King.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Player/PlayerCharacter.h"
 
 ATaskObject::ATaskObject()
 {
-	// PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh Component");
 	SetRootComponent(MeshComponent);
 
 	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
+	MeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 	MeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
+	MeshComponent->SetGenerateOverlapEvents(true);
+	MeshComponent->SetNotifyRigidBodyCollision(true);
+	MeshComponent->SetSimulatePhysics(true);
 
-	ConstructorHelpers::FObjectFinder<UDataTable> WineDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Wine/WineData.WineData'"));
-	auto WineDataObject = WineDataTableDefinition.Object;
-	if (WineDataObject)
+
+	ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
+	auto DrinksDataObject = DrinksDataTableDefinition.Object;
+	if (DrinksDataObject)
 	{
-		WineDataTable = WineDataObject;
+		DrinksDataTable = DrinksDataObject;
 	}
 
 	ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Food/FoodData.FoodData'"));
@@ -37,6 +43,11 @@ ATaskObject::ATaskObject()
 	{
 		FoodDataTable = FoodDataObject;
 	}
+}
+
+void ATaskObject::SetSelected(bool Value)
+{
+	DynamicMaterial->SetScalarParameterValue("Selected", (float)Value);
 }
 
 void ATaskObject::BeginPlay()
@@ -60,11 +71,17 @@ void ATaskObject::BeginPlay()
 		SetDefault();
 	}
 
+	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &ATaskObject::OnCollisionBeginOverlap);
+	MeshComponent->OnComponentHit.AddDynamic(this, &ATaskObject::OnHit);
+
 	if (LaunchVelocity != FVector::ZeroVector)
 	{
 		SetEnable(true, true, true);
 		MeshComponent->AddImpulse(LaunchVelocity);
+		bRecordingTimeSinceThrown = true;
 	}
+	
+	DynamicMaterial = MeshComponent->CreateDynamicMaterialInstance(0, MeshComponent->GetMaterial(0));
 }
 
 
@@ -72,6 +89,15 @@ void ATaskObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bRecordingTimeSinceThrown)
+	{
+		TimeSinceThrown += DeltaTime;
+
+		if (TimeSinceThrown > CountAsPlayerTaskThreshold)
+		{
+			bRecordingTimeSinceThrown = false;
+		}
+	}
 }
 
 #if WITH_EDITOR
@@ -105,9 +131,9 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			SetDefault();
 		}
 	}
-	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, WineDataTable)))
+	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, DrinksDataTable)))
 	{
-		if (TaskType == EObjectType::Wine && WineDataTable)
+		if (TaskType == EObjectType::Drink && DrinksDataTable)
 		{
 			if (!SetDataFromTable())
 			{
@@ -150,49 +176,38 @@ bool ATaskObject::SetDataFromTable()
 		Stream.GenerateNewSeed();
 	}
 
+	UDataTable* DataTableToUse = nullptr;
+
 	switch (TaskType)
 	{
-	case EObjectType::Wine:
+	case EObjectType::Drink:
 	{
-		if (!WineDataTable)
-			return false;
-
-		auto Rows = WineDataTable->GetRowMap();
-		auto RowNum = Rows.Num();
-		if (!RowNum)
-			return false;
-
-		auto RowName = WineDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
-		TaskData = NewObject<UWineTask>(this, RowName);
-		TaskData->Name = RowName.ToString();
-
-		if (!TaskData->InitTaskData(Rows[RowName]))
-			return false;
-
+		DataTableToUse = DrinksDataTable;
 		break;
 	}
 	case EObjectType::Food:
 	{
-		if (!FoodDataTable)
-			return false;
-
-		auto Rows = FoodDataTable->GetRowMap();
-		auto RowNum = Rows.Num();
-		if (!RowNum)
-			return false;
-
-		auto RowName = FoodDataTable->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
-		TaskData = NewObject<UFoodTask>(this, RowName);
-		TaskData->Name = RowName.ToString();
-
-		if (!TaskData->InitTaskData(Rows[RowName]))
-			return false;
-
+		DataTableToUse = FoodDataTable;
 		break;
 	}
 	default:
 		return false;
 	}
+
+	if (!DataTableToUse)
+		return false;
+
+	auto Rows = DataTableToUse->GetRowMap();
+	auto RowNum = Rows.Num();
+	if (!RowNum)
+		return false;
+
+	auto RowName = DataTableToUse->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
+	TaskData = NewObject<UTask>(this, RowName);
+	TaskData->Name = RowName.ToString();
+
+	if (!TaskData->InitTaskData(Rows[RowName]))
+		return false;
 
 	if (TaskData && TaskData->Type != EObjectType::None)
 	{
@@ -254,6 +269,31 @@ bool ATaskObject::SetDataFromAssetData()
 	}
 }
 
+void ATaskObject::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->IsA(AKing::StaticClass()))
+	{
+		if (bRecordingTimeSinceThrown && TimeSinceThrown < CountAsPlayerTaskThreshold)
+		{
+			OnTaskObjectDelivered.ExecuteIfBound(this);
+			bRecordingTimeSinceThrown = false;
+		}
+	}
+}
+
+void ATaskObject::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (bCanHit)
+	{
+		if (auto Other = Cast<APlayerCharacter>(OtherActor))
+		{
+			Other->EnableRagdoll(NormalImpulse * GetVelocity(), Hit.ImpactPoint);
+		}
+	}
+
+	bCanHit = false;
+}
+
 void ATaskObject::SetDefault()
 {
 	if (DefaultMesh)
@@ -266,7 +306,7 @@ void ATaskObject::SetDefault()
 		MeshComponent->SetMaterial(0, DefaultMaterial);
 	}
 
-	TaskData = NewObject<UBaseTask>(this, "DefaultTask");
+	TaskData = NewObject<UTask>(this, "DefaultTask");
 	TaskData->Name = "DefaultTask";
 }
 

@@ -6,16 +6,21 @@
 #include "Components/PrimitiveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SplineComponent.h"
-
+#include "Tasks/TaskObject.h"
 #include "PlayerCharacter.h"
+#include "Utils/btd.h"
 
 UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 {
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
 	DefaultWaterMovementMode = EMovementMode::MOVE_Custom;
-	MaxAcceleration = 2048.f;
-	MaxCustomMovementSpeed = 2048.f;
-	JumpZVelocity = 600.f;
+	MaxCustomMovementSpeed = 4196.f;
+	JumpZVelocity = 1600.f;
+	AirControl = 0.f;
+	AirControlBoostMultiplier = 0.f;
+	AirControlBoostVelocityThreshold = 0.f;
+	MaxAcceleration = 1800.f;
+	GravityScale = 3.0f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
@@ -35,7 +40,7 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 
 void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction)
 {
-	InputDir = GetPendingInputVector();
+	UpdateInput();
 
 	Super::TickComponent(deltaTime, TickType, thisTickFunction);
 }
@@ -101,12 +106,11 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 		// Ensure velocity is horizontal.
 		MaintainHorizontalGroundVelocity();
 
-		AdjustSlopeVelocity(OldFloor.HitResult, deltaTime);
-		CalcSkateboardVelocity(TimeTick);
+		CalcSkateboardVelocity(OldFloor.HitResult, TimeTick);
 		check(!Velocity.ContainsNaN());
 
-		if (PlayerCharacter && PlayerCharacter->CanFall() && SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
-			PlayerCharacter->EnableRagdoll();
+		// Check if player should fall off
+		TryFallOff();
 
 		// Compute move parameters
 		const FVector MoveVelocity = Velocity;
@@ -170,18 +174,6 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float deltaTime, int32 It
 				RemainingTime = 0.f;
 				break;
 		}
-
-		// Note: Commented out because it cancels velocity if teleported, but teleportation bool didn't change anyway. Meaning it's useless.
-		//// Allow overlap events and such to change physics state and velocity
-		//if (IsMovingOnGround())
-		//{
-		//	// Make velocity reflect actual move
-		//	if (!bJustTeleported && timeTick >= MIN_TICK_TIME)
-		//	{
-		//		// TODO-RootMotionSource: Allow this to happen during partial override Velocity, but only set allowed axes?
-		//		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / timeTick;
-		//	}
-		//}
 
 		// If we didn't move at all this iteration then abort (since future iterations will also be stuck).
 		if (UpdatedComponent->GetComponentLocation() == OldLocation)
@@ -304,13 +296,15 @@ void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Itera
 	Super::PhysFalling(deltaTime, Iterations);
 
 	// Apply rotation based on input
-	auto forwardDir = GetOwner()->GetActorForwardVector();
 	const auto rotAmount = CalcRotation() * deltaTime;
-	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
+	if (!FMath::IsNearlyZero(rotAmount))
+	{
+		GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 
-	// Set velocity to be facing same direction as forward dir.
-	if (!Velocity.IsNearlyZero())
-		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+		// Set velocity to be facing same direction as forward dir.
+		if (!Velocity.IsNearlyZero())
+			Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+	}
 }
 
 void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
@@ -379,7 +373,18 @@ void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float Del
 	}
 }
 
-void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
+void UPlayerCharacterMovementComponent::TryFallOff()
+{
+	if (!PlayerCharacter || !PlayerCharacter->CanFall())
+		return;
+		
+	if (SidewaysForce > PlayerCharacter->GetSidewaysForceFallOffThreshold())
+	{
+		PlayerCharacter->EnableRagdoll();
+	}
+}
+
+void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime)
 {
 	// Do not update velocity when using root motion or when SimulatedProxy and not simulating root motion - SimulatedProxy are repped their Velocity
 	if (!HasValidData() || HasAnimRootMotion() || DeltaTime < MIN_TICK_TIME || (CharacterOwner && CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy && !bWasSimulatingRootMotion))
@@ -388,7 +393,9 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	}
 
 	float MaxSpeed = GetMaxSpeed();
-	Acceleration = CalcAcceleration();
+	
+	// Calculate and set acceleration
+	Acceleration = GetClampedInputAcceleration(bBraking, DeltaTime);
 
 	// Get the fully modified analog input value.
 	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
@@ -397,8 +404,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 	const bool bZeroAcceleration = Acceleration.IsZero();
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
 
-	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
-
 	const FVector OldVelocity = Velocity;
 	// Don't allow braking to lower us below max speed if we started above it.
 	if (bVelocityOverMax && Velocity.SizeSquared() < FMath::Square(MaxSpeed) && FVector::DotProduct(Acceleration, OldVelocity) > 0.0f)
@@ -406,23 +411,12 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		Velocity = OldVelocity.GetSafeNormal() * MaxSpeed;
 	}
 
-	const bool bIsStandstill = Velocity.Size() < StandstillThreshold;
+	bIsStandstill = Velocity.Size() < StandstillThreshold;
+	const bool bShouldStopCompletely = bBraking && bIsStandstill;
 
 	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
 	if (!bZeroAcceleration)
 	{
-		bool bNegativeAcceleration = FMath::IsNegativeFloat(FVector::DotProduct(Acceleration, GetOwner()->GetActorForwardVector()));
-		const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
-
-		// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
-		if (bNegativeAcceleration && bMovingBackwards)
-		{
-			Acceleration = -Acceleration;
-			bNegativeAcceleration = !bNegativeAcceleration;
-		}
-
-		const bool bShouldStopCompletely = bNegativeAcceleration && bIsStandstill;
-
 		if (bShouldStopCompletely)
 		{
 			Velocity = FVector::ZeroVector;
@@ -435,19 +429,33 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(float DeltaTime)
 		}
 	}
 
+	// Apply slope acceleration (needs to be applied after input acceleration as to not get clamped)
+	if (!bShouldStopCompletely)
+	{
+		const auto slopeAcceleration = GetSlopeAcceleration(FloorHitResult);
+		Velocity += slopeAcceleration * DeltaTime;
+	}
+
+	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
+
+
+	ApplyRotation(DeltaTime);
+}
+
+void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
+{
 	// Apply rotation based on input
-	auto forwardDir = GetOwner()->GetActorForwardVector();
-	const auto rotAmount = CalcRotation() * ((bIsStandstill) ? SkateboardStandstillRotationSpeed : 1.f) * DeltaTime;
+	const auto rotAmount = CalcRotation() * DeltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
-	// Set velocity to be facing same direction as forward dir.
-	if (!Velocity.IsNearlyZero())
+	// Rotate velocity the same amount as forward dir.
+	if (!IsHandbraking() && !Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
 }
 
-void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitResult, float DeltaTime)
+FVector UPlayerCharacterMovementComponent::GetSlopeAcceleration(const FHitResult &FloorHitResult) const
 {
 	if (!FloorHitResult.bBlockingHit)
-		return;
+		return FVector::ZeroVector;
 
 	auto n = FloorHitResult.Normal;
 	FVector u = FVector(0, 0, 1);
@@ -457,7 +465,7 @@ void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitR
 
 	// If it's zero, then there is no acceleration in the horizontal plane, because the slope is vertical.
 	if (!cosAlpha)
-		return;
+		return FVector::ZeroVector;
 
 	float N = SlopeGravityMultiplier / cosAlpha;
 	float Nx = N * FMath::Cos((PI / 2) - alpha);
@@ -466,7 +474,7 @@ void UPlayerCharacterMovementComponent::AdjustSlopeVelocity(FHitResult FloorHitR
 
 	FVector a = d * Nx;
 
-	Velocity += a * DeltaTime;
+	return a;
 }
 
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector &forward) const
@@ -474,14 +482,130 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 	return 1.f - FMath::Abs(FVector::DotProduct(forward, Velocity));
 }
 
-inline FVector UPlayerCharacterMovementComponent::CalcAcceleration() const
+float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
 {
-	const auto input = GetForwardInput();
-	const float factor = input * ((input >= 0) ? FMath::Abs(GetMaxAcceleration()) : SkateboardBreakingDeceleration);
-	return UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
+	return FMath::Max(FMath::Abs(GetMaxAcceleration()) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+}
+
+bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime) const
+{
+	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
+	return CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
+}
+
+bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, float DeltaTime, bool bMovingBackwards) const
+{
+	return !IsHandbraking() && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
+}
+
+bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime) const
+{
+	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime);
+}
+
+bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, bool bBrakingIn, float DeltaTime, bool bMovingBackwards) const
+{
+	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
+}
+
+FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float input)
+{
+	if (input == 0)
+	{
+		input = GetForwardInput();
+		if (input == 0)
+		{
+			return FVector::ZeroVector;
+		}
+	}
+
+	// If input is negative, we are currently braking on the controller.
+	bBrakingOut = input < 0.f;
+	
+	// Scale braking with rotation, 0% rotation equals 100% braking
+	if (bBrakingOut)
+		input *= 1.f - FMath::Abs(GetRotationInput());
+
+	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
+	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && bBrakingOut);
+	const float factor = bCanMoveVertically * input * (bBrakingOut ? FMath::Abs(SkateboardBreakingDeceleration) : GetMaxForwardAcceleration());
+	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * factor;
+
+	if (a.IsNearlyZero())
+		a = FVector::ZeroVector;
+
+	bMovingBackwardsOut = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
+
+	// If we have backwards velocity we need to flip acceleration so we still brake (backwards acceleration should be forward until velocity is 0 again)
+	if (bBrakingOut && bMovingBackwardsOut)
+	{
+		a = -a;
+	}
+
+	if (a.IsNearlyZero())
+		a = FVector::ZeroVector;
+
+	return a;
+}
+
+FVector UPlayerCharacterMovementComponent::GetInputAccelerationTimeNormalized(const FVector &a, bool bBrakingIn, float DeltaTime) const
+{
+	return (bBrakingIn || DeltaTime < MIN_TICK_TIME) ? a : a * (1.f / DeltaTime);
+}
+
+FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime, float input)
+{
+	bool bMovingBackwards;
+	auto a = GetInputAcceleration(bBrakingOut, bMovingBackwards, input);
+	a = GetInputAccelerationTimeNormalized(a, bBrakingOut, DeltaTime);
+	return CanAccelerate(a, bBrakingOut, DeltaTime, bMovingBackwards) ? a : FVector::ZeroVector;
+}
+
+void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, float TimeSlice, const FVector& MoveDelta)
+{
+	if (Hit.GetActor()->IsA(ATaskObject::StaticClass()))
+	{
+		Super::HandleImpact(Hit, TimeSlice, MoveDelta);
+		return;
+	}
+
+	auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(Velocity.GetSafeNormal(), Hit.ImpactNormal))));
+
+	if (PlayerCharacter && angle < PlayerCharacter->GetCrashAngleThreshold () && Velocity.Size() > PlayerCharacter->GetCrashVelocityFallOffThreshold())
+	{
+		PlayerCharacter->EnableRagdoll();
+
+		if (auto Other = Cast<APlayerCharacter>(Hit.GetActor()))
+		{
+			if (Other->CanFall())
+			{
+				Other->EnableRagdoll();
+			}
+		}
+	}
+	else
+	{
+		Super::HandleImpact(Hit, TimeSlice, MoveDelta);
+	}
 }
 
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
-	return SkateboardRotationSpeed * GetRotationInput();
+	const float standstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
+
+	if (IsHandbraking() && !IsFalling())
+	{
+		float alpha = Velocity.Size() / HandbrakeVelocityThreshold;
+		const bool bWithinThreshold = alpha <= 1.f;
+		// If above threshold remember to clamp to threshold.
+		if (!bWithinThreshold)
+			alpha = 1.f;
+
+		const float rotSpeed = FMath::Lerp(standstillRotationSpeed, HandbrakeRotationFactor, alpha);
+		return GetHandbrakeAmount() * GetRotationInput() * rotSpeed;
+	}
+	else
+	{
+		return GetRotationInput() * (bIsStandstill ? standstillRotationSpeed : SkateboardRotationSpeed);
+	}
 }

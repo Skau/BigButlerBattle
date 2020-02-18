@@ -7,6 +7,7 @@
 #include "MainMenuGameModeBase.generated.h"
 
 class UMainMenuWidget;
+class UMainMenuPlayWidget;
 class APlayerCharacterController;
 class UButlerGameInstance;
 
@@ -21,13 +22,20 @@ class BIGBUTLERBATTLE_API AMainMenuGameModeBase : public AGameModeBase
 public:
 	AMainMenuGameModeBase();
 
-	FORCEINLINE TArray<APlayerCharacterController*> GetControllers() { return Controllers; }
+	UFUNCTION(BlueprintPure)
+	TArray<APlayerCharacterController*> GetControllers() { return Controllers; }
+
+	UFUNCTION(BlueprintPure)
+	bool HasAnyPlayerJoined() { return NumJoinedPlayers != 0; }
 
 protected:
 	void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UMainMenuPlayWidget> MainMenuPlayWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	float TimeUntilGameStart = 6.f;
@@ -37,6 +45,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UMainMenuWidget* MainMenuWidgetInstance;
+
+	UPROPERTY(BlueprintReadOnly)
+	UMainMenuPlayWidget* MainMenuPlayWidgetInstance;
 
 	UPROPERTY(EditDefaultsOnly)
 	FName LevelToPlay = "Main";

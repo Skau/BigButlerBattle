@@ -1,4 +1,0 @@
-Name,Type,Mesh,Material,Year
-Chandelier,1,StaticMesh'/Game/TaskObjects/Wine/Shape_Cone.Shape_Cone',"""MaterialInstanceConstant'/Game/TaskObjects/Wine/WineMaterial_inst1.WineMaterial_inst1'""",1982
-Doumas,1,StaticMesh'/Game/TaskObjects/Wine/Shape_Cone.Shape_Cone',"""MaterialInstanceConstant'/Game/TaskObjects/Wine/WineMaterial_inst2.WineMaterial_inst2'""",1969
-Champagne,1,StaticMesh'/Game/TaskObjects/Wine/Shape_Cone.Shape_Cone',"""MaterialInstanceConstant'/Game/TaskObjects/Wine/WineMaterial_inst3.WineMaterial_inst3'""",1999
