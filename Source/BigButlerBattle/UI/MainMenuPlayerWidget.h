@@ -14,6 +14,15 @@ class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
 class UMainMenuPlayWidget;
+class UButlerGameInstance;
+
+enum class EWidgetSwitcherIndex
+{
+	Join = 0,
+	Main,
+	CameraOptions, 
+	Ready
+};
 
 /**
  * 
@@ -40,10 +49,28 @@ public:
 	UTextBlock* PlayerNameText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_ToggleReady;
+	UButton* Button_Ready;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTextBlock* ButtonReadyText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraOptions;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertYaw;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_CameraToggleInvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_InvertPitch;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Back;
 
 	UMainMenuPlayWidget* MainPlayWidget;
 
@@ -56,16 +83,33 @@ protected:
 	void OnBackButtonPressed() override;
 
 private:
-	void UpdatePlayerName();
+	void SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex);
 
 	UFUNCTION()
-	void OnJoinClicked();
+	void OnJoinPressed();
+
+	void UpdateJoinedStatus(bool bHasJoined);
 
 	UFUNCTION()
-	void OnToggledReady();
+	void OnReadyPressed();
 
-	void UpdateToggledReady();
+	void UpdateReadyStatus(bool bIsReady);
 
-	bool bIsReady = false;
-	bool bHasJoined = false;
+	UFUNCTION()
+	void OnCameraOptionsPressed();
+
+	UFUNCTION()
+	void OnCameraToggleInvertYawPressed();
+
+	UFUNCTION()
+	void OnCameraToggleInvertPitchPressed();
+
+	UFUNCTION()
+	void OnBackPressed();
+
+	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
+
+	int ID = -1;
+	UButlerGameInstance* GameInstance;
+
 };

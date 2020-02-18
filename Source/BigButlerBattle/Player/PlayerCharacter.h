@@ -7,6 +7,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
 #include "Engine/EngineTypes.h"
+#include "Utils/Spawnpoint.h"
 #include "PlayerCharacter.generated.h"
 
 // Forward declarations
@@ -22,7 +23,7 @@ class ATaskObject;
 class UTask;
 
 // Delegates
-DECLARE_DELEGATE(FCharacterFellSignature);
+DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
@@ -40,16 +41,6 @@ public:
 	FHitResult Back;
 
 	FSkateboardTraceResult()
-	{}
-};
-
-struct FFeetTransform
-{
-	FTransform Left;
-	FTransform Right;
-
-	FFeetTransform(const FTransform& left, const FTransform& right)
-	 : Left{left}, Right{right}
 	{}
 };
 
@@ -73,6 +64,8 @@ public:
 	void AddForwardInput();
 
 	FCharacterFellSignature OnCharacterFell;
+
+	ERoomSpawn CurrentRoom;
 
 protected:
 	virtual void BeginPlay() override;
@@ -98,7 +91,6 @@ private:
 	bool bEnabledRagdoll = false;
 
 protected:
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Can Fall Off"))
 	bool bCanFall = true;
 
@@ -111,7 +103,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ragdoll", meta = (DisplayName = "Crash Angle Threshold"))
 	float CrashAngleThreshold = 45.f;
 
-
 public:
 	void EnableRagdoll(FVector Impulse = FVector::ZeroVector, FVector HitLocation = FVector::ZeroVector);
 	bool HasEnabledRagdoll() const { return bEnabledRagdoll; }
@@ -121,37 +112,6 @@ public:
 	float GetCrashAngleThreshold() const { return CrashAngleThreshold; }
 	UFUNCTION()
 	void OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-
-
-/// ==================================== IK =================================================
-
-public:
-	/**
-	 * Returns the locations of the skateboard feet sockets in world space.
-	 */
-	FFeetTransform GetSkateboardFeetTransform() const;
-	/**
-	 * Returns the locations of the skateboard feet sockets in component space.
-	 */
-	FFeetTransform GetComponentSkateboardFeetTransform() const;
-
-	FFeetTransform GetSkateboardFeetTransformInButlerSpace() const;
-
-	FTransform GetCharacterBoneTransform(FName BoneName) const;
-	FTransform GetCharacterBoneTransform(FName BoneName, const FTransform &localToWorld) const;
-	FTransform GetCharacterRefPoseBoneTransform(FName BoneName) const;
-	FTransform GetCharacterRefPoseBoneTransform(FName BoneNamem, const FTransform &localToWorld) const;
-
-	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() { return Movement; }
-	/**
-	 * Does a recursive search upwards to find the world space transform of the reference bone.
-	 */
-	FTransform GetCharacterRefPoseBoneTransformRec(FName BoneName) const;
-	FTransform GetCharacterRefPoseBoneTransformRec(int32 BoneIndex) const;
-
-	FTransform LocalSkateboardToButler(const FTransform& trans) const;
-	FTransform LocalButlerToSkateboard(const FTransform& trans) const;
 
 
 
@@ -168,31 +128,37 @@ public:
 
 	void StartJump();
 
+	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() { return Movement; }
+
 protected:
 	void MoveForward(float Value);
 
 	void MoveRight(float Value);
 
 	void UpdateHandbrake(float Value);
+	
+
+
+
 
 
 	/// ==================================== Camera =================================================
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Speed"))
-	float CameraRotationSpeed = 10.f;
+	float CameraRotationSpeed = 2.8f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Dead Zone"))
-	float CameraRotationDeadZone = 0.1f;
+	float CameraRotationDeadZone = 0.001f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Yaw Angle"))
-	float CameraRotationYawAngle = 120.f;
+	float CameraRotationYawAngle = 100.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert X"))
-	bool CameraInvertX = true;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Yaw"))
+	bool CameraInvertYaw = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Y"))
-	bool CameraInvertY = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Invert Pitch"))
+	bool CameraInvertPitch = false;
 
 	/**
 	 * Both the pitch rotation of the camera but as the camera also moves up/down from the character this also controls the height.
@@ -218,6 +184,10 @@ protected:
 
 public:
 	void SetCustomSpringArmLength();
+
+	void SetCameraInvertPitch(bool Value) { CameraInvertPitch = Value; }
+
+	void SetCameraInvertYaw(bool Value) { CameraInvertYaw = Value; }
 
 protected:
 	void UpdateCameraRotation(float DeltaTime);
@@ -253,6 +223,8 @@ protected:
 	bool bDebugMovement = false;
 
 public:
+	USkeletalMeshComponent* GetSkateboardMesh() { return SkateboardMesh; }
+
 	FRotator GetSkateboardRotation() const;
 
 	UFUNCTION(BlueprintPure)
@@ -280,18 +252,22 @@ public:
 	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	FTaskObjectDroppedSignature OnTaskObjectDropped;
 
+	int GetCurrentItemIndex() { return CurrentItemIndex; }
+	void IncrementCurrentItemIndex();
+
 protected:
 	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* ObjectPickupCollision;
+	UBoxComponent* TaskObjectPickupCollision;
 
 	UPROPERTY(VisibleAnywhere)
-	UCapsuleComponent* CapsuleObjectCollision;
+	UCapsuleComponent* TaskObjectCameraCollision;
 
-	TArray<ATaskObject *> Inventory;
-	TArray<ATaskObject *> PickupBlacklist;
+	TArray<ATaskObject*> Inventory;
+	TArray<ATaskObject*> PickupBlacklist;
 	TArray<FName> TraySlotNames;
 
-	TArray<ATaskObject*> TaskObjectsInRange;
+	TArray<ATaskObject*> TaskObjectsInCameraRange;
+	TArray<ATaskObject*> TaskObjectsInPickupRange;
 
 	UPROPERTY()
 	ATaskObject* ClosestPickup;
@@ -319,20 +295,47 @@ protected:
 	void OnHoldingThrow();
 	void OnHoldThrowReleased();
 
-	void IncrementCurrentItemIndex();
-	void DecrementCurrentItemIndex();
-
-	UFUNCTION()
-	void OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UFUNCTION()
-	void OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void ResetItemIndex();
 
 	void UpdateClosestTaskObject();
+
+	/* Delegates to handle actual pickup of tasks */
+
+	UFUNCTION()
+	void OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	/* Delegates to handle the ones in range based on camera */
+
+	UFUNCTION()
+	void OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+	/// ==================================== Tackling =================================================
+
+private:
+	TArray<APlayerCharacter*> PlayersInRange;
+
+	void TryTackle();
+
+protected:
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* PlayersInRangeCollision;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool CanTackle = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Angle Threshold"))
+	float TackleAngleThreshold = 45.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Strength"))
+	float TackleStrength = 100.f;
+
+	UFUNCTION()
+	void OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

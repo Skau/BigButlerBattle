@@ -22,10 +22,10 @@ public:
 
 	void ForwardKick();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector LeftFootTarget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector RightFootTarget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -37,52 +37,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator SkateboardRotationOffset;
 
-	UFUNCTION(BlueprintCallable, meta = (NotBlueprintThreadSafe))
-	FVector GetLeftFootTarget() const;
-
-	UFUNCTION(BlueprintCallable, meta = (NotBlueprintThreadSafe))
-	FVector GetRightFootTarget() const;
-	FVector GetFootLocation(APlayerCharacter* character, bool left = true) const;
-	FVector GetFootLocation(APlayerCharacter* character, FQuat feetRotationOffset, bool left = true) const;
-
-	FRotator GetSkateboardRotationOffset(APlayerCharacter* character) const;
-
-	FTransform GetSkeletonRefBoneTransform(FName BoneName) const;
-	bool GenerateRefSkeletonBoneTransforms(APlayerCharacter* character);
-	int32 GetRefBoneIndex(FName BoneName) const;
-
 protected:
 	void NativeBeginPlay() override;
-
-	void NativeUpdateAnimation(float DeltaTime) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* JumpMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* ForwardMontage;
-
-	/**
-	 * Whether the root bone of the skeleton hierarchy is scaled by 100
-	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	bool bSkeletonScaledByHundred = false;
-
-	// UFUNCTION(BlueprintPure)
-	// TPair<FVector, FVector> GetFeetLocations() const;
-
-private:
-	FQuat PelvisStartRotation;
-	FQuat LeftFootStartRotation;
-	FQuat RightFootStartRotation;
-
-	float PelvisStartYawOffset;
-	float LeftFootStartYawOffset;
-	float RightFootStartYawOffset;
-	float LeftKneeStartYawOffset;
-	float RightKneeStartYawOffset;
-
-	// List of all reference bone transforms in component space
-	TArray<FTransform> RefSkeletonBoneTransforms;
-	TArray<FMeshBoneInfo> RefSkeletonBoneInfos;
 };

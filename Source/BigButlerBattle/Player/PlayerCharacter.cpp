@@ -46,28 +46,28 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
-	ObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
-	ObjectPickupCollision->SetupAttachment(RootComponent);
+	TaskObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
+	TaskObjectPickupCollision->SetupAttachment(RootComponent);
 
 	// Default values
 
-	ObjectPickupCollision->SetGenerateOverlapEvents(true);
-	ObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
+	TaskObjectPickupCollision->SetGenerateOverlapEvents(true);
+	TaskObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
-	ObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
-	ObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
+	TaskObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
+	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
 
-	CapsuleObjectCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
-	CapsuleObjectCollision->SetupAttachment(Camera);
+	TaskObjectCameraCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
+	TaskObjectCameraCollision->SetupAttachment(Camera);
 
 	// Default values
 
-	CapsuleObjectCollision->SetGenerateOverlapEvents(true);
-	CapsuleObjectCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
+	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
+	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
-	CapsuleObjectCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
-	CapsuleObjectCollision->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
-	CapsuleObjectCollision->InitCapsuleSize(128.f, 256.f);
+	TaskObjectCameraCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
+	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
+	TaskObjectCameraCollision->InitCapsuleSize(128.f, 256.f);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
@@ -88,6 +88,14 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	bUseControllerRotationYaw = false;
 
+	PlayersInRangeCollision = CreateDefaultSubobject<UBoxComponent>("Players In Range Collision");
+	PlayersInRangeCollision->SetupAttachment(RootComponent);
+
+	PlayersInRangeCollision->SetGenerateOverlapEvents(true);
+	PlayersInRangeCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	PlayersInRangeCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	PlayersInRangeCollision->SetRelativeLocation(FVector{ 0, 0, 32.f });
+	PlayersInRangeCollision->SetBoxExtent(FVector{ 128.f, 256.f, 128.f });
 }
 
 void APlayerCharacter::BeginPlay()
@@ -115,13 +123,16 @@ void APlayerCharacter::BeginPlay()
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
 
-	ObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionOverlap);
-	ObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnObjectPickupCollisionEndOverlap);
+	TaskObjectPickupCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap);
+	TaskObjectPickupCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap);
 
-	CapsuleObjectCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnCapsuleObjectCollisionOverlap);
-	CapsuleObjectCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnCapsuleObjectCollisionEndOverlap);
+	TaskObjectCameraCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap);
+	TaskObjectCameraCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap);
 
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
+
+	PlayersInRangeCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap);
+	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -134,7 +145,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
-	Input->BindAction("DecrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::DecrementCurrentItemIndex);
+	Input->BindAction("Tackle", EInputEvent::IE_Pressed, this, &APlayerCharacter::TryTackle);
 
 	// Axis Mappings
 	Input->BindAxis("Forward", this, &APlayerCharacter::MoveForward);
@@ -209,7 +220,7 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 
 	bEnabledRagdoll = true;
 
-	OnCharacterFell.ExecuteIfBound();
+	OnCharacterFell.ExecuteIfBound(CurrentRoom, GetActorLocation());
 }
 
 void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -222,106 +233,6 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 			Other->EnableRagdoll(NormalImpulse * Movement->Velocity, Hit.ImpactPoint);
 		}
 	}
-}
-
-
-
-
-FFeetTransform APlayerCharacter::GetSkateboardFeetTransform() const
-{
-	return {SkateboardMesh->GetSocketTransform("FootLeft"), SkateboardMesh->GetSocketTransform("FootRight")};
-}
-
-FFeetTransform APlayerCharacter::GetComponentSkateboardFeetTransform() const
-{
-	return {
-		FTransform{
-			FRotator{},
-			SkateboardMesh->GetSocketTransform("FootLeft", ERelativeTransformSpace::RTS_Component).GetTranslation(),
-			FVector{1.f, 1.f, 1.f}
-		},
-		FTransform{
-			FRotator{},
-			SkateboardMesh->GetSocketTransform("FootRight", ERelativeTransformSpace::RTS_Component).GetTranslation(),
-			FVector{1.f, 1.f, 1.f}
-		}
-	};
-}
-
-FFeetTransform APlayerCharacter::GetSkateboardFeetTransformInButlerSpace() const
-{
-	auto feetTrans = GetComponentSkateboardFeetTransform();	
-	return {LocalSkateboardToButler(feetTrans.Left), LocalSkateboardToButler(feetTrans.Right)};
-}
-
-FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex) : FTransform{};
-}
-
-FTransform APlayerCharacter::GetCharacterBoneTransform(FName BoneName, const FTransform& localToWorld) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->GetBoneTransform(boneIndex, localToWorld) : FTransform{};
-}
-
-FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName) const
-{
-	return GetCharacterRefPoseBoneTransform(BoneName, GetMesh()->GetComponentTransform());
-}
-
-FTransform APlayerCharacter::GetCharacterRefPoseBoneTransform(FName BoneName, const FTransform& localToWorld) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return boneIndex > -1 ? GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[boneIndex] * localToWorld : FTransform{};
-}
-
-FTransform APlayerCharacter::GetCharacterRefPoseBoneTransformRec(FName BoneName) const
-{
-	auto boneIndex = GetMesh()->GetBoneIndex(BoneName);
-	return GetCharacterRefPoseBoneTransformRec(boneIndex);
-}
-
-FTransform APlayerCharacter::GetCharacterRefPoseBoneTransformRec(int32 BoneIndex) const
-{
-	if (BoneIndex < 0)
-	{
-		return FTransform{};
-	}
-	// Short circuit evaluation
-	else if (BoneIndex == 0)
-	{
-		return GetMesh()->SkeletalMesh->RefSkeleton.GetRefBonePose()[BoneIndex];
-	}
-	else
-	{
-		const auto& refSkeleton = GetMesh()->SkeletalMesh->RefSkeleton;
-		auto parentIndex = refSkeleton.GetParentIndex(BoneIndex);
-		if (parentIndex == 0)
-		{
-			return refSkeleton.GetRefBonePose()[BoneIndex];
-		}
-		else
-		{
-			return refSkeleton.GetRefBonePose()[BoneIndex] * GetCharacterRefPoseBoneTransformRec(parentIndex);
-		}
-	}
-}
-
-FTransform APlayerCharacter::LocalSkateboardToButler(const FTransform& trans) const
-{
-	const auto skateboardToMesh = SkateboardMesh->GetComponentTransform().GetRelativeTransform(GetMesh()->GetComponentTransform());
-	// UE_LOG(LogTemp, Warning, TEXT("skateboardToMesh: %s"), *skateboardToMesh.ToString());
-	// UE_LOG(LogTemp, Warning, TEXT("matrix location: %s, scale: %s, rotation: %s"), *skateboardToMesh.GetLocation().ToString(), *skateboardToMesh.GetScale3D().ToString(), *skateboardToMesh.GetRotation().ToString());
-	// UE_LOG(LogTemp, Warning, TEXT("Scaled: %s"), *(skateboardToMesh * trans).ToString());
-	return trans * skateboardToMesh;
-}
-
-FTransform APlayerCharacter::LocalButlerToSkateboard(const FTransform& trans) const
-{
-	const auto meshToSkateboard = SkateboardMesh->GetComponentTransform().GetRelativeTransformReverse(GetMesh()->GetComponentTransform());
-	return meshToSkateboard * trans;
 }
 
 
@@ -347,13 +258,7 @@ void APlayerCharacter::MoveForward(float Value)
 	bool bMovingBackwards = false;
 	auto acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
 
-	// Brake
-	if (bBraking)
-	{
-		AddMovementInput(FVector::ForwardVector * Value);
-	}
-	// // Forward kick
-	else if (Value != 0)
+	if (!bBraking && Value != 0)
 	{
 		// Normalize with time
 		const float deltaTime = GetWorld()->GetDeltaSeconds();
@@ -378,8 +283,10 @@ void APlayerCharacter::MoveRight(float Value)
 
 void APlayerCharacter::UpdateHandbrake(float Value)
 {
-	if (Movement) Movement->bHandbrakeValue = Value;
+	AddMovementInput(FVector::BackwardVector * Value);
 }
+
+
 
 
 
@@ -390,15 +297,15 @@ void APlayerCharacter::SetCustomSpringArmLength()
 
 void APlayerCharacter::LookUp(float Value)
 {
-	DesiredCameraRotation.Y = Value != 0 ? -Value * CameraRotationPitchHeight : 0.f;
-	if (CameraInvertY)
+	DesiredCameraRotation.Y = Value != 0 ? Value * CameraRotationPitchHeight : 0.f;
+	if (CameraInvertPitch)
 		DesiredCameraRotation.Y = -DesiredCameraRotation.Y;
 }
 
 void APlayerCharacter::LookRight(float Value)
 {
 	DesiredCameraRotation.X = Value != 0 ? -Value * CameraRotationYawAngle : 0.f;
-	if (CameraInvertX)
+	if (CameraInvertYaw)
 		DesiredCameraRotation.X = -DesiredCameraRotation.X;
 }
 
@@ -413,8 +320,8 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 
 
 	// Find new rotation
-	const bool bXNearZero = FMath::Abs(DesiredCameraRotation.X - CameraRotation.X) < CameraRotationDeadZone;
-	const bool bYNearZero = FMath::Abs(DesiredCameraRotation.Y - CameraRotation.Y) < CameraRotationDeadZone;
+	const bool bXNearZero = FMath::Abs(DesiredCameraRotation.X - CameraRotation.X) / CameraRotationYawAngle < CameraRotationDeadZone;
+	const bool bYNearZero = FMath::Abs(DesiredCameraRotation.Y - CameraRotation.Y) / CameraRotationPitchHeight < CameraRotationDeadZone;
 
 	CameraRotation.X = bXNearZero ? DesiredCameraRotation.X : FMath::Lerp(CameraRotation.X, DesiredCameraRotation.X, lerpFactor);
 	CameraRotation.Y = bYNearZero ? DesiredCameraRotation.Y : FMath::Lerp(CameraRotation.Y, DesiredCameraRotation.Y, lerpFactor);
@@ -428,6 +335,7 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 	SpringArm->SetRelativeRotation(NewLocalRot);
 	SpringArm->TargetArmLength = DefaultSpringArmLength * Direction.Size();
 }
+
 
 
 
@@ -648,6 +556,7 @@ void APlayerCharacter::DropCurrentObject()
 		//}
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
+		IncrementCurrentItemIndex();
 	}
 }
 
@@ -736,6 +645,7 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 {
 	float DeltaYaw = 0.0f;
 	int i = CurrentItemIndex;
+	bool Found = false;
 	do
 	{
 		DeltaYaw += 90.f;
@@ -744,29 +654,22 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 		{
 			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
 			CurrentItemIndex = i;
+			Found = true;
 			break;
 		}
 	} while (i != CurrentItemIndex);
+
+	if (!Found)
+		ResetItemIndex();
 }
 
-void APlayerCharacter::DecrementCurrentItemIndex()
+void APlayerCharacter::ResetItemIndex()
 {
-	float DeltaYaw = 0.0f;
-	int i = CurrentItemIndex;
-	do
-	{
-		DeltaYaw -= 90.f;
-		i = (i ? i : Inventory.Num()) - 1;
-		if (Inventory[i] != nullptr)
-		{
-			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
-			CurrentItemIndex = i;
-			break;
-		}
-	} while (i != CurrentItemIndex);
+	CurrentItemIndex = 0;
+	Tray->SetRelativeRotation(FRotator(0, 0, 0));
 }
 
-void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
@@ -774,6 +677,10 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 		if(TaskObject == ClosestPickup && PickupBlacklist.Find(TaskObject) == INDEX_NONE)
 		{
 			OnObjectPickedUp(TaskObject);
+		}
+		else
+		{
+			TaskObjectsInPickupRange.Add(TaskObject);
 		}
 	}
 	else if(OtherActor->IsA(AKing::StaticClass()))
@@ -786,23 +693,24 @@ void APlayerCharacter::OnObjectPickupCollisionOverlap(UPrimitiveComponent* Overl
 	}
 }
 
-void APlayerCharacter::OnObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
-		PickupBlacklist.RemoveSingle(Cast<ATaskObject>(OtherActor));
+		PickupBlacklist.RemoveSingle(TaskObject);
+		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 	}
 }
 
-void APlayerCharacter::OnCapsuleObjectCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
-		TaskObjectsInRange.Add(Object);
+		TaskObjectsInCameraRange.Add(Object);
 	}
 }
 
-void APlayerCharacter::OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
@@ -811,13 +719,62 @@ void APlayerCharacter::OnCapsuleObjectCollisionEndOverlap(UPrimitiveComponent* O
 			Object->SetSelected(false);
 			ClosestPickup = nullptr;
 		}
-		TaskObjectsInRange.RemoveSingle(Object);
+		TaskObjectsInCameraRange.RemoveSingle(Object);
+	}
+}
+
+void APlayerCharacter::TryTackle()
+{
+	if (!PlayersInRange.Num())
+		return;
+
+	float ClosestDistance = MAX_FLT;
+	APlayerCharacter* ClosestPlayer = nullptr;
+	FVector Direction = FVector::ZeroVector;
+
+	for (int i = 0; i < PlayersInRange.Num(); ++i)
+	{
+		auto OtherPlayer = PlayersInRange[i];
+		auto OtherPlayerLocation = OtherPlayer->GetActorLocation();
+
+		// Check angle
+		Direction = (OtherPlayerLocation - GetActorLocation()).GetSafeNormal();
+		auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(GetActorForwardVector(), Direction))));
+		if (angle < TackleAngleThreshold)
+			continue;
+
+		// Check distance
+		auto Distance = FVector::Distance(GetActorLocation(), OtherPlayerLocation);
+		if (Distance < ClosestDistance)
+			ClosestPlayer = OtherPlayer;
+	}
+
+	if (ClosestPlayer)
+	{
+		ClosestPlayer->EnableRagdoll(Direction * TackleStrength, ClosestPlayer->GetActorLocation());
+		PlayersInRange.RemoveSingle(ClosestPlayer);
+	}
+}
+
+void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (auto Other = Cast<APlayerCharacter>(OtherActor))
+	{
+		PlayersInRange.AddUnique(Other);
+	}
+}
+
+void APlayerCharacter::OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (auto Other = Cast<APlayerCharacter>(OtherActor))
+	{
+		PlayersInRange.RemoveSingle(Other);
 	}
 }
 
 void APlayerCharacter::UpdateClosestTaskObject()
 {
-	if (!TaskObjectsInRange.Num())
+	if (!TaskObjectsInCameraRange.Num())
 		return;
 
 	float Closest = MAX_FLT;
@@ -827,16 +784,19 @@ void APlayerCharacter::UpdateClosestTaskObject()
 		ClosestPickup = nullptr;
 	}
 
-	for (int i = 0; i < TaskObjectsInRange.Num(); ++i)
+	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
-		auto Distance = FVector::Distance(TaskObjectsInRange[i]->GetActorLocation(), GetActorLocation());
+		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{
 			Closest = Distance;
-			ClosestPickup = TaskObjectsInRange[i];
+			ClosestPickup = TaskObjectsInCameraRange[i];
 		}
 	}
 
 	if (ClosestPickup)
 		ClosestPickup->SetSelected(true);
+
+	if (TaskObjectsInPickupRange.Find(ClosestPickup) != INDEX_NONE)
+		OnObjectPickedUp(ClosestPickup);
 }

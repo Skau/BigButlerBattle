@@ -11,6 +11,7 @@
 #include "Tasks/TaskObject.h"
 #include "GameFramework/PlayerStart.h"
 #include "Utils/btd.h"
+#include "ButlerGameInstance.h"
 
 APlayerCharacterController::APlayerCharacterController() 
 {
@@ -21,6 +22,8 @@ void APlayerCharacterController::BeginPlay()
 	Super::BeginPlay();
 
 	bShowMouseCursor = false;
+
+	ButlerGameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 }
 
 void APlayerCharacterController::OnPossess(APawn* InPawn)
@@ -45,6 +48,11 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 
 		if (PlayerWidget->Visibility == ESlateVisibility::Hidden)
 			PlayerWidget->SetVisibility(ESlateVisibility::Visible);
+
+		auto GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		check(GameInstance != nullptr);
+		PlayerCharacter->SetCameraInvertYaw(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraYaw);
+		PlayerCharacter->SetCameraInvertPitch(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraPitch);
 	}
 }
 
@@ -142,7 +150,7 @@ void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 	}
 }
 
-void APlayerCharacterController::OnCharacterFell()
+void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, FVector Position)
 {
 	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
 	btd::Delay(this, RespawnTime, [=]()
@@ -154,8 +162,15 @@ void APlayerCharacterController::OnCharacterFell()
 			PlayerCharacter->Destroy();
 			PlayerCharacter = nullptr;
 		}
-		RespawnCharacter();
 
+		if (!ButlerGameMode)
+		{
+			UE_LOG(LogTemp, Error, TEXT("APlayerCharacterController::RespawnCharacter: Wrong gamemode setup!"));
+			return;
+		}
+
+		auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room, Position);
+		RespawnCharacter(Spawnpoint);
 	});
 }
 
@@ -178,6 +193,9 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 						Inventory[i]->Destroy();
 						Inventory[i] = nullptr;
 						SetPlayerTaskState(j, ETaskState::Finished);
+
+						if(PlayerCharacter->GetCurrentItemIndex() == i)
+							PlayerCharacter->IncrementCurrentItemIndex();
 					}
 				}
 			}
@@ -194,22 +212,31 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 	OnGameFinished.ExecuteIfBound(ID);
 }
 
-void APlayerCharacterController::RespawnCharacter(APlayerStart* PlayerStart)
+void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
 {
 	if (!PlayerCharacterClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Player Controller: Player Character Class not set!"));
 		return;
 	}
-
-	if (PlayerStart)
-		SpawnTransform = PlayerStart->GetActorTransform();
-
-	PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	
-	PlayerCharacter->SetCustomSpringArmLength();
+	
+	if (Spawnpoint)
+	{
+		auto SpawnTransform = Spawnpoint->GetTransform();
 
-	UGameplayStatics::FinishSpawningActor(PlayerCharacter, SpawnTransform);
+		PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
-	Possess(PlayerCharacter);
+		PlayerCharacter->SetCustomSpringArmLength();
+
+		PlayerCharacter->CurrentRoom = Spawnpoint->RoomSpawn;
+
+		UGameplayStatics::FinishSpawningActor(PlayerCharacter, SpawnTransform);
+
+		Possess(PlayerCharacter);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player Controller: Null spawnpoint provided!"));
+	}
 }

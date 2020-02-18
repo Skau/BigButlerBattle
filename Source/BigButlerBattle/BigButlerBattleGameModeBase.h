@@ -5,12 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Utils/DataTables.h"
+#include "Utils/Spawnpoint.h"
 #include "BigButlerBattleGameModeBase.generated.h"
 
 class APlayerCharacterController;
 class UPauseWidget;
 class UTask;
 class UGameFinishedWidget;
+class ASpawnpoint;
 
 UENUM()
 enum class ETaskState
@@ -44,6 +46,9 @@ UCLASS()
 class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	ASpawnpoint* GetRandomSpawnpoint(ERoomSpawn Room, FVector Position);
 
 protected:
 	void BeginPlay() override;
@@ -84,6 +89,8 @@ private:
 
 	int RemainingTasksToCreate = 0;
 
+	void SetupSpawnpoints();
+
 	/*
 	 Starts the process of generating tasks
 	*/
@@ -121,5 +128,7 @@ private:
 	double TaskGenerationStartTime = 0;
 
 	void GenerateExtraTask();
+
+	TMap<ERoomSpawn, TArray<ASpawnpoint*>> Spawnpoints;
 
 };

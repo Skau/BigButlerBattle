@@ -13,4 +13,6 @@ void UButlerGameInstance::Init()
 		stream.GenerateNewSeed();
 		Seed = stream.GetCurrentSeed();
 	}
+
+	PlayerOptions.AddDefaulted(4);
 }

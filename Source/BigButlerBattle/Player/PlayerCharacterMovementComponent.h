@@ -70,7 +70,7 @@ protected:
 	float HandbrakeVelocityThreshold = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
-	bool bAllowBrakingWhileHandbraking = false;
+	bool bAllowBrakingWhileHandbraking = true;
 
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
@@ -86,9 +86,7 @@ protected:
 	float SidewaysForce = 0.0f;
 
 	bool bBraking = false;
-
-public:
-	float bHandbrakeValue = 0.f;
+	bool bIsStandstill = false;
 
 public:
 	UPlayerCharacterMovementComponent();
@@ -127,7 +125,7 @@ public:
 	/**
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
-	FVector GetClampedInputAcceleration(bool &bBreakingOut, float DeltaTime = 0.f, float input = 0.f);
+	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float input = 0.f);
 
 	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 
@@ -149,20 +147,26 @@ protected:
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
-	void PerformSickAssHandbraking(float DeltaTime);
-
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
 	void TryFallOff();
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
-	bool IsHandbraking() const { return bHandbrakeValue != 0; }
+	// Applies this frames current rotation multiplied by deltaTime
+	void ApplyRotation(float DeltaTime);
+
+	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
 
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	float GetForwardInput() const { return InputDir.X; }
+	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
 	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	float CalcSidewaysBreaking(const FVector& forward) const;
+
+	/**
+	 * Returns current rotation amount.
+	 * Both normal rotation and handbraking rotation.
+	 */
 	float CalcRotation() const;
-	float CalcHandbrakeRotation() const;
 };
