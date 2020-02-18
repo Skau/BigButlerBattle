@@ -43,28 +43,35 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 {
 	if (Controller)
 	{
-		UWidget* ActualWidgetToFocus = nullptr;
-
-		if (WidgetToFocus == nullptr && DefaultWidgetToFocus)
-			ActualWidgetToFocus = DefaultWidgetToFocus;
-		else
-			ActualWidgetToFocus = WidgetToFocus;
-
+		UWidget* ActualWidgetToFocus = (WidgetToFocus == nullptr && DefaultWidgetToFocus) ? DefaultWidgetToFocus : WidgetToFocus;
 		WidgetFocusedLast = ActualWidgetToFocus;
 
-		FInputModeGameAndUI Mode;
-		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-		Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
-		
-		Controller->SetInputMode(Mode);
-		Controller->CurrentMouseCursor = EMouseCursor::None;
-		Controller->bShowMouseCursor = false;
-		Controller->bEnableClickEvents = false;
-		Controller->bEnableMouseOverEvents = false;
-		FSlateApplication::Get().OnCursorSet();
+		if (ActualWidgetToFocus)
+		{
+			FInputModeGameAndUI Mode;
+			Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+			Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
 
-		OwningCharacterController = Controller;
-		OnPlayerCharacterControllerSet();
+			Controller->SetInputMode(Mode);
+			Controller->CurrentMouseCursor = EMouseCursor::None;
+			Controller->bShowMouseCursor = false;
+			Controller->bEnableClickEvents = false;
+			Controller->bEnableMouseOverEvents = false;
+			FSlateApplication::Get().OnCursorSet();
+
+			OwningCharacterController = Controller;
+			OnPlayerCharacterControllerSet();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No actual widget to focus! Controller name: %s, This widget name: %s"), *Controller->GetName(), *GetName());
+		}
+	}
+	else
+	{
+		// This isn't necessarily bad, it just means the controller is not active.
+		// We always try to focus every controller with their individual MainMenuPlayerWidget for example.
+		UE_LOG(LogTemp, Warning, TEXT("Controller was nullptr! This widget name: %s"), *GetName()); 
 	}
 }
 

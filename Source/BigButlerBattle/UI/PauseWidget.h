@@ -39,7 +39,6 @@ protected:
     void OnPlayerCharacterControllerSet() override;
 
 private:
-  
     UFUNCTION()
     void OnContinuePressed();
 

@@ -31,6 +31,13 @@ bool UMainMenuPlayWidget::Initialize()
 
 void UMainMenuPlayWidget::BackToMainMenu()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Back to main menu"));
+	if (!IsValid(MainMenuWidget))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MainMenuWidget not valid!"));
+		return;
+	}
+
 	SetVisibility(ESlateVisibility::Hidden);
 	MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
 	MainMenuWidget->FocusWidget(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)));

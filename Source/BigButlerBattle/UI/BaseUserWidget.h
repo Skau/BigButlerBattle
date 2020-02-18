@@ -13,7 +13,7 @@ class UButton;
 /**
  * 
  */
-UCLASS()
+UCLASS(abstract)
 class BIGBUTLERBATTLE_API UBaseUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
@@ -33,13 +33,12 @@ protected:
 
 	UWidget* DefaultWidgetToFocus = nullptr;
 
-	/* Overriden in sublcasses */
 	virtual void OnPlayerCharacterControllerSet();
+
+	virtual void OnBackButtonPressed();
 
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacterController* OwningCharacterController;
-
-	virtual void OnBackButtonPressed();
 
 	TArray<UButton*> Buttons;
 

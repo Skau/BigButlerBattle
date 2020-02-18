@@ -37,6 +37,13 @@ bool UMainMenuWidget::Initialize()
 
 void UMainMenuWidget::OnPlayPressed()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Play pressed"));
+	if (!IsValid(PlayWidget))
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayWidget is not valid!"));
+		return;
+	}
+
 	SetVisibility(ESlateVisibility::Hidden);
 	if(PlayWidget->MainMenuWidget != this)
 		PlayWidget->MainMenuWidget = this;
