@@ -25,6 +25,7 @@ class UTask;
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
+DECLARE_DELEGATE_OneParam(FDeliverTasksSignature, TArray<ATaskObject*>&)
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
 // Structs
@@ -250,6 +251,7 @@ protected:
 public:
 	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	FTaskObjectDroppedSignature OnTaskObjectDropped;
+	FDeliverTasksSignature OnDeliverTasks;
 
 	int GetCurrentItemIndex() const { return CurrentItemIndex; }
 	void IncrementCurrentItemIndex();

@@ -44,8 +44,6 @@ public:
 	void SetPlayerTaskName(int Index, const FString& Name) const;
 	void SetPlayerTaskState(int Index, ETaskState NewState);
 
-	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
-
 	void RespawnCharacter(ASpawnpoint* Spawnpoint);
 
 	bool bUseCustomSpringArmLength = false;
@@ -84,6 +82,10 @@ private:
 
 	UFUNCTION()
 	void OnPlayerDroppedObject(ATaskObject* Object);
+
+	UFUNCTION()
+	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
+
 
 	void UpdatePlayerTasks();
 

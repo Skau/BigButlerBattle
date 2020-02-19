@@ -34,6 +34,7 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(this, &APlayerCharacterController::OnPlayerPickedUpObject);
 		PlayerCharacter->OnTaskObjectDropped.BindUObject(this, &APlayerCharacterController::OnPlayerDroppedObject);
 		PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
+		PlayerCharacter->OnDeliverTasks.BindUObject(this, &APlayerCharacterController::CheckIfTasksAreDone);
 
 		if (!PlayerWidget && PlayerWidgetType)
 		{

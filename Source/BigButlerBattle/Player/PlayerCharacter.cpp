@@ -675,11 +675,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 	}
 	else if(OtherActor->IsA(AKing::StaticClass()))
 	{
-		auto Con = Cast<APlayerCharacterController>(GetController());
-		if (Con)
-		{
-			Con->CheckIfTasksAreDone(Inventory);
-		}
+		OnDeliverTasks.ExecuteIfBound(Inventory);
 	}
 }
 
