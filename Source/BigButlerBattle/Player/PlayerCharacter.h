@@ -356,12 +356,18 @@ protected:
 
 	TArray<ARailing*> RailsInRange;
 
+	bool bPendingGrindingAttempt = false;
+
 public:
 	void OnRailsInRangeUpdated(ARailing* RailObject, bool Enter);
 
 	/**
 	 * Attempts to start to grind on the closest rail available
-	 * @return true if grinding was successfull, false otherwise
 	 */
-	bool TryStartGrinding();
+	void TryStartGrinding();
+
+	/**
+	 * @return true if grinding attempts should start pending, false otherwise
+	 */
+	bool StartPendingGrinding();
 };

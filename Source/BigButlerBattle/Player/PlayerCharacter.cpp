@@ -168,6 +168,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 	UpdateSkateboardRotation(DeltaTime);
 
 	UpdateClosestTaskObject();
+
+	// Only attempt to start grinding if we have a pending check
+	if (bPendingGrindingAttempt)
+		TryStartGrinding();
 }
 
 
@@ -839,7 +843,16 @@ void APlayerCharacter::OnRailsInRangeUpdated(ARailing* RailObject, bool Enter)
 	TryStartGrinding();
 }
 
-bool APlayerCharacter::TryStartGrinding()
+void APlayerCharacter::TryStartGrinding()
+{
+	/*
+	If we no longer meet the requirements to grind, or we have managed to start grinding
+	we don't need to check each frame anymore.
+	*/
+	bPendingGrindingAttempt = StartPendingGrinding();
+}
+
+bool APlayerCharacter::StartPendingGrinding()
 {
 	if (RailsInRange.Num() < 1 || !Movement)
 		return false;
@@ -868,12 +881,17 @@ bool APlayerCharacter::TryStartGrinding()
 		}
 	}
 
+	const bool bFoundPoint = -1 < closestIndex;
+
 	// Start grinding
-	if (-1 < closestIndex && Movement->SkateboardSplineReference == nullptr)
+	if (bFoundPoint && Movement->SkateboardSplineReference == nullptr)
 	{
 		Movement->SkateboardSplineReference = RailsInRange[closestIndex]->SplineComp;
 		Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
-		// Movement->CustomMovementMode = static_cast<uint8>(ECustomMovementType::MOVE_Grinding);
+	}
+	else if (!bFoundPoint)
+	{
+		// If we failed because of range, check again each frame while we still are holding jump.
 		return true;
 	}
 
