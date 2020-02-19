@@ -9,7 +9,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
 #include "ButlerGameInstance.h"
-#include "Player/PlayerCharacterController.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -42,12 +41,12 @@ bool UMainMenuPlayerWidget::Initialize()
 	return bInit;
 }
 
-void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
+void UMainMenuPlayerWidget::OnPlayerControllerSet()
 {
 	GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	check(GameInstance != nullptr);
 
-	ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	ID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 
 	const auto Options = GameInstance->PlayerOptions[ID];
 	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
@@ -64,13 +63,13 @@ void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex N
 	switch (CurrentIndex)
 	{
 	case EWidgetSwitcherIndex::Join:
-		FocusWidget(OwningCharacterController, Button_Join);
+		FocusWidget(OwningPlayerController, Button_Join);
 		break;
 	case EWidgetSwitcherIndex::Main:
-		FocusWidget(OwningCharacterController, Button_Ready);
+		FocusWidget(OwningPlayerController, Button_Ready);
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
-		FocusWidget(OwningCharacterController, Button_Back);
+		FocusWidget(OwningPlayerController, Button_Back);
 		break;
 	case EWidgetSwitcherIndex::Ready: break;
 	default: ;
@@ -110,7 +109,7 @@ void UMainMenuPlayerWidget::OnJoinPressed()
 
 void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined) const
 {
-	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ControllerID);
 }
 
@@ -125,7 +124,7 @@ void UMainMenuPlayerWidget::OnReadyPressed()
 
 void UMainMenuPlayerWidget::UpdateReadyStatus(const bool bIsReady) const
 {
-	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 	OnToggleReadyGame.ExecuteIfBound(bIsReady, ControllerID);
 }
 

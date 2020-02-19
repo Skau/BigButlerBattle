@@ -7,7 +7,6 @@
 #include "Styling/SlateTypes.h"
 #include "BaseUserWidget.generated.h"
 
-class APlayerCharacterController;
 class UButton;
 
 /**
@@ -22,9 +21,9 @@ public:
 	UBaseUserWidget(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintPure)
-	APlayerCharacterController* GetOwningPlayerCharacterController() const;
+	APlayerController* GetOwningPlayerController() const;
 
-	void FocusWidget(APlayerCharacterController* Controller, UWidget* WidgetToFocus = nullptr);
+	void FocusWidget(APlayerController* Controller, UWidget* WidgetToFocus = nullptr);
 
 protected:
 	bool Initialize() override;
@@ -33,12 +32,12 @@ protected:
 
 	UWidget* DefaultWidgetToFocus = nullptr;
 
-	virtual void OnPlayerCharacterControllerSet();
+	virtual void OnPlayerControllerSet();
 
 	virtual void OnBackButtonPressed();
 
 	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacterController* OwningCharacterController;
+	APlayerController* OwningPlayerController;
 
 	TArray<UButton*> Buttons;
 

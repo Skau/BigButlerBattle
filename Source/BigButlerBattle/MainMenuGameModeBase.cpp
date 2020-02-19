@@ -5,7 +5,6 @@
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayWidget.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/PlayerCharacterController.h"
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayerWidget.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -32,17 +31,17 @@ void AMainMenuGameModeBase::BeginPlay()
 		auto ID = Controller->GetControllerId();
 		UE_LOG(LogTemp, Warning, TEXT("Added local player with ID %i"), ID);
 		IDsToCreate.Remove(ID);
-		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID)));
+		Controllers.Add(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Creating the remaining players.."));
 	for (auto& ID : IDsToCreate)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Creating player with ID %i"), ID);
-		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::CreatePlayer(GetWorld(), ID)));
+		Controllers.Add(UGameplayStatics::CreatePlayer(GetWorld(), ID));
 	}
 
-	Controllers.Sort([](APlayerCharacterController& p1, APlayerCharacterController& p2)
+	Controllers.Sort([](APlayerController& p1, APlayerController& p2)
 	{
 			return UGameplayStatics::GetPlayerControllerID(&p1) < UGameplayStatics::GetPlayerControllerID(&p2);
 	});
@@ -87,8 +86,6 @@ void AMainMenuGameModeBase::BeginPlay()
 	
 	UE_LOG(LogTemp, Warning, TEXT("Updating play widget on menu widget instance"));
 	MainMenuWidgetInstance->PlayWidget = MainMenuPlayWidgetInstance;
-	UE_LOG(LogTemp, Warning, TEXT("Updating controllers on menu widget instance"));
-	MainMenuWidgetInstance->Controllers = Controllers;
 	
 	UE_LOG(LogTemp, Warning, TEXT("Binding delegates.."));
 	MainMenuPlayWidgetInstance->PlayerWidget_0->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);

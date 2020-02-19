@@ -36,7 +36,7 @@ public:
     FQuitGameSignature QuitGame;
 
 protected:
-    void OnPlayerCharacterControllerSet() override;
+    void OnPlayerControllerSet() override;
 
 private:
     UFUNCTION()

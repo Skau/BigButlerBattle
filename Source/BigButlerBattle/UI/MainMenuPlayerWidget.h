@@ -77,7 +77,7 @@ public:
 protected:
 	bool Initialize() override;
 
-	void OnPlayerCharacterControllerSet() override;
+	void OnPlayerControllerSet() override;
 
 	UFUNCTION(BlueprintCallable)
 	void OnBackButtonPressed() override;

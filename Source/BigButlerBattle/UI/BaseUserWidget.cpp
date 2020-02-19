@@ -2,7 +2,6 @@
 
 
 #include "BaseUserWidget.h"
-#include "Player/PlayerCharacterController.h"
 #include "Components/Button.h"
 #include "Application/SlateApplication.h"
 
@@ -34,12 +33,12 @@ void UBaseUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	}
 }
 
-APlayerCharacterController* UBaseUserWidget::GetOwningPlayerCharacterController() const
+APlayerController* UBaseUserWidget::GetOwningPlayerController() const
 {
-	return OwningCharacterController;
+	return OwningPlayerController;
 }
 
-void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidget* WidgetToFocus)
+void UBaseUserWidget::FocusWidget(APlayerController* Controller, UWidget* WidgetToFocus)
 {
 	if (Controller)
 	{
@@ -59,8 +58,8 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 			Controller->bEnableMouseOverEvents = false;
 			FSlateApplication::Get().OnCursorSet();
 
-			OwningCharacterController = Controller;
-			OnPlayerCharacterControllerSet();
+			OwningPlayerController = Controller;
+			OnPlayerControllerSet();
 		}
 		else
 		{
@@ -75,7 +74,7 @@ void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidge
 	}
 }
 
-void UBaseUserWidget::OnPlayerCharacterControllerSet()
+void UBaseUserWidget::OnPlayerControllerSet()
 {
 }
 
@@ -88,5 +87,5 @@ void UBaseUserWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEve
 	// In case we want to use this function in blueprint too
 	Super::NativeOnRemovedFromFocusPath(InFocusEvent);
 
-	FocusWidget(OwningCharacterController, WidgetFocusedLast);
+	FocusWidget(OwningPlayerController, WidgetFocusedLast);
 }

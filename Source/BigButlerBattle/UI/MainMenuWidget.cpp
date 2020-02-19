@@ -5,6 +5,7 @@
 #include "MainMenuPlayWidget.h"
 #include "MainMenuPlayerWidget.h"
 #include "Components/Button.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 UMainMenuWidget::UMainMenuWidget(const FObjectInitializer& ObjectInitializer)
@@ -49,11 +50,18 @@ void UMainMenuWidget::OnPlayPressed()
 		PlayWidget->MainMenuWidget = this;
 
 	PlayWidget->SetVisibility(ESlateVisibility::Visible);
-	
-	PlayWidget->PlayerWidget_0->FocusWidget(Controllers[0], PlayWidget->PlayerWidget_0->Button_Join);
-	PlayWidget->PlayerWidget_1->FocusWidget(Controllers[1], PlayWidget->PlayerWidget_1->Button_Join);
-	PlayWidget->PlayerWidget_2->FocusWidget(Controllers[2], PlayWidget->PlayerWidget_2->Button_Join);
-	PlayWidget->PlayerWidget_3->FocusWidget(Controllers[3], PlayWidget->PlayerWidget_3->Button_Join);
+
+	if(auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		PlayWidget->PlayerWidget_0->FocusWidget(Player, PlayWidget->PlayerWidget_0->Button_Join);
+
+	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 1))
+		PlayWidget->PlayerWidget_1->FocusWidget(Player, PlayWidget->PlayerWidget_1->Button_Join);
+
+	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 2))
+		PlayWidget->PlayerWidget_2->FocusWidget(Player, PlayWidget->PlayerWidget_2->Button_Join);
+
+	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 3))
+		PlayWidget->PlayerWidget_3->FocusWidget(Player, PlayWidget->PlayerWidget_3->Button_Join);
 
 	DefaultWidgetToFocus = Button_Play;
 }
