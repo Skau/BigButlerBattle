@@ -25,15 +25,25 @@ struct FSplineInfo
 {
 	GENERATED_BODY()
 
+	enum ESplineState : uint8
+	{
+		STATE_GodKnowsWhere = 0b0000,
+		STATE_Entering = 0b0001,
+		STATE_OnRail = 0b0010,
+		STATE_Leaving = 0b0011
+	};
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference = nullptr;
 
 	uint8 bHasValue : 1;
 	int SplineDir : 2;
+	uint8 PlayerState : 2;
 	uint8 PointCount;
 
 	float SplinePos = -1.f;
+	FVector StartWorldPos;
 
 public:
 	FSplineInfo(USplineComponent* Spline = nullptr);

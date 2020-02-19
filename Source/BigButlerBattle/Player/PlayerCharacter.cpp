@@ -910,6 +910,5 @@ bool APlayerCharacter::StartPendingGrinding()
 
 void APlayerCharacter::SetRailCollision(bool mode)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Rail collisions turned %s!"), *(mode ? FString{"on"} : FString{"off"}));
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, mode ? ECollisionResponse::ECR_Block : ECollisionResponse::ECR_Ignore);
 }
