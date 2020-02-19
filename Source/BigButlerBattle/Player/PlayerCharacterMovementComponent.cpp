@@ -62,6 +62,21 @@ void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode Prev
 {
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 
+	if (PreviousCustomMode != CustomMovementMode)
+	{
+		// Don't generate oncustommovementmodestart events when changing to MOVE_None
+		if (CustomMovementMode != static_cast<uint8>(ECustomMovementType::MOVE_None))
+		{
+			OnCustomMovementStart.Broadcast(CustomMovementMode);
+		}
+
+		// Don't generate oncustommovementmodeend events when changing from MOVE_None
+		if (PreviousCustomMode != static_cast<uint8>(ECustomMovementType::MOVE_None))
+		{
+			OnCustomMovementEnd.Broadcast(PreviousCustomMode);
+		}
+	}
+
 	// If changed to custom movement and default custom movement is not zero, switch to default custom movement.
 	if (MovementMode == MOVE_Custom && CustomMovementMode == static_cast<uint8>(ECustomMovementType::MOVE_None) &&
 		DefaultCustomMovementMode != ECustomMovementType::MOVE_None)

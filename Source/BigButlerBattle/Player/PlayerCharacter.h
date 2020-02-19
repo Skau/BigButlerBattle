@@ -370,4 +370,6 @@ public:
 	 * @return true if grinding attempts should start pending, false otherwise
 	 */
 	bool StartPendingGrinding();
+
+	void SetRailCollision(bool mode);
 };

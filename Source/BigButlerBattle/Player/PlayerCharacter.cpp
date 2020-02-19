@@ -118,10 +118,20 @@ void APlayerCharacter::BeginPlay()
 	LinetraceSocketBack = SkateboardMesh->GetSocketByName("LinetraceBack");
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
-	check(Movement != nullptr);
+	check(Movement != nullptr); // TODO: Remove check in build
+
+	Movement->OnCustomMovementStart.AddLambda([&](uint8 MovementMode){
+		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
+			SetRailCollision(false);
+	});
+
+	Movement->OnCustomMovementEnd.AddLambda([&](uint8 MovementMode){
+		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
+			SetRailCollision(true);
+	});
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	check(GameMode != nullptr);
+	check(GameMode != nullptr); // TODO: Remove check in build
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
 
@@ -896,4 +906,10 @@ bool APlayerCharacter::StartPendingGrinding()
 	}
 
 	return false;
+}
+
+void APlayerCharacter::SetRailCollision(bool mode)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Rail collisions turned %s!"), *(mode ? FString{"on"} : FString{"off"}));
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, mode ? ECollisionResponse::ECR_Block : ECollisionResponse::ECR_Ignore);
 }

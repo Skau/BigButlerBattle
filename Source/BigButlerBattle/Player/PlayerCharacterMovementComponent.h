@@ -41,6 +41,9 @@ public:
 	bool HasValue() const { return bHasValue; }	
 };
 
+// Delegates
+DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FCustomMovementChangedSignature, uint8);
+
 /** Custom override of movement component
  * 
  */
@@ -108,6 +111,11 @@ protected:
 	bool bIsStandstill = false;
 
 public:
+	// Parameter is mode that started
+	FCustomMovementChangedSignature OnCustomMovementStart;
+	// Parameter is mode that ended
+	FCustomMovementChangedSignature OnCustomMovementEnd;
+
 	/// Grinding movement:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
 	FSplineInfo CurrentSpline;
