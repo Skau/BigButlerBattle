@@ -10,12 +10,35 @@
 class APlayerCharacter;
 class USplineComponent;
 
+// Enums
 UENUM(BlueprintType)
 enum class ECustomMovementType : uint8
 {
 	MOVE_None			UMETA(DisplayName = "None"),
 	MOVE_Skateboard		UMETA(DisplayName = "Skateboard"),
 	MOVE_Grinding		UMETA(DisplayName = "Grinding")
+};
+
+// Structs
+USTRUCT(BlueprintType)
+struct FSplineInfo
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
+	USplineComponent* SkateboardSplineReference = nullptr;
+
+	uint8 bHasValue : 1;
+	int SplineDir : 2;
+	uint8 PointCount;
+
+	float SplinePos = -1.f;
+
+public:
+	FSplineInfo(USplineComponent* Spline = nullptr);
+
+	bool HasValue() const { return bHasValue; }	
 };
 
 /** Custom override of movement component
@@ -75,9 +98,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
 	bool bAllowBrakingWhileHandbraking = true;
 
-	float SplinePos = -1.f;
-	int SplineDir = 1;
-
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
 
@@ -89,8 +109,8 @@ protected:
 
 public:
 	/// Grinding movement:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
-	USplineComponent* SkateboardSplineReference = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
+	FSplineInfo CurrentSpline;
 
 	UPlayerCharacterMovementComponent();
 

@@ -884,9 +884,9 @@ bool APlayerCharacter::StartPendingGrinding()
 	const bool bFoundPoint = -1 < closestIndex;
 
 	// Start grinding
-	if (bFoundPoint && Movement->SkateboardSplineReference == nullptr)
+	if (bFoundPoint && !Movement->CurrentSpline.HasValue())
 	{
-		Movement->SkateboardSplineReference = RailsInRange[closestIndex]->SplineComp;
+		Movement->CurrentSpline = FSplineInfo{RailsInRange[closestIndex]->SplineComp};
 		Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
 	}
 	else if (!bFoundPoint)
