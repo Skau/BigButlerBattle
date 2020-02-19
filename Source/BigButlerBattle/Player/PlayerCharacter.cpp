@@ -479,13 +479,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 
 			// Turn on falling just in case we are at an edge/incline and the velocity is great enough to get some air
-			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
+			// Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 		// No hits:
 		else
 		{
 			// Turn on falling, because we have no idea where the ground is and we are definitely in the air.
-			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
+			// Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 	}
 }

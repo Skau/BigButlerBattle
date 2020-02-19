@@ -28,7 +28,7 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
-	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
+	ECustomMovementType DefaultCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
 	/**
 	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
@@ -141,6 +141,8 @@ protected:
 
 	void TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction) override;
 
+	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
+
 	/** @note Movement update functions should only be called through StartNewPhysics()*/
 	void PhysCustom(float deltaTime, int32 Iterations) override;
 
@@ -149,8 +151,6 @@ protected:
 
 	/** Handle falling movement. */
 	void PhysFalling(float deltaTime, int32 Iterations) override;
-
-	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 

@@ -22,12 +22,12 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	MaxAcceleration = 1800.f;
 	GravityScale = 3.0f;
 
-	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
+	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(DefaultCustomMovementMode));
 }
 
 bool UPlayerCharacterMovementComponent::IsMovingOnGround() const
 {
-	return ((MovementMode == MOVE_Custom && CurrentCustomMovementMode == ECustomMovementType::MOVE_Skateboard) || (MovementMode == MOVE_Walking) || (MovementMode == MOVE_NavWalking)) && UpdatedComponent;
+	return ((MovementMode == MOVE_Custom && DefaultCustomMovementMode == ECustomMovementType::MOVE_Skateboard) || (MovementMode == MOVE_Walking) || (MovementMode == MOVE_NavWalking)) && UpdatedComponent;
 }
 
 void UPlayerCharacterMovementComponent::BeginPlay()
@@ -35,7 +35,7 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 	Super::BeginPlay();
 
 	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
-	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
+	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(DefaultCustomMovementMode));
 }
 
 void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction)
@@ -45,16 +45,28 @@ void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELev
 	Super::TickComponent(deltaTime, TickType, thisTickFunction);
 }
 
+void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
+
+	// If changed to custom movement and default custom movement is not zero, switch to default custom movement.
+	if (MovementMode == MOVE_Custom && CustomMovementMode == static_cast<uint8>(ECustomMovementType::MOVE_None) &&
+		DefaultCustomMovementMode != ECustomMovementType::MOVE_None)
+	{
+		SetMovementMode(MOVE_Custom, static_cast<uint8>(DefaultCustomMovementMode));
+	}
+}
+
 void UPlayerCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
 {
 	Super::PhysCustom(deltaTime, Iterations);
 
 	switch (CustomMovementMode)
 	{
-		case ECustomMovementType::MOVE_Skateboard:
+		case static_cast<uint8>(ECustomMovementType::MOVE_Skateboard):
 			PhysSkateboard(deltaTime, Iterations);
 			break;
-		case ECustomMovementType::MOVE_Grinding:
+		case static_cast<uint8>(ECustomMovementType::MOVE_Grinding):
 			PhysGrinding(deltaTime, Iterations);
 			break;
 		default:
@@ -288,7 +300,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		{
 			SplinePos = -1.f;
 
-			// SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
+			UE_LOG(LogTemp, Warning, TEXT("Outside of curve, so switching to falling movement."));
 			SetMovementMode(EMovementMode::MOVE_Falling);
 			StartNewPhysics(remainingTime, Iterations);
 		}
@@ -315,14 +327,6 @@ void UPlayerCharacterMovementComponent::PhysFalling(float deltaTime, int32 Itera
 		if (!Velocity.IsNearlyZero())
 			Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
 	}
-}
-
-void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
-{
-	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
-
-	if (MovementMode == MOVE_Custom && CustomMovementMode == static_cast<int>(ECustomMovementType::MOVE_None) && CurrentCustomMovementMode != ECustomMovementType::MOVE_None)
-		SetMovementMode(MOVE_Custom, static_cast<int>(CurrentCustomMovementMode));
 }
 
 void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
