@@ -17,7 +17,7 @@ public:
 	AOutOfBounds();
 
 protected:
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* Collision;

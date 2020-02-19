@@ -102,7 +102,7 @@ void AMainMenuGameModeBase::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("Binding delegates done."));
 }
 
-void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
+void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(const bool Value, const int ID)
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnPlayerToggledJoinedGame, Joined: %i, Controller ID %i"), Value, ID);
 
@@ -130,7 +130,7 @@ void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
 	}
 }
 
-void AMainMenuGameModeBase::OnPlayerToggledReady(bool Value, int ID)
+void AMainMenuGameModeBase::OnPlayerToggledReady(const bool Value, const int ID)
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnPlayerToggledReady, Ready: %i, Controller ID %i"), Value, ID);
 
@@ -163,7 +163,7 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	}
 
 	ElapsedCountdownTime += GetWorldTimerManager().GetTimerElapsed(HandleStartGame);
-	float TimeLeft = TimeUntilGameStart - ElapsedCountdownTime;
+	const float TimeLeft = TimeUntilGameStart - ElapsedCountdownTime;
 
 	if (TimeLeft <= 0.f)
 	{
@@ -172,7 +172,7 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	
 		for(auto& ID : PlayerNotJoinedIDs)
 		{
-			if (auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
+			if (const auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Removing Controller ID %i, because it never joined."), ID);
 				UGameplayStatics::RemovePlayer(controller, false);

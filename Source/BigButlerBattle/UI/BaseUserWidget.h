@@ -22,7 +22,7 @@ public:
 	UBaseUserWidget(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintPure)
-	APlayerCharacterController* GetOwningPlayerCharacterController();
+	APlayerCharacterController* GetOwningPlayerCharacterController() const;
 
 	void FocusWidget(APlayerCharacterController* Controller, UWidget* WidgetToFocus = nullptr);
 

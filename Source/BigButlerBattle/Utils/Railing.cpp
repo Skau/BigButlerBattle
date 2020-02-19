@@ -52,7 +52,7 @@ void ARailing::Tick(float DeltaTime)
 void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
 {
     //Get the name of the property that was changed  
-    FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;  
+    const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;  
 
     // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name  
     // in the future this will fail to compile and we can update it.  
@@ -64,7 +64,7 @@ void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChan
 }
 #endif
 
-void ARailing::BuildSpline()
+void ARailing::BuildSpline() const
 {
 	if (!SplineComp)
 	{
@@ -76,52 +76,52 @@ void ARailing::BuildSpline()
 	{
 		SplineComp->ClearSplinePoints();
 
-		const auto rows = Splinepoints->GetRowNames();
+		const auto Rows = Splinepoints->GetRowNames();
 
-		for (int32 i{0}; i < rows.Num(); ++i)
+		for (int32 i{0}; i < Rows.Num(); ++i)
 		{
-			auto row = Splinepoints->FindRow<FBezierPoint>(bSwapPointOrder ? rows[rows.Num() - i - 1] : rows[i], *Splinepoints->GetName());
-			if (row)
+			const auto Row = Splinepoints->FindRow<FBezierPoint>(bSwapPointOrder ? Rows[Rows.Num() - i - 1] : Rows[i], *Splinepoints->GetName());
+			if (Row)
 			{
-				auto transform = [](const FVector& f)
+				auto Transform = [](const FVector& F)
 				{
-					return FVector{f.Y, f.X, f.Z} * 100.f;
+					return FVector{F.Y, F.X, F.Z} * 100.f;
 				};
 
-				auto pos = transform(row->Position);
+				auto Pos = Transform(Row->Position);
 
 				/* In-tangent is multiplied by -1 because tangents are relative to the direction they're pointing.
 				* So the in-tangent isn't a vector pointing from the control point, it's a negative direction vector
 				* from the control point.
 				*/
-				auto inTan = transform(row->InTangent);
-				auto outTan = -transform(row->OutTangent);
+				auto InTan = Transform(Row->InTangent);
+				auto OutTan = -Transform(Row->OutTangent);
 
 				if (bRotateSpline)
 				{
-					auto rotate = [](const FVector& f)
+					auto Rotate = [](const FVector& F)
 					{
-						return FVector{f.Y, -f.X, f.Z};
+						return FVector{F.Y, -F.X, F.Z};
 					};
 
-					pos = rotate(pos);
-					inTan = rotate(inTan);
-					outTan = rotate(outTan);
+					Pos = Rotate(Pos);
+					InTan = Rotate(InTan);
+					OutTan = Rotate(OutTan);
 				}
 
 				if (bInvertTangents)
 				{
-					inTan *= -1.f;
-					outTan *= -1.f;
+					InTan *= -1.f;
+					OutTan *= -1.f;
 				}
 
 				if (bSwapInOutTangents)
-					btd::Swap(inTan, outTan);
+					btd::Swap(InTan, OutTan);
 
 
 
-				SplineComp->AddSplinePoint(pos, ESplineCoordinateSpace::Local);
-				SplineComp->SetTangentsAtSplinePoint(i, inTan * TangentMultiplier, outTan * TangentMultiplier, ESplineCoordinateSpace::Local);
+				SplineComp->AddSplinePoint(Pos, ESplineCoordinateSpace::Local);
+				SplineComp->SetTangentsAtSplinePoint(i, InTan * TangentMultiplier, OutTan * TangentMultiplier, ESplineCoordinateSpace::Local);
 
 				// if (10.f < row->Position.Z)
 				// 	SplineComp->SetUpVectorAtSplinePoint(i, FVector::UpVector, ESplineCoordinateSpace::World);

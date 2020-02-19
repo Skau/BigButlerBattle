@@ -19,7 +19,7 @@ class BIGBUTLERBATTLE_API ARailing : public AActor
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Splinepoints"))
-	UDataTable *Splinepoints = nullptr;
+	UDataTable* Splinepoints = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap in and out tangents?"))
 	bool bSwapInOutTangents = true;
@@ -59,6 +59,6 @@ public:
 
 private:
 	UFUNCTION(BlueprintCallable)
-	void BuildSpline();
+	void BuildSpline() const;
 
 };

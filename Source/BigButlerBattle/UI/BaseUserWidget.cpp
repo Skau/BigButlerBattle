@@ -12,7 +12,7 @@ UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 
 bool UBaseUserWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	return bInit;
 }
@@ -21,20 +21,20 @@ void UBaseUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	for (auto& button : Buttons)
+	for (auto& Button : Buttons)
 	{
-		if (button->HasAnyUserFocus())
+		if (Button->HasAnyUserFocus())
 		{
-			button->SetStyle(ButtonStyleHovered);
+			Button->SetStyle(ButtonStyleHovered);
 		}
 		else
 		{
-			button->SetStyle(ButtonStyleDefault);
+			Button->SetStyle(ButtonStyleDefault);
 		}
 	}
 }
 
-APlayerCharacterController* UBaseUserWidget::GetOwningPlayerCharacterController()
+APlayerCharacterController* UBaseUserWidget::GetOwningPlayerCharacterController() const
 {
 	return OwningCharacterController;
 }

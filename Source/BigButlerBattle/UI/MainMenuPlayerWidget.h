@@ -6,8 +6,8 @@
 #include "BaseUserWidget.h"
 #include "MainMenuPlayerWidget.generated.h"
 
-DECLARE_DELEGATE_TwoParams(ToggleJoinGameSignature, bool, int);
-DECLARE_DELEGATE_TwoParams(ToggleReadyGameSignature, bool, int);
+DECLARE_DELEGATE_TwoParams(FToggleJoinGameSignature, bool, int);
+DECLARE_DELEGATE_TwoParams(FToggleReadyGameSignature, bool, int);
 
 class UButton;
 class UWidgetSwitcher;
@@ -36,8 +36,8 @@ class BIGBUTLERBATTLE_API UMainMenuPlayerWidget : public UBaseUserWidget
 public:
 	UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer);
 
-	ToggleJoinGameSignature OnToggleJoinedGame;
-	ToggleReadyGameSignature OnToggleReadyGame;
+	FToggleJoinGameSignature OnToggleJoinedGame;
+	FToggleReadyGameSignature OnToggleReadyGame;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_Join;
@@ -77,7 +77,7 @@ public:
 protected:
 	bool Initialize() override;
 
-	virtual void OnPlayerCharacterControllerSet() override;
+	void OnPlayerCharacterControllerSet() override;
 
 	UFUNCTION(BlueprintCallable)
 	void OnBackButtonPressed() override;
@@ -88,12 +88,12 @@ private:
 	UFUNCTION()
 	void OnJoinPressed();
 
-	void UpdateJoinedStatus(bool bHasJoined);
+	void UpdateJoinedStatus(bool bHasJoined) const;
 
 	UFUNCTION()
 	void OnReadyPressed();
 
-	void UpdateReadyStatus(bool bIsReady);
+	void UpdateReadyStatus(bool bIsReady) const;
 
 	UFUNCTION()
 	void OnCameraOptionsPressed();

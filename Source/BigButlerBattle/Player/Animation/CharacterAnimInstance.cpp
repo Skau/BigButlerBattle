@@ -3,21 +3,20 @@
 
 #include "CharacterAnimInstance.h"
 #include "Player/PlayerCharacter.h"
-#include "Player/PlayerCharacterMovementComponent.h"
 
 void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-	auto character = Cast<APlayerCharacter>(TryGetPawnOwner());
+	auto Character = Cast<APlayerCharacter>(TryGetPawnOwner());
 
-	if (!IsValid(character))
+	if (!IsValid(Character))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Character isn't valid!"));
 		return;
 	}
 
-	character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
+	Character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
 }
 
 void UCharacterAnimInstance::ForwardKick()

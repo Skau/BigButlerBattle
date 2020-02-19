@@ -13,7 +13,7 @@ UTask::UTask()
 
 bool UTask::InitTaskData(uint8* Data)
 {
-    auto TaskData = (FTaskTableData*)(Data);
+	const auto TaskData = reinterpret_cast<FTaskTableData*>(Data);
     if (TaskData)
     {
         Type = TaskData->Type;

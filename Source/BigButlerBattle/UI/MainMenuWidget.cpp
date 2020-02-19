@@ -19,7 +19,7 @@ void UMainMenuWidget::NativeConstruct()
 
 bool UMainMenuWidget::Initialize()
 {
-	bool initialized = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	Button_Play->OnClicked.AddDynamic(this, &UMainMenuWidget::OnPlayPressed);
 	Buttons.Add(Button_Play);
@@ -32,7 +32,7 @@ bool UMainMenuWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Play;
 
-	return initialized;
+	return bInit;
 }
 
 void UMainMenuWidget::OnPlayPressed()

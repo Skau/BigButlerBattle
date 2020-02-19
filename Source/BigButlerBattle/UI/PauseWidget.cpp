@@ -26,14 +26,14 @@ bool UPauseWidget::Initialize()
 
 void UPauseWidget::OnPlayerCharacterControllerSet()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
-	PlayerText->SetText(FText::FromString("By Player " + FString::FromInt(ID + 1)));
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
+	PlayerText->SetText(FText::FromString("By Player " + FString::FromInt(ControllerID + 1)));
 }
 
 void UPauseWidget::OnContinuePressed()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
-	ContinueGame.ExecuteIfBound(ID);
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
+	ContinueGame.ExecuteIfBound(ControllerID);
 }
 
 void UPauseWidget::OnQuitPressed()

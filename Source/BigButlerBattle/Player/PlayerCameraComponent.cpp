@@ -4,7 +4,6 @@
 #include "PlayerCameraComponent.h"
 #include "PlayerCharacter.h"
 #include "PlayerCharacterMovementComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 
 
 UPlayerCameraComponent::UPlayerCameraComponent()
@@ -29,11 +28,11 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (!Player->HasEnabledRagdoll())
 	{
-		auto MoveComp = Player->GetPlayerCharacterMovementComponent();
-		auto MaxVel = MoveComp->MaxCustomMovementSpeed;
-		auto CurrentVel = Player->GetVelocity().Size();
+		const auto MoveComp = Player->GetPlayerCharacterMovementComponent();
+		const auto MaxVel = MoveComp->MaxCustomMovementSpeed;
+		const auto CurrentVel = Player->GetVelocity().Size();
 
-		auto DesiredFOV = FMath::Lerp(MinFOV, MaxFOV, CurrentVel / MaxVel);
+		const auto DesiredFOV = FMath::Lerp(MinFOV, MaxFOV, CurrentVel / MaxVel);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);
 		SetFieldOfView((FMath::IsNearlyZero(Info.FOV - DesiredFOV)) ? DesiredFOV : FMath::Lerp(Info.FOV, DesiredFOV, Factor));
 	}

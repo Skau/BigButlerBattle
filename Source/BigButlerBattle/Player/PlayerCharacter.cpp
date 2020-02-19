@@ -14,7 +14,6 @@
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Animation/CharacterAnimInstance.h"
-#include "Animation/SkateboardAnimInstance.h"
 #include "Utils/btd.h"
 #include "Tasks/TaskObject.h"
 #include "Tasks/Task.h"
@@ -22,7 +21,6 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "King/King.h"
 #include "PlayerCharacterController.h"
-#include "ReferenceSkeleton.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -170,7 +168,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 
 
-void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
+void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitLocation)
 {
 	if (!bCanFall || bEnabledRagdoll)
 		return;
@@ -195,8 +193,8 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 	// Tray
 
 	Tray->SetSimulatePhysics(true);
-	Tray->DetachFromParent(true);
-	FDetachmentTransformRules Rules(EDetachmentRule::KeepWorld, true);
+	Tray->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true));
+	
 	for (auto& Obj : Inventory)
 	{
 		if (Obj)
@@ -205,18 +203,13 @@ void APlayerCharacter::EnableRagdoll(FVector Impulse, FVector HitLocation)
 		}
 	}
 
-	Camera->DetachFromParent(true);
+	Camera->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true));
 	
 
 	// Skateboard
 
 	SkateboardMesh->SetAllBodiesSimulatePhysics(true);
 	SkateboardMesh->WakeAllRigidBodies();
-
-	// Movement
-
-	//Movement->DisableMovement();
-	//Movement->SetComponentTickEnabled(false);
 
 	bEnabledRagdoll = true;
 
@@ -309,7 +302,7 @@ void APlayerCharacter::LookRight(float Value)
 		DesiredCameraRotation.X = -DesiredCameraRotation.X;
 }
 
-void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
+void APlayerCharacter::UpdateCameraRotation(const float DeltaTime)
 {
 	// Clamp rotation
 	DesiredCameraRotation.X = FMath::Clamp(DesiredCameraRotation.X, -CameraRotationYawAngle, CameraRotationYawAngle);
@@ -328,9 +321,9 @@ void APlayerCharacter::UpdateCameraRotation(float DeltaTime)
 
 
 	// Set rotation of camera 
-	FVector point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraRotation.X - 180.f, 0.f) + FVector{0.f, 0.f, CameraRotation.Y};
-	FVector Direction = FVector(0, 0, 0) - point;
-	FRotator NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
+	const auto Point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraRotation.X - 180.f, 0.f) + FVector{0.f, 0.f, CameraRotation.Y};
+	const auto Direction = FVector(0, 0, 0) - Point;
+	const auto NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
 	SpringArm->SetRelativeRotation(NewLocalRot);
 	SpringArm->TargetArmLength = DefaultSpringArmLength * Direction.Size();
@@ -350,8 +343,8 @@ bool APlayerCharacter::TraceSkateboard()
 	if (!IsSocketsValid())
 		return false;
 
-	FTransform LinetraceFront = LinetraceSocketFront->GetSocketTransform(SkateboardMesh);
-	FTransform LinetraceBack = LinetraceSocketBack->GetSocketTransform(SkateboardMesh);
+	const auto LinetraceFront = LinetraceSocketFront->GetSocketTransform(SkateboardMesh);
+	const auto LinetraceBack = LinetraceSocketBack->GetSocketTransform(SkateboardMesh);
 
 	FCollisionObjectQueryParams ObjParams;
 	ObjParams.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
@@ -359,7 +352,7 @@ bool APlayerCharacter::TraceSkateboard()
 	// Making the trace distance really short makes it happen more often over inclines that only 1 or 0 hits are recorded.
 	// This directly affects the rate of which we change to the falling movement mode. This definitely needs more tweaking.
 	// Use the bDebugMovement bool in the editor to visualize this (and the projectile prediction above).
-	float TraceDistance = 20.f;
+	const float TraceDistance = 20.f;
 
 	FVector Start = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * TraceDistance);
 	FVector End = LinetraceFront.GetLocation() + (FVector(0, 0, 1) * -TraceDistance);
@@ -446,16 +439,16 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		if (!TraceSkateboard())
 			return;
 
-		auto traceResults = GetSkateboardTraceResults();
+		auto TraceResults = GetSkateboardTraceResults();
 
 		// Both hits:
-		if (traceResults.Front.bBlockingHit && traceResults.Back.bBlockingHit)
+		if (TraceResults.Front.bBlockingHit && TraceResults.Back.bBlockingHit)
 		{
-			auto dot = FVector::DotProduct(traceResults.Front.ImpactNormal, traceResults.Back.ImpactNormal);
+			auto dot = FVector::DotProduct(TraceResults.Front.ImpactNormal, TraceResults.Back.ImpactNormal);
 			if (dot != 0)
 			{
-				auto newNormal = (traceResults.Front.ImpactNormal + traceResults.Back.ImpactNormal).GetSafeNormal();
-				auto DesiredRotation = GetDesiredRotation(newNormal);
+				auto NewNormal = (TraceResults.Front.ImpactNormal + TraceResults.Back.ImpactNormal).GetSafeNormal();
+				auto DesiredRotation = GetDesiredRotation(NewNormal);
 				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * dot));
 			}
 
@@ -463,10 +456,10 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			// If some combination of normals changing here is true, we need to switch movement mode to falling.
 		}
 		// One hit:
-		else if (traceResults.Front.bBlockingHit || traceResults.Back.bBlockingHit)
+		else if (TraceResults.Front.bBlockingHit || TraceResults.Back.bBlockingHit)
 		{
-			auto &result = traceResults.Front.bBlockingHit ? traceResults.Front : traceResults.Back;
-			auto DesiredRotation = GetDesiredRotation(result.ImpactNormal);
+			auto& Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
+			auto DesiredRotation = GetDesiredRotation(Result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 
 			// Turn on falling just in case we are at an edge/incline and the velocity is great enough to get some air
@@ -482,12 +475,12 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 }
 
 
-FQuat APlayerCharacter::GetDesiredRotation(FVector DestinationNormal) const
+FQuat APlayerCharacter::GetDesiredRotation(const FVector& DestinationNormal) const
 {
-	FVector Right = FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
-	FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
+	const FVector Right = FVector::CrossProduct(DestinationNormal, GetActorForwardVector());
+	const FVector Forward = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
 
-	FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
+	const FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
 
 	return Rot.Quaternion();
 }
@@ -531,19 +524,16 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 
 void APlayerCharacter::DropCurrentObject()
 {
-	if (auto Obj = Inventory[CurrentItemIndex])
+	if (const auto Obj = Inventory[CurrentItemIndex])
 	{
 		PickupBlacklist.RemoveSingle(Obj);
 
-		FVector SpawnPos = FVector::ZeroVector;
-		FVector FinalVelocity = FVector::ZeroVector;
-
 		//if (bCurrentlyHoldingThrow)
 		//{
-			auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
-			auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
-			SpawnPos = GetActorLocation() + (Dir * 200.f);
-			FinalVelocity = VelProject + (Dir * ThrowStrength);
+		const auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
+		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
+		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
+		const auto FinalVelocity = VelProject + (Dir * ThrowStrength);
 		//}
 		//else
 		//{

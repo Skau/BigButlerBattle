@@ -23,7 +23,7 @@ class BIGBUTLERBATTLE_API UButlerGameInstance : public UGameInstance
 public:
     void Init() override;
 
-	int GetCurrentRandomSeed() { return Seed; }
+	int GetCurrentRandomSeed() const { return Seed; }
 
 	TArray<FPlayerOptions> PlayerOptions;
 

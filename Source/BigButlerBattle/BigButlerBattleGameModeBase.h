@@ -48,7 +48,7 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	ASpawnpoint* GetRandomSpawnpoint(ERoomSpawn Room, FVector Position);
+	ASpawnpoint* GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position);
 
 protected:
 	void BeginPlay() override;
@@ -79,13 +79,13 @@ private:
 	TArray<APlayerCharacterController*> Controllers;
 
 	UFUNCTION()
-	void OnGameFinished(int ControllerID);
+	void OnGameFinished(int ControllerID) const;
 	UFUNCTION()
-	void OnPlayerPaused(int ControllerID);
+	void OnPlayerPaused(int ControllerID) const;
 	UFUNCTION()
-	void OnPlayerContinued(int ControllerID);
+	void OnPlayerContinued(int ControllerID) const;
 	UFUNCTION()
-	void OnPlayerQuit();
+	void OnPlayerQuit() const;
 
 	int RemainingTasksToCreate = 0;
 
@@ -101,7 +101,7 @@ private:
 	 Helper function that returns all tasks found in world.
 	 Return value is a TMap where key is the type of task and the value is an array containing the tasks
 	*/
-	TMap<EObjectType, TArray<UTask*>> GetWorldTaskData();
+	TMap<EObjectType, TArray<UTask*>> GetWorldTaskData() const;
 
 	/*
 	 Helper function that returns all tasks that needs to be created

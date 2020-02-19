@@ -6,7 +6,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "Player/PlayerCharacterController.h"
-#include "Player/PlayerCharacter.h"
 #include "UI/PauseWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
@@ -14,9 +13,7 @@
 #include "EngineUtils.h"
 #include "Math/RandomStream.h"
 #include "Tasks/Task.h"
-#include "King/King.h"
 #include "Utils/btd.h"
-#include "GameFramework/PlayerStart.h"
 #include "UI/GameFinishedWidget.h"
 #include "Utils/Spawnpoint.h"
 
@@ -25,9 +22,9 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	Super::BeginPlay();
 
 	// Get all controllers
-	for (TActorIterator<APlayerCharacterController> iter(GetWorld()); iter; ++iter)
+	for (TActorIterator<APlayerCharacterController> Iter(GetWorld()); Iter; ++Iter)
 	{
-		Controllers.Add(*iter);
+		Controllers.Add(*Iter);
 	}
 
 	// If in editor this can happen
@@ -49,10 +46,10 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 	// Get player start locations
 	TArray<ASpawnpoint*> PlayerStarts;
-	for (TActorIterator<ASpawnpoint> iter(GetWorld()); iter; ++iter)
+	for (TActorIterator<ASpawnpoint> Iter(GetWorld()); Iter; ++Iter)
 	{
-		if(iter->bIsStartSpawn)
-			PlayerStarts.Add(*iter);
+		if(Iter->bIsStartSpawn)
+			PlayerStarts.Add(*Iter);
 	}
 
 	if(!PlayerStarts.Num())
@@ -129,24 +126,24 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	});
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerPaused(int ID)
+void ABigButlerBattleGameModeBase::OnPlayerPaused(int ControllerID) const
 {
 	if (!PauseWidget->IsVisible())
 	{
 		PauseWidget->SetVisibility(ESlateVisibility::Visible);
-		auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
+		const auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
 		PauseWidget->FocusWidget(Controller);
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
 	else
 	{
-		OnPlayerContinued(ID);
+		OnPlayerContinued(ControllerID);
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerContinued(int ID)
+void ABigButlerBattleGameModeBase::OnPlayerContinued(const int ControllerID) const
 {
-	auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
+	auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
 
 	if (PauseWidget->IsVisible())
 	{
@@ -156,26 +153,26 @@ void ABigButlerBattleGameModeBase::OnPlayerContinued(int ID)
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnGameFinished(int ID)
+void ABigButlerBattleGameModeBase::OnGameFinished(const int ControllerID) const
 {
 	if (!GameFinishedWidget)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Game finished widget not setup!"));
-		UE_LOG(LogTemp, Warning, TEXT("Player %i won!"), ID +1);
+		UE_LOG(LogTemp, Warning, TEXT("Player %i won!"), ControllerID +1);
 		UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 	}
 
 	if (!GameFinishedWidget->IsVisible())
 	{
-		GameFinishedWidget->SetWonText("Player " + FString::FromInt(ID + 1) + " won!");
+		GameFinishedWidget->SetWonText("Player " + FString::FromInt(ControllerID + 1) + " won!");
 		GameFinishedWidget->SetVisibility(ESlateVisibility::Visible);
-		auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
+		const auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
 		GameFinishedWidget->FocusWidget(Controller);
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerQuit()
+void ABigButlerBattleGameModeBase::OnPlayerQuit() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("GM: Player Quit"));
 
@@ -185,12 +182,12 @@ void ABigButlerBattleGameModeBase::OnPlayerQuit()
 
 void ABigButlerBattleGameModeBase::SetupSpawnpoints()
 {
-	for (TActorIterator<ASpawnpoint> iter(GetWorld()); iter; ++iter)
+	for (TActorIterator<ASpawnpoint> Iter(GetWorld()); Iter; ++Iter)
 	{
-		if (!Spawnpoints.Find(iter->RoomSpawn))
-			Spawnpoints.Add(iter->RoomSpawn);
+		if (!Spawnpoints.Find(Iter->RoomSpawn))
+			Spawnpoints.Add(Iter->RoomSpawn);
 
-		Spawnpoints[iter->RoomSpawn].Add(*iter);
+		Spawnpoints[Iter->RoomSpawn].Add(*Iter);
 	}
 }
 
@@ -291,18 +288,18 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	EndTaskGeneration(Tasks);
 }
 
-TMap<EObjectType, TArray<UTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData()
+TMap<EObjectType, TArray<UTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData() const
 {
 	TMap<EObjectType, TArray<UTask*>> WorldTaskData;
 
 	// Get all actors that are task objects
-	for (TActorIterator<ATaskObject> itr(GetWorld()); itr; ++itr)
+	for (TActorIterator<ATaskObject> Itr(GetWorld()); Itr; ++Itr)
 	{
-		if (!itr)
+		if (!Itr)
 			continue;
 
 		// Get the task
-		auto Task = itr->GetTaskData();
+		auto Task = Itr->GetTaskData();
 
 		// If the task is legit
 		if (Task && Task->Type != EObjectType::None)
@@ -319,7 +316,7 @@ TMap<EObjectType, TArray<UTask*>> ABigButlerBattleGameModeBase::GetWorldTaskData
 	return WorldTaskData;
 }
 
-TArray<UTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UTask*>>& WorldTaskData, bool bShouldGenerateMinTasks)
+TArray<UTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UTask*>>& WorldTaskData, const bool bShouldGenerateMinTasks)
 {
 	TArray<UTask*> Tasks;
 
@@ -373,11 +370,11 @@ TArray<UTask*> ABigButlerBattleGameModeBase::GenerateTasks(const TArray<EObjectT
 	return Tasks;
 }
 
-TArray<UTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UTask*>& TaskData, const FRandomStream& Stream, int Min, int Max)
+TArray<UTask*> ABigButlerBattleGameModeBase::ProcessWorldTasks(TArray<UTask*>& TaskData, const FRandomStream& Stream, const int Min, const int Max)
 {
 	TArray<UTask*> Tasks;
 
-	int TasksToAdd = Stream.RandRange(Min, Max);
+	const int TasksToAdd = Stream.RandRange(Min, Max);
 
 	if (TasksToAdd == 0)
 		return Tasks;
@@ -416,18 +413,9 @@ void ABigButlerBattleGameModeBase::EndTaskGeneration(TArray<UTask*> Tasks)
 
 	GeneratePlayerTasks(Tasks);
 
-	double TaskGenerationEndTime = FPlatformTime::Seconds();
+	const double TaskGenerationEndTime = FPlatformTime::Seconds();
 
 	UE_LOG(LogTemp, Warning, TEXT("Task generation finished. Total time used: %f"), TaskGenerationEndTime - TaskGenerationStartTime);
-
-	//FTimerDelegate TimerCallback;
-	//TimerCallback.BindLambda([&]
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Generating Extra Task"));
-	//		GenerateExtraTask();
-	//	});
-	//FTimerHandle Handle;
-	//GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 3.f, true);
 }
 
 void ABigButlerBattleGameModeBase::GeneratePlayerTasks(TArray<UTask*> Tasks)
@@ -458,14 +446,14 @@ void ABigButlerBattleGameModeBase::GenerateExtraTask()
 	GeneratePlayerTasks(Tasks);
 }
 
-ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(ERoomSpawn Room, FVector Position)
+ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position)
 {
 	float ClosestDistance = MAX_FLT;
 	ASpawnpoint* ClosestSpawnpoint = nullptr;
 	
 	for (auto& Spawnpoint : Spawnpoints[Room])
 	{
-		auto Distance = FVector::Distance(Position, Spawnpoint->GetActorLocation());
+		const auto Distance = FVector::Distance(Position, Spawnpoint->GetActorLocation());
 		if (Distance < ClosestDistance)
 		{
 			ClosestSpawnpoint = Spawnpoint;

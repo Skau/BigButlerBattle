@@ -41,7 +41,7 @@ public:
 
 	TArray<TPair<UTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
 
-	void SetPlayerTaskName(int Index, FString Name);
+	void SetPlayerTaskName(int Index, const FString& Name) const;
 	void SetPlayerTaskState(int Index, ETaskState NewState);
 
 	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);

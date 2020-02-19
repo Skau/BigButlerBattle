@@ -38,23 +38,24 @@ public:
 	/**
 	 * Returns the locations of the skateboard feet sockets in world space.
 	 */
-	FFeetTransform GetSkateboardFeetTransform(const USkeletalMeshComponent& skateboardMesh) const;
+	FFeetTransform GetSkateboardFeetTransform(const USkeletalMeshComponent& SkateboardMesh) const;
 	/**
 	 * Returns the locations of the skateboard feet sockets in component space.
 	 */
-	FFeetTransform GetComponentSkateboardFeetTransform(const USkeletalMeshComponent& skateboardMesh) const;
+	FFeetTransform GetComponentSkateboardFeetTransform(const USkeletalMeshComponent& SkateboardMesh) const;
 
-	FFeetTransform GetSkateboardFeetTransformInButlerSpace(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh) const;
+	FFeetTransform GetSkateboardFeetTransformInButlerSpace(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh) const;
 
-	FTransform GetLocalSkateboardToButlerTransform(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh) const;
-	FTransform GetLocalButlerToSkateboardTransform(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh) const;
+	FTransform GetLocalSkateboardToButlerTransform(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh) const;
+	FTransform GetLocalButlerToSkateboardTransform(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& skateboardMesh) const;
 
 protected:
-    FRotator GetSkateboardRotationOffset(const USkeletalMeshComponent& skateboardMesh) const;
+    FRotator GetSkateboardRotationOffset(const USkeletalMeshComponent& SkateboardMesh) const;
 
-    FVector GetFootLocation(const FVector& socketPos, FCSPose<FCompactPose>& pose, const USkeletalMeshComponent& skateboardMesh, bool left = true) const;
-    FVector GetFootLocation(const FVector& socketPos, FCSPose<FCompactPose>& pose, FQuat feetRotationOffset, bool left = true) const;
+    FVector GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const USkeletalMeshComponent& SkateboardMesh, const bool& bLeft
+	                            = true) const;
+    FVector GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const FQuat& FeetRotationOffset, const bool& bLeft = true) const;
 
-    FVector GetSocketPos(const USkeletalMeshComponent& butlerMesh, const USkeletalMeshComponent& skateboardMesh, bool left = true) const;
+    FVector GetSocketPos(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh, const bool& bLeft = true) const;
 
 };

@@ -19,14 +19,14 @@ void UMainMenuPlayWidget::NativeConstruct()
 
 bool UMainMenuPlayWidget::Initialize()
 {
-	bool initialized = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	PlayerWidget_0->MainPlayWidget = this;
 	PlayerWidget_1->MainPlayWidget = this;
 	PlayerWidget_2->MainPlayWidget = this;
 	PlayerWidget_3->MainPlayWidget = this;
 
-	return initialized;
+	return bInit;
 }
 
 void UMainMenuPlayWidget::BackToMainMenu()
