@@ -38,9 +38,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->SetRelativeLocation(FVector(0, 60.f, 0.f));
+	SpringArm->SetRelativeLocation(FVector(0, 80.f, 0.f));
 	SpringArm->SetRelativeRotation(FRotator(5.f, 0, 0));
-	SpringArm->TargetArmLength = 250.f;
+	SpringArm->TargetArmLength = 200.f;
 	SpringArm->bEnableCameraLag = true;
 	SpringArm->CameraLagSpeed = 100.f;
 	SpringArm->bEnableCameraRotationLag = true;
@@ -69,7 +69,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
 	TaskObjectCameraCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
-	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
+	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f + SpringArm->GetRelativeRotation().Pitch, 0.f, 0.f));
 	TaskObjectCameraCollision->InitCapsuleSize(128.f, 256.f);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
