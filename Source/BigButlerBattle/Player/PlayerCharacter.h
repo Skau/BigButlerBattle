@@ -166,8 +166,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Pitch Height"))
 	float CameraRotationPitchHeight = 1.2f;
 
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-	float CustomSpringArmLength = 450.f;
+	float CustomSpringArmLength = 300.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCameraComponent* Camera;
@@ -175,6 +177,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent *SpringArm;
 
+
+	FVector2D DefaultCameraRotation = {};
 	// The target rotation set by the player
 	FVector2D DesiredCameraRotation = {};
 	// The current actual rotation

@@ -38,8 +38,13 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->SetRelativeLocation(FVector(0, 0, 50.f));
-	SpringArm->SetRelativeRotation(FRotator(-10.f, 0, 0));
+	SpringArm->SetRelativeLocation(FVector(0, 60.f, 0.f));
+	SpringArm->SetRelativeRotation(FRotator(5.f, 0, 0));
+	SpringArm->TargetArmLength = 250.f;
+	SpringArm->bEnableCameraLag = true;
+	SpringArm->CameraLagSpeed = 100.f;
+	SpringArm->bEnableCameraRotationLag = true;
+	SpringArm->CameraRotationLagSpeed = 15.f;
 
 	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
@@ -112,6 +117,9 @@ void APlayerCharacter::BeginPlay()
 
 	LinetraceSocketFront = SkateboardMesh->GetSocketByName("LinetraceFront");
 	LinetraceSocketBack = SkateboardMesh->GetSocketByName("LinetraceBack");
+
+	DefaultCameraRotation.X = SpringArm->GetRelativeRotation().Yaw;
+	DefaultCameraRotation.Y = SpringArm->GetRelativeRotation().Pitch;
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
 	check(Movement != nullptr);
@@ -325,7 +333,7 @@ void APlayerCharacter::UpdateCameraRotation(const float DeltaTime)
 	const auto Direction = FVector(0, 0, 0) - Point;
 	const auto NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
 
-	SpringArm->SetRelativeRotation(NewLocalRot);
+	SpringArm->SetRelativeRotation(FRotator(DefaultCameraRotation.Y, DefaultCameraRotation.X, 0) - NewLocalRot);
 	SpringArm->TargetArmLength = DefaultSpringArmLength * Direction.Size();
 }
 

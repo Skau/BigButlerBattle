@@ -219,14 +219,14 @@ void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
 		return;
 	}
 	
-	
 	if (Spawnpoint)
 	{
 		const auto SpawnTransform = Spawnpoint->GetTransform();
 
 		PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
-		PlayerCharacter->SetCustomSpringArmLength();
+		if(bUseCustomSpringArmLength)
+			PlayerCharacter->SetCustomSpringArmLength();
 
 		PlayerCharacter->CurrentRoom = Spawnpoint->RoomSpawn;
 

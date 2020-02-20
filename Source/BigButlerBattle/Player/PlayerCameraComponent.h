@@ -29,10 +29,10 @@ protected:
 	float FieldOfViewSpeedChange = 5.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	float MinFOV = 105.f;
+	float MinFOV = 110.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	float MaxFOV = 120.f;
+	float MaxFOV = 125.f;
 
 private:
 	APlayerCharacter* Player;
