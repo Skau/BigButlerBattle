@@ -229,6 +229,7 @@ public:
 	USkeletalMeshComponent* GetSkateboardMesh() { return SkateboardMesh; }
 
 	FRotator GetSkateboardRotation() const;
+	FVector GetSkateboardLocation() const;
 
 	UFUNCTION(BlueprintPure)
 	FSkateboardTraceResult GetSkateboardTraceResults() const { return LastTraceResult;  }

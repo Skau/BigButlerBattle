@@ -43,7 +43,10 @@ public:
 	uint8 PointCount;
 
 	float SplinePos = -1.f;
-	FVector StartWorldPos;
+	float StartDistanceToCurve;
+	FVector StartVelocity;
+	FRotator StartRotation;
+	float TravelTime{0.f};
 
 public:
 	FSplineInfo(USplineComponent* Spline = nullptr);
@@ -126,10 +129,6 @@ public:
 	// Parameter is mode that ended
 	FCustomMovementChangedSignature OnCustomMovementEnd;
 
-	/// Grinding movement:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
-	FSplineInfo CurrentSpline;
-
 	UPlayerCharacterMovementComponent();
 
 	UFUNCTION(BlueprintPure)
@@ -185,7 +184,6 @@ protected:
 	void PhysCustom(float deltaTime, int32 Iterations) override;
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
-	void PhysGrinding(float deltaTime, int32 Iterations);
 
 	/** Handle falling movement. */
 	void PhysFalling(float deltaTime, int32 Iterations) override;
@@ -214,4 +212,27 @@ protected:
 	 * Both normal rotation and handbraking rotation.
 	 */
 	float CalcRotation() const;
+
+
+
+
+	// ================================== Grinding =================================================
+public:
+	/// Grinding movement:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
+	FSplineInfo CurrentSpline;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	bool bUseConstantEnteringSpeed = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
+	float GrindingEnteringSpeed = 1600.f;
+
+	void PhysGrinding(float deltaTime, int32 Iterations);
+
+	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime);
+	void CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime);
+
+	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
 };

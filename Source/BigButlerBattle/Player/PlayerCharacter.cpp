@@ -368,6 +368,11 @@ FRotator APlayerCharacter::GetSkateboardRotation() const
 	return SkateboardMesh->GetRelativeRotation();
 }
 
+FVector APlayerCharacter::GetSkateboardLocation() const
+{
+	return SkateboardMesh->GetRelativeLocation();
+}
+
 bool APlayerCharacter::TraceSkateboard()
 {
 	if (!IsSocketsValid())
