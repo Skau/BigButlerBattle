@@ -44,7 +44,7 @@ public:
 
 	float SplinePos = -1.f;
 	float StartDistanceToCurve;
-	FVector StartVelocity;
+	float StartVelocity;
 	FRotator StartRotation;
 	float TravelTime{0.f};
 
@@ -231,7 +231,7 @@ protected:
 
 	void PhysGrinding(float deltaTime, int32 Iterations);
 
-	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime);
+	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime, APlayerCharacter* Owner);
 	void CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime);
 
 	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
