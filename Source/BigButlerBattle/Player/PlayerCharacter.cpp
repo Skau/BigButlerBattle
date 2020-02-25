@@ -21,6 +21,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "King/King.h"
 #include "PlayerCharacterController.h"
+#include "Components/AudioComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -99,6 +100,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	PlayersInRangeCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 	PlayersInRangeCollision->SetRelativeLocation(FVector{ 0, 0, 32.f });
 	PlayersInRangeCollision->SetBoxExtent(FVector{ 128.f, 256.f, 128.f });
+
+
+	// Sound
+	Sound = CreateDefaultSubobject<UAudioComponent>("Audio Component");
+	Sound->SetupAttachment(RootComponent);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -138,7 +144,7 @@ void APlayerCharacter::BeginPlay()
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
 
 	PlayersInRangeCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap);
-	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);
+	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);	
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -169,6 +175,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 	UpdateSkateboardRotation(DeltaTime);
 
 	UpdateClosestTaskObject();
+
+	// Update sound
+	if (Sound && Movement)
+	{
+		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetAudioVolumeMult());
+	}
 }
 
 
