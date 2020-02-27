@@ -27,7 +27,7 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 	GENERATED_BODY()
 
 public:
-	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
+	float GetMaxAccelerationVelocity() const { return CustomMaxAccelerationVelocity; }
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
@@ -123,7 +123,7 @@ public:
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
 	 */
-	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float input = 0.f);
+	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float Input = 0.f);
 
 	/**
 	 * Multiplies kicking acceleration with a factor to make up for different tick speeds.
@@ -133,23 +133,23 @@ public:
 	/**
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
-	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float input = 0.f);
+	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float Input = 0.f);
 
 	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 
 protected:
 	void BeginPlay() override;
 
-	void TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction) override;
+	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** @note Movement update functions should only be called through StartNewPhysics()*/
-	void PhysCustom(float deltaTime, int32 Iterations) override;
+	void PhysCustom(float DeltaTime, int32 Iterations) override;
 
-	void PhysSkateboard(float deltaTime, int32 Iterations);
-	void PhysGrinding(float deltaTime, int32 Iterations);
+	void PhysSkateboard(float DeltaTime, int32 Iterations);
+	void PhysGrinding(float DeltaTime, int32 Iterations);
 
 	/** Handle falling movement. */
-	void PhysFalling(float deltaTime, int32 Iterations) override;
+	void PhysFalling(float DeltaTime, int32 Iterations) override;
 
 	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
@@ -157,7 +157,7 @@ protected:
 
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
-	void TryFallOff();
+	void TryFallOff() const;
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
@@ -170,7 +170,7 @@ protected:
 	float GetForwardInput() const { return InputDir.X; }
 	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
 	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	float CalcSidewaysBreaking(const FVector& forward) const;
+	float CalcSidewaysBreaking(const FVector& Forward) const;
 
 	/**
 	 * Returns current rotation amount.

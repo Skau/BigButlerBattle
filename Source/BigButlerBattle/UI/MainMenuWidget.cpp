@@ -5,6 +5,7 @@
 #include "MainMenuPlayWidget.h"
 #include "MainMenuPlayerWidget.h"
 #include "Components/Button.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 UMainMenuWidget::UMainMenuWidget(const FObjectInitializer& ObjectInitializer)
@@ -19,7 +20,7 @@ void UMainMenuWidget::NativeConstruct()
 
 bool UMainMenuWidget::Initialize()
 {
-	bool initialized = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	Button_Play->OnClicked.AddDynamic(this, &UMainMenuWidget::OnPlayPressed);
 	Buttons.Add(Button_Play);
@@ -32,21 +33,35 @@ bool UMainMenuWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Play;
 
-	return initialized;
+	return bInit;
 }
 
 void UMainMenuWidget::OnPlayPressed()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Play pressed"));
+	if (!IsValid(PlayWidget))
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayWidget is not valid!"));
+		return;
+	}
+
 	SetVisibility(ESlateVisibility::Hidden);
 	if(PlayWidget->MainMenuWidget != this)
 		PlayWidget->MainMenuWidget = this;
 
 	PlayWidget->SetVisibility(ESlateVisibility::Visible);
-	
-	PlayWidget->PlayerWidget_0->FocusWidget(Controllers[0], PlayWidget->PlayerWidget_0->Button_Join);
-	PlayWidget->PlayerWidget_1->FocusWidget(Controllers[1], PlayWidget->PlayerWidget_1->Button_Join);
-	PlayWidget->PlayerWidget_2->FocusWidget(Controllers[2], PlayWidget->PlayerWidget_2->Button_Join);
-	PlayWidget->PlayerWidget_3->FocusWidget(Controllers[3], PlayWidget->PlayerWidget_3->Button_Join);
+
+	if(auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		PlayWidget->PlayerWidget_0->FocusWidget(Player, PlayWidget->PlayerWidget_0->Button_Join);
+
+	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 1))
+		PlayWidget->PlayerWidget_1->FocusWidget(Player, PlayWidget->PlayerWidget_1->Button_Join);
+
+	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 2))
+		PlayWidget->PlayerWidget_2->FocusWidget(Player, PlayWidget->PlayerWidget_2->Button_Join);
+
+	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 3))
+		PlayWidget->PlayerWidget_3->FocusWidget(Player, PlayWidget->PlayerWidget_3->Button_Join);
 
 	DefaultWidgetToFocus = Button_Play;
 }

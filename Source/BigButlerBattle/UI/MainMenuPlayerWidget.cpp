@@ -4,10 +4,8 @@
 #include "MainMenuPlayerWidget.h"
 #include "MainMenuPlayWidget.h"
 #include "Components/TextBlock.h"
-#include "Components/CheckBox.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/Button.h"
-#include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
 #include "ButlerGameInstance.h"
@@ -18,7 +16,7 @@ UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectIni
 
 bool UMainMenuPlayerWidget::Initialize()
 {
-	bool bInit =  Super::Initialize();
+	const bool bInit =  Super::Initialize();
 
 	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinPressed);
 	Buttons.Add(Button_Join);
@@ -43,14 +41,14 @@ bool UMainMenuPlayerWidget::Initialize()
 	return bInit;
 }
 
-void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
+void UMainMenuPlayerWidget::OnPlayerControllerSet()
 {
 	GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	check(GameInstance != nullptr);
 
-	ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
+	ID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 
-	auto Options = GameInstance->PlayerOptions[ID];
+	const auto Options = GameInstance->PlayerOptions[ID];
 	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
 	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
 
@@ -60,19 +58,21 @@ void UMainMenuPlayerWidget::OnPlayerCharacterControllerSet()
 void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
 {
 	CurrentIndex = NewIndex;
-	Switcher->SetActiveWidgetIndex((int)CurrentIndex);
+	Switcher->SetActiveWidgetIndex(static_cast<int>(CurrentIndex));
 
 	switch (CurrentIndex)
 	{
 	case EWidgetSwitcherIndex::Join:
-		FocusWidget(OwningCharacterController, Button_Join);
+		FocusWidget(OwningPlayerController, Button_Join);
 		break;
 	case EWidgetSwitcherIndex::Main:
-		FocusWidget(OwningCharacterController, Button_Ready);
+		FocusWidget(OwningPlayerController, Button_Ready);
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
-		FocusWidget(OwningCharacterController, Button_Back);
+		FocusWidget(OwningPlayerController, Button_Back);
 		break;
+	case EWidgetSwitcherIndex::Ready: break;
+	default: ;
 	}
 }
 
@@ -107,10 +107,10 @@ void UMainMenuPlayerWidget::OnJoinPressed()
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 }
 
-void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined)
+void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined) const
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ID);
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
+	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ControllerID);
 }
 
 void UMainMenuPlayerWidget::OnReadyPressed()
@@ -122,10 +122,10 @@ void UMainMenuPlayerWidget::OnReadyPressed()
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Ready);
 }
 
-void UMainMenuPlayerWidget::UpdateReadyStatus(bool bIsReady)
+void UMainMenuPlayerWidget::UpdateReadyStatus(const bool bIsReady) const
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(OwningCharacterController);
-	OnToggleReadyGame.ExecuteIfBound(bIsReady, ID);
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
+	OnToggleReadyGame.ExecuteIfBound(bIsReady, ControllerID);
 }
 
 void UMainMenuPlayerWidget::OnCameraOptionsPressed()

@@ -9,9 +9,9 @@ void UButlerGameInstance::Init()
 
 	if (!bUseCustomSeed)
 	{
-		FRandomStream stream;
-		stream.GenerateNewSeed();
-		Seed = stream.GetCurrentSeed();
+		FRandomStream Stream;
+		Stream.GenerateNewSeed();
+		Seed = Stream.GetCurrentSeed();
 	}
 
 	PlayerOptions.AddDefaulted(4);

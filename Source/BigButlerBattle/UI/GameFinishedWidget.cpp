@@ -7,7 +7,7 @@
 
 bool UGameFinishedWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	SetVisibility(ESlateVisibility::Hidden);
 
@@ -20,7 +20,7 @@ bool UGameFinishedWidget::Initialize()
 	return bInit;
 }
 
-void UGameFinishedWidget::SetWonText(FString Text)
+void UGameFinishedWidget::SetWonText(const FString& Text) const
 {
 	WonText->SetText(FText::FromString(Text));
 }

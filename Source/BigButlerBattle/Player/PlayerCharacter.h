@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
 #include "Engine/EngineTypes.h"
 #include "Utils/Spawnpoint.h"
@@ -26,6 +25,7 @@ class UTask;
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
+DECLARE_DELEGATE_OneParam(FDeliverTasksSignature, TArray<ATaskObject*>&)
 DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
 
 // Structs
@@ -68,11 +68,11 @@ public:
 	ERoomSpawn CurrentRoom;
 
 protected:
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+	void SetupPlayerInputComponent(class UInputComponent* Input) override;
 
-	virtual void Tick(float DeltaTime) override;
+	void Tick(float DeltaTime) override;
 
 
 
@@ -104,7 +104,7 @@ protected:
 	float CrashAngleThreshold = 45.f;
 
 public:
-	void EnableRagdoll(FVector Impulse = FVector::ZeroVector, FVector HitLocation = FVector::ZeroVector);
+	void EnableRagdoll(const FVector& Impulse = FVector::ZeroVector, const FVector& HitLocation = FVector::ZeroVector);
 	bool HasEnabledRagdoll() const { return bEnabledRagdoll; }
 	bool CanFall() const { return bCanFall; }
 	float GetSidewaysForceFallOffThreshold() const { return SidewaysForceFallOffThreshold; }
@@ -128,7 +128,7 @@ public:
 
 	void StartJump();
 
-	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() { return Movement; }
+	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() const { return Movement; }
 
 protected:
 	void MoveForward(float Value);
@@ -166,8 +166,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (DisplayName = "Rotation Pitch Height"))
 	float CameraRotationPitchHeight = 1.2f;
 
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-	float CustomSpringArmLength = 450.f;
+	float CustomSpringArmLength = 300.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCameraComponent* Camera;
@@ -175,6 +177,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent *SpringArm;
 
+
+	FVector2D DefaultCameraRotation = {};
 	// The target rotation set by the player
 	FVector2D DesiredCameraRotation = {};
 	// The current actual rotation
@@ -185,9 +189,9 @@ protected:
 public:
 	void SetCustomSpringArmLength();
 
-	void SetCameraInvertPitch(bool Value) { CameraInvertPitch = Value; }
+	void SetCameraInvertPitch(const bool& Value) { CameraInvertPitch = Value; }
 
-	void SetCameraInvertYaw(bool Value) { CameraInvertYaw = Value; }
+	void SetCameraInvertYaw(const bool& Value) { CameraInvertYaw = Value; }
 
 protected:
 	void UpdateCameraRotation(float DeltaTime);
@@ -207,9 +211,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	USkeletalMeshComponent* SkateboardMesh;
 
-	const USkeletalMeshSocket *LinetraceSocketFront = nullptr;
+	const USkeletalMeshSocket* LinetraceSocketFront = nullptr;
 
-	const USkeletalMeshSocket *LinetraceSocketBack = nullptr;
+	const USkeletalMeshSocket* LinetraceSocketBack = nullptr;
 
 	FSkateboardTraceResult LastTraceResult;
 
@@ -223,7 +227,7 @@ protected:
 	bool bDebugMovement = false;
 
 public:
-	USkeletalMeshComponent* GetSkateboardMesh() { return SkateboardMesh; }
+	USkeletalMeshComponent* GetSkateboardMesh() const { return SkateboardMesh; }
 
 	FRotator GetSkateboardRotation() const;
 
@@ -238,7 +242,7 @@ public:
 protected:
 	void UpdateSkateboardRotation(float DeltaTime);
 
-	FQuat GetDesiredRotation(FVector DestinationNormal) const;
+	FQuat GetDesiredRotation(const FVector& DestinationNormal) const;
 
 
 
@@ -251,8 +255,9 @@ protected:
 public:
 	FTaskObjectPickedUpSignature OnTaskObjectPickedUp;
 	FTaskObjectDroppedSignature OnTaskObjectDropped;
+	FDeliverTasksSignature OnDeliverTasks;
 
-	int GetCurrentItemIndex() { return CurrentItemIndex; }
+	int GetCurrentItemIndex() const { return CurrentItemIndex; }
 	void IncrementCurrentItemIndex();
 
 protected:

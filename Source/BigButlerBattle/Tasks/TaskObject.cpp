@@ -4,7 +4,6 @@
 #include "TaskObject.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
-#include "Materials/MaterialInstanceConstant.h"
 #include "ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Math/RandomStream.h"
@@ -30,24 +29,24 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetSimulatePhysics(true);
 
 
-	ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
-	auto DrinksDataObject = DrinksDataTableDefinition.Object;
+	const ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
+	const auto DrinksDataObject = DrinksDataTableDefinition.Object;
 	if (DrinksDataObject)
 	{
 		DrinksDataTable = DrinksDataObject;
 	}
 
-	ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Food/FoodData.FoodData'"));
-	auto FoodDataObject = FoodDataTableDefinition.Object;
+	const ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Food/FoodData.FoodData'"));
+	const auto FoodDataObject = FoodDataTableDefinition.Object;
 	if (FoodDataObject)
 	{
 		FoodDataTable = FoodDataObject;
 	}
 }
 
-void ATaskObject::SetSelected(bool Value)
+void ATaskObject::SetSelected(const bool Value) const
 {
-	DynamicMaterial->SetScalarParameterValue("Selected", (float)Value);
+	DynamicMaterial->SetScalarParameterValue("Selected", static_cast<float>(Value));
 }
 
 void ATaskObject::BeginPlay()
@@ -105,7 +104,7 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	if (PropertyName == NAME_None)
 		return;
@@ -176,7 +175,7 @@ bool ATaskObject::SetDataFromTable()
 		Stream.GenerateNewSeed();
 	}
 
-	UDataTable* DataTableToUse = nullptr;
+	UDataTable* DataTableToUse;
 
 	switch (TaskType)
 	{
@@ -198,11 +197,11 @@ bool ATaskObject::SetDataFromTable()
 		return false;
 
 	auto Rows = DataTableToUse->GetRowMap();
-	auto RowNum = Rows.Num();
+	const auto RowNum = Rows.Num();
 	if (!RowNum)
 		return false;
 
-	auto RowName = DataTableToUse->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
+	const auto RowName = DataTableToUse->GetRowNames()[Stream.RandRange(0, RowNum - 1)];
 	TaskData = NewObject<UTask>(this, RowName);
 	TaskData->Name = RowName.ToString();
 
@@ -211,7 +210,7 @@ bool ATaskObject::SetDataFromTable()
 
 	if (TaskData && TaskData->Type != EObjectType::None)
 	{
-		if (auto Mesh = TaskData->Mesh)
+		if (const auto Mesh = TaskData->Mesh)
 		{
 			MeshComponent->SetStaticMesh(Mesh);
 		}
@@ -220,7 +219,7 @@ bool ATaskObject::SetDataFromTable()
 			MeshComponent->SetStaticMesh((DefaultMesh) ? DefaultMesh : nullptr);
 		}
 
-		if (auto Material = TaskData->Material)
+		if (const auto Material = TaskData->Material)
 		{
 			MeshComponent->SetMaterial(0, Material);
 		}
@@ -243,7 +242,7 @@ bool ATaskObject::SetDataFromAssetData()
 	{
 		TaskType = TaskData->Type;
 
-		if (auto Mesh = TaskData->Mesh)
+		if (const auto Mesh = TaskData->Mesh)
 		{
 			MeshComponent->SetStaticMesh(Mesh);
 		}
@@ -252,7 +251,7 @@ bool ATaskObject::SetDataFromAssetData()
 			MeshComponent->SetStaticMesh((DefaultMesh) ? DefaultMesh : nullptr);
 		}
 
-		if (auto Material = TaskData->Material)
+		if (const auto Material = TaskData->Material)
 		{
 			MeshComponent->SetMaterial(0, Material);
 		}
@@ -316,7 +315,6 @@ void ATaskObject::OnPickedUp()
 
 	if (bRespawn)
 	{
-		FTransform CurrentTransform = GetTransform();
 		FTimerDelegate TimerCallback;
 		TimerCallback.BindLambda([&]
 			{
@@ -328,7 +326,7 @@ void ATaskObject::OnPickedUp()
 	}
 }
 
-void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics)
+void ATaskObject::SetEnable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics) const
 {
 	MeshComponent->SetVisibility(NewVisiblity, true);
 
@@ -340,7 +338,7 @@ void ATaskObject::SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysic
 	MeshComponent->SetGenerateOverlapEvents(NewCollision);
 }
 
-void ATaskObject::Launch(FVector Direction, float Force)
+void ATaskObject::Launch(const FVector Direction, const float Force) const
 {
 	MeshComponent->AddImpulse(Direction * Force);
 }

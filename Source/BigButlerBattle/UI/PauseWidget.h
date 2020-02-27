@@ -6,8 +6,8 @@
 #include "BaseUserWidget.h"
 #include "PauseWidget.generated.h"
 
-DECLARE_DELEGATE_OneParam(ContinueGameSignature, int);
-DECLARE_DELEGATE(QuitGameSignature);
+DECLARE_DELEGATE_OneParam(FContinueGameSignature, int);
+DECLARE_DELEGATE(FQuitGameSignature);
 
 class UTextBlock;
 class UButton;
@@ -32,14 +32,13 @@ public:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UButton* Button_Quit;
 
-    ContinueGameSignature ContinueGame;
-    QuitGameSignature QuitGame;
+    FContinueGameSignature ContinueGame;
+    FQuitGameSignature QuitGame;
 
 protected:
-    void OnPlayerCharacterControllerSet() override;
+    void OnPlayerControllerSet() override;
 
 private:
-  
     UFUNCTION()
     void OnContinuePressed();
 

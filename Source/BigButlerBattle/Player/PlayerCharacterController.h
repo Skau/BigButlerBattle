@@ -41,10 +41,8 @@ public:
 
 	TArray<TPair<UTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
 
-	void SetPlayerTaskName(int Index, FString Name);
+	void SetPlayerTaskName(int Index, const FString& Name) const;
 	void SetPlayerTaskState(int Index, ETaskState NewState);
-
-	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
 
 	void RespawnCharacter(ASpawnpoint* Spawnpoint);
 
@@ -84,6 +82,10 @@ private:
 
 	UFUNCTION()
 	void OnPlayerDroppedObject(ATaskObject* Object);
+
+	UFUNCTION()
+	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
+
 
 	void UpdatePlayerTasks();
 

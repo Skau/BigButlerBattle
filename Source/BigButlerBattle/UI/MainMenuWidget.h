@@ -33,7 +33,6 @@ public:
 
 	UMainMenuPlayWidget* PlayWidget;
 
-	TArray<APlayerCharacterController*> Controllers;
 protected:
 	void NativeConstruct() override;
 
