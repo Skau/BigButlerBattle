@@ -3,8 +3,7 @@
 
 #include "PlayerCameraComponent.h"
 #include "PlayerCharacter.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "GameFramework/PawnMovementComponent.h"
+#include "PlayerCharacterMovementComponent.h"
 
 
 UPlayerCameraComponent::UPlayerCameraComponent()
@@ -29,9 +28,9 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (!Player->HasEnabledRagdoll())
 	{
-		auto MoveComp = Player->GetMovementComponent();
-		auto MaxVel = MoveComp->GetMaxSpeed();
-		auto CurrentVel = Player->GetVelocity().Size();
+		const auto MoveComp = Player->GetPlayerCharacterMovementComponent();
+		const auto MaxVel = MoveComp->MaxCustomMovementSpeed;
+		const auto CurrentVel = Player->GetVelocity().Size();
 
 		const auto DesiredFOV = FMath::Lerp(MinFOV, MaxFOV, CurrentVel / MaxVel);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);
