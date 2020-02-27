@@ -128,8 +128,6 @@ public:
 
 	void StartJump();
 
-	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() const { return Movement; }
-
 protected:
 	void MoveForward(float Value);
 
