@@ -102,6 +102,8 @@ public:
 
 	bool IsMovingOnGround() const override;
 
+	float GetAudioVolumeMult() const;
+
 	UFUNCTION(BlueprintPure)
 	float GetRotationInput() const { return InputDir.Y; }
 

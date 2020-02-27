@@ -29,6 +29,11 @@ bool UPlayerCharacterMovementComponent::IsMovingOnGround() const
 	return (MovementMode == MOVE_Custom && CurrentCustomMovementMode == ECustomMovementType::MOVE_Skateboard || MovementMode == MOVE_Walking || MovementMode == MOVE_NavWalking) && UpdatedComponent;
 }
 
+float UPlayerCharacterMovementComponent::GetAudioVolumeMult() const
+{
+	return IsStandstill() ? 0.f : Velocity.Size() / GetMaxSpeed();
+}
+
 void UPlayerCharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
