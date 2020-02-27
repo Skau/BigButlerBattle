@@ -305,7 +305,7 @@ void APlayerCharacter::LookUp(float Value)
 
 void APlayerCharacter::LookRight(float Value)
 {
-	DesiredCameraRotation.X = Value != 0 ? -Value * CameraRotationYawAngle : 0.f;
+	DesiredCameraRotation.X = Value != 0 ? Value * CameraRotationYawAngle : 0.f;
 	if (CameraInvertYaw)
 		DesiredCameraRotation.X = -DesiredCameraRotation.X;
 }
