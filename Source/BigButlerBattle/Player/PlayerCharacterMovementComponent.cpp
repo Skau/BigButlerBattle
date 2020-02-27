@@ -49,6 +49,15 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 
 	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(DefaultCustomMovementMode));
+
+	OnCustomMovementEnd.AddLambda([&](uint8 movementMode){
+		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+		{
+			// Reset curve
+			CurrentSpline.PlayerState = FSplineInfo::STATE_Leaving;
+			CurrentSpline.bHasValue = false;
+		}
+	});
 }
 
 void UPlayerCharacterMovementComponent::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction)
@@ -544,6 +553,7 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 
 
 
+// ================================== Grinding =================================================
 void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iterations)
 {
 	if (deltaTime < MIN_TICK_TIME)
@@ -650,17 +660,17 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			bool bMoveResult = SafeMoveUpdatedComponent(Velocity * timeTick, newRot, true, Hit);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("Current pos: %f"), CurrentSpline.SplinePos);
+		// UE_LOG(LogTemp, Warning, TEXT("Current pos: %f"), CurrentSpline.SplinePos);
 
 		// 5. Check if outside curve.
-		if (CurrentSpline.PlayerState != FSplineInfo::STATE_Entering)
+		if (CurrentSpline.PlayerState == FSplineInfo::STATE_OnRail)
 		{
 			CurrentSpline.SplinePos += timeTick * CurrentSpline.SplineDir;
 			if (CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f)
 			{
-				CurrentSpline.PlayerState = FSplineInfo::STATE_Leaving;
-				// Reset curve
-				CurrentSpline.bHasValue = false;
+				// CurrentSpline.PlayerState = FSplineInfo::STATE_Leaving;
+				// // Reset curve
+				// CurrentSpline.bHasValue = false;
 
 				UE_LOG(LogTemp, Warning, TEXT("Outside of curve, so switching to falling movement."));
 				SetMovementMode(EMovementMode::MOVE_Falling);

@@ -25,6 +25,7 @@
 #include "ReferenceSkeleton.h"
 #include "Utils/Railing.h"
 #include "Components/SplineComponent.h"
+#include "Components/SphereComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -98,6 +99,14 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	PlayersInRangeCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 	PlayersInRangeCollision->SetRelativeLocation(FVector{ 0, 0, 32.f });
 	PlayersInRangeCollision->SetBoxExtent(FVector{ 128.f, 256.f, 128.f });
+
+	GrindingOverlapThreshold = CreateDefaultSubobject<USphereComponent>("Grinding Overlap Threshold");
+	GrindingOverlapThreshold->SetupAttachment(RootComponent);
+	// Set overlap threshold to ignore everything but the rail's
+	GrindingOverlapThreshold->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
+	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
+	GrindingOverlapThreshold->SetSphereRadius(200.f);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -145,6 +154,9 @@ void APlayerCharacter::BeginPlay()
 
 	PlayersInRangeCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap);
 	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);
+
+	GrindingOverlapThreshold->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapBegin);
+	GrindingOverlapThreshold->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapEnd);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -179,9 +191,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	UpdateClosestTaskObject();
 
-	// Only attempt to start grinding if we have a pending check
-	if (bPendingGrindingAttempt)
-		TryStartGrinding();
+	if (CanGrind())
+	{
+		if (auto rail = GetClosestRail())
+		{
+			StartGrinding(rail);
+		}
+	}
 }
 
 
@@ -263,13 +279,16 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 void APlayerCharacter::StartJump()
 {
 	bHoldingJump = true;
+	if (CanGrind())
+	{
+		if (auto rail = GetClosestRail())
+		{
+			StartGrinding(rail);
+		}
+	}
 
 	if (Movement && !Movement->IsFalling())
-	{
 		OnJumpEvent.Broadcast();
-		
-		TryStartGrinding();
-	}
 }
 
 void APlayerCharacter::MoveForward(float Value)
@@ -833,87 +852,64 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 
 
-
-void APlayerCharacter::OnRailsInRangeUpdated(ARailing* RailObject, bool Enter)
+ARailing* APlayerCharacter::GetClosestRail()
 {
-	if (!IsValid(RailObject))
-		return;
+	ARailing* rail{nullptr};
+	float currentRange{MAX_FLT};
 
-	int32 railIndex;
-	const bool bFoundInArray = RailsInRange.Find(RailObject, railIndex);
-
-	if (!bFoundInArray && Enter)
+	for (auto& item : RailsInRange)
 	{
-		RailsInRange.Add(RailObject);
-	}
-	else if (bFoundInArray && !Enter)
-	{
-		RailsInRange.RemoveAt(railIndex);
-	}
-	else
-	{
-		return;
-	}
-
-	TryStartGrinding();
-}
-
-void APlayerCharacter::TryStartGrinding()
-{
-	/*
-	If we no longer meet the requirements to grind, or we have managed to start grinding
-	we don't need to check each frame anymore.
-	*/
-	bPendingGrindingAttempt = StartPendingGrinding();
-}
-
-bool APlayerCharacter::StartPendingGrinding()
-{
-	if (RailsInRange.Num() < 1 || !Movement)
-		return false;
-
-	const bool bCanGrind = Movement->IsFalling() && bHoldingJump;
-	if (!bCanGrind)
-		return false;
-
-	const auto currentPos = GetActorLocation();
-	int closestIndex{-1};
-	float closestDistance{MAX_FLT};
-
-	// Find closest point on rail (and closest rail)
-	for (int i{0}; i < RailsInRange.Num(); ++i)
-	{
-		auto& railObj = RailsInRange[i];
-		// TODO: Remove
-		check(IsValid(railObj));
-
-		const auto splinePos = railObj->SplineComp->FindLocationClosestToWorldLocation(currentPos, ESplineCoordinateSpace::World);
-		const auto distance = (splinePos - currentPos).Size();
-		if (distance < RailDistanceThreshold && distance < closestDistance)
+		if (item)
 		{
-			closestIndex = i;
-			closestDistance = distance;
+			auto range = (item->GetActorLocation() - GetActorLocation()).Size();
+			if (range < currentRange)
+			{
+				currentRange = range;
+				rail = item;
+			}
 		}
 	}
 
-	const bool bFoundPoint = -1 < closestIndex;
-
-	// Start grinding
-	if (bFoundPoint && !Movement->CurrentSpline.HasValue())
-	{
-		Movement->CurrentSpline = FSplineInfo{RailsInRange[closestIndex]->SplineComp};
-		Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
-	}
-	else if (!bFoundPoint)
-	{
-		// If we failed because of range, check again each frame while we still are holding jump.
-		return true;
-	}
-
-	return false;
+	return rail;
 }
 
 void APlayerCharacter::SetRailCollision(bool mode)
 {
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, mode ? ECollisionResponse::ECR_Block : ECollisionResponse::ECR_Ignore);
+}
+
+bool APlayerCharacter::CanGrind() const
+{
+	return Movement->IsFalling() && bHoldingJump && CurrentGrindingRail == nullptr /* && !Movement->CurrentSpline.HasValue() */;
+}
+
+void APlayerCharacter::StartGrinding(ARailing* rail)
+{
+	// Start grinding
+	CurrentGrindingRail = rail;
+	Movement->CurrentSpline = FSplineInfo{rail->SplineComp};
+	Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
+}
+
+void APlayerCharacter::OnGrindingOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	auto rail = Cast<ARailing>(OtherActor);
+	if (rail)
+	{
+		RailsInRange.Add(rail);
+
+		if (CanGrind())
+			StartGrinding(rail);
+	}
+}
+
+void APlayerCharacter::OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	auto rail = Cast<ARailing>(OtherActor);
+	if (rail)
+	{
+		RailsInRange.RemoveSingle(rail);
+		if (CurrentGrindingRail == rail)
+			CurrentGrindingRail = nullptr;
+	}
 }

@@ -22,6 +22,7 @@ class UBoxComponent;
 class ATaskObject;
 class UTask;
 class ARailing;
+class USphereComponent;
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -352,25 +353,21 @@ protected:
 
 /// ==================================== Grinding =================================================
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grinding", meta = (DisplayName = "Rail Distance Threshold"))
-	float RailDistanceThreshold = 100.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Grinding")
+	USphereComponent* GrindingOverlapThreshold;
 
 	TArray<ARailing*> RailsInRange;
+	ARailing* CurrentGrindingRail{nullptr};
 
-	bool bPendingGrindingAttempt = false;
+	ARailing* GetClosestRail();
 
 public:
-	void OnRailsInRangeUpdated(ARailing* RailObject, bool Enter);
-
-	/**
-	 * Attempts to start to grind on the closest rail available
-	 */
-	void TryStartGrinding();
-
-	/**
-	 * @return true if grinding attempts should start pending, false otherwise
-	 */
-	bool StartPendingGrinding();
-
 	void SetRailCollision(bool mode);
+	bool CanGrind() const;
+	void StartGrinding(ARailing* rail);
+
+	UFUNCTION()
+	void OnGrindingOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };
