@@ -665,7 +665,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		// 5. Check if outside curve.
 		if (CurrentSpline.PlayerState == FSplineInfo::STATE_OnRail)
 		{
-			CurrentSpline.SplinePos += timeTick * CurrentSpline.SplineDir;
+			CurrentSpline.SplinePos += timeTick * CurrentSpline.SplineDir * RailSpeedMultiplier;
 			if (CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f)
 			{
 				// CurrentSpline.PlayerState = FSplineInfo::STATE_Leaving;
@@ -739,7 +739,7 @@ void UPlayerCharacterMovementComponent::CalcGrindingVelocity(FQuat& NewRotation,
 
 	auto& SplineRef = *CurrentSpline.SkateboardSplineReference;
 	FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
-	float NextSplinePos = CurrentSpline.SplinePos + DeltaTime * CurrentSpline.SplineDir;
+	float NextSplinePos = CurrentSpline.SplinePos + DeltaTime * CurrentSpline.SplineDir * RailSpeedMultiplier;
 	FVector SplineNextWorldPos;
 	// If inside curve, use curve point.
 	if (NextSplinePos < CurrentSpline.PointCount)

@@ -229,6 +229,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
 	float GrindingEnteringSpeed = 1600.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	float RailSpeedMultiplier = 3.f;
+
 	void PhysGrinding(float deltaTime, int32 Iterations);
 
 	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime, APlayerCharacter* Owner);
