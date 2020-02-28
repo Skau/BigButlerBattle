@@ -5,7 +5,6 @@
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayWidget.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/PlayerCharacterController.h"
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayerWidget.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -26,23 +25,39 @@ void AMainMenuGameModeBase::BeginPlay()
 
 	TArray<int> IDsToCreate = { 0, 1, 2, 3 };
 
+	UE_LOG(LogTemp, Warning, TEXT("Adding all local players already existing."));
 	for (auto& Controller : GetGameInstance()->GetLocalPlayers())
 	{
 		auto ID = Controller->GetControllerId();
+		UE_LOG(LogTemp, Warning, TEXT("Added local player with ID %i"), ID);
 		IDsToCreate.Remove(ID);
-		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID)));
+		Controllers.Add(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID));
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Creating the remaining players.."));
 	for (auto& ID : IDsToCreate)
 	{
-		Controllers.Add(Cast<APlayerCharacterController>(UGameplayStatics::CreatePlayer(GetWorld(), ID)));
+		UE_LOG(LogTemp, Warning, TEXT("Creating player with ID %i"), ID);
+		Controllers.Add(UGameplayStatics::CreatePlayer(GetWorld(), ID));
 	}
 
-
-	Controllers.Sort([](APlayerCharacterController& p1, APlayerCharacterController& p2)
+	Controllers.Sort([](APlayerController& p1, APlayerController& p2)
 	{
 			return UGameplayStatics::GetPlayerControllerID(&p1) < UGameplayStatics::GetPlayerControllerID(&p2);
 	});
+
+	UE_LOG(LogTemp, Warning, TEXT("Number of controllers: %i"), Controllers.Num());
+	for (int i = 0; i < Controllers.Num(); ++i)
+	{
+		if (IsValid(Controllers[i]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Controllers[%i] is valid. ID: %i"), i, UGameplayStatics::GetPlayerControllerID(Controllers[i]));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Controllers[%i] is not valid."));
+		}
+	}
 
 	if (!MainMenuWidgetClass || !MainMenuPlayWidgetClass)
 	{
@@ -50,18 +65,29 @@ void AMainMenuGameModeBase::BeginPlay()
 		return;
 	}
 
+	if (!IsValid(Controllers[0]))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Controllers[0] is not valid. Not playable."));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Disabling split screen"));
 	Controllers[0]->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Creating main menu widget instance"));
 	MainMenuWidgetInstance = CreateWidget<UMainMenuWidget>(Controllers[0], MainMenuWidgetClass);
 	MainMenuWidgetInstance->AddToViewport();
 	MainMenuWidgetInstance->FocusWidget(Controllers[0]);
 
+	UE_LOG(LogTemp, Warning, TEXT("Creating main menu play widget instance"));
 	MainMenuPlayWidgetInstance = CreateWidget<UMainMenuPlayWidget>(Controllers[0], MainMenuPlayWidgetClass);
 	MainMenuPlayWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 	MainMenuPlayWidgetInstance->AddToViewport();
 	
+	UE_LOG(LogTemp, Warning, TEXT("Updating play widget on menu widget instance"));
 	MainMenuWidgetInstance->PlayWidget = MainMenuPlayWidgetInstance;
-	MainMenuWidgetInstance->Controllers = Controllers;
 	
+	UE_LOG(LogTemp, Warning, TEXT("Binding delegates.."));
 	MainMenuPlayWidgetInstance->PlayerWidget_0->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
 	MainMenuPlayWidgetInstance->PlayerWidget_0->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
 	MainMenuPlayWidgetInstance->PlayerWidget_1->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
@@ -70,10 +96,13 @@ void AMainMenuGameModeBase::BeginPlay()
 	MainMenuPlayWidgetInstance->PlayerWidget_2->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
 	MainMenuPlayWidgetInstance->PlayerWidget_3->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);
 	MainMenuPlayWidgetInstance->PlayerWidget_3->OnToggleReadyGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledReady);
+	UE_LOG(LogTemp, Warning, TEXT("Binding delegates done."));
 }
 
-void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
+void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(const bool Value, const int ID)
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnPlayerToggledJoinedGame, Joined: %i, Controller ID %i"), Value, ID);
+
 	if (Value)
 	{
 		NumJoinedPlayers++;
@@ -89,23 +118,37 @@ void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(bool Value, int ID)
 	{
 		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
 	}
-	GetWorldTimerManager().ClearTimer(HandleStartGame);
-	ElapsedCountdownTime = 0.0f;
+
+	if (GetWorldTimerManager().IsTimerActive(HandleStartGame))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Game countdown reset"));
+		GetWorldTimerManager().ClearTimer(HandleStartGame);
+		ElapsedCountdownTime = 0.0f;
+	}
 }
 
-void AMainMenuGameModeBase::OnPlayerToggledReady(bool Value, int ID)
+void AMainMenuGameModeBase::OnPlayerToggledReady(const bool Value, const int ID)
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnPlayerToggledReady, Ready: %i, Controller ID %i"), Value, ID);
+
 	Value ? NumReadiedPlayers++ : NumReadiedPlayers--;
 
 	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
 	{
 		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
 	}
-	GetWorldTimerManager().ClearTimer(HandleStartGame);
-	ElapsedCountdownTime = 0.0f;
+
+	if (GetWorldTimerManager().IsTimerActive(HandleStartGame))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Game countdown reset"));
+		GetWorldTimerManager().ClearTimer(HandleStartGame);
+		ElapsedCountdownTime = 0.0f;
+	}
+
 	if (NumJoinedPlayers >= MinimumPlayersToStartGame && NumReadiedPlayers == NumJoinedPlayers)
 	{
-		GetWorldTimerManager().SetTimer(HandleStartGame, this, &AMainMenuGameModeBase::GameStartCountdown, 0.1f, true, 0.0f);
+		UE_LOG(LogTemp, Warning, TEXT("Starting game countdown.."));
+		GetWorldTimerManager().SetTimer(HandleStartGame, this, &AMainMenuGameModeBase::GameStartCountdown, .1f, true, 0.0f);
 	}
 }
 
@@ -117,24 +160,26 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	}
 
 	ElapsedCountdownTime += GetWorldTimerManager().GetTimerElapsed(HandleStartGame);
-	float TimeLeft = TimeUntilGameStart - ElapsedCountdownTime;
+	const float TimeLeft = TimeUntilGameStart - ElapsedCountdownTime;
+
 	if (TimeLeft <= 0.f)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Starting game..."));
 		Controllers[0]->GetLocalPlayer()->ViewportClient->SetForceDisableSplitscreen(false);
 	
 		for(auto& ID : PlayerNotJoinedIDs)
 		{
-			if (auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
+			if (const auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Removing Controller ID %i, because it never joined."), ID);
 				UGameplayStatics::RemovePlayer(controller, false);
 			}
 		}
-		
+		Cast<UButlerGameInstance>(GetGameInstance())->LevelChanged(false);
 		UGameplayStatics::OpenLevel(GetWorld(), LevelToPlay);
 	}
 	else
 	{
 		MainMenuPlayWidgetInstance->GameStartTime->SetText(FText::FromString(FString::FromInt(TimeLeft)));
 	}
-	
 }

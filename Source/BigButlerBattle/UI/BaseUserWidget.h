@@ -7,13 +7,12 @@
 #include "Styling/SlateTypes.h"
 #include "BaseUserWidget.generated.h"
 
-class APlayerCharacterController;
 class UButton;
 
 /**
  * 
  */
-UCLASS()
+UCLASS(abstract)
 class BIGBUTLERBATTLE_API UBaseUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
@@ -22,9 +21,9 @@ public:
 	UBaseUserWidget(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintPure)
-	APlayerCharacterController* GetOwningPlayerCharacterController();
+	APlayerController* GetOwningPlayerController() const;
 
-	void FocusWidget(APlayerCharacterController* Controller, UWidget* WidgetToFocus = nullptr);
+	void FocusWidget(APlayerController* Controller, UWidget* WidgetToFocus = nullptr);
 
 protected:
 	bool Initialize() override;
@@ -33,13 +32,12 @@ protected:
 
 	UWidget* DefaultWidgetToFocus = nullptr;
 
-	/* Overriden in sublcasses */
-	virtual void OnPlayerCharacterControllerSet();
-
-	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacterController* OwningCharacterController;
+	virtual void OnPlayerControllerSet();
 
 	virtual void OnBackButtonPressed();
+
+	UPROPERTY(BlueprintReadOnly)
+	APlayerController* OwningPlayerController;
 
 	TArray<UButton*> Buttons;
 

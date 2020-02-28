@@ -2,7 +2,6 @@
 
 
 #include "BaseUserWidget.h"
-#include "Player/PlayerCharacterController.h"
 #include "Components/Button.h"
 #include "Application/SlateApplication.h"
 
@@ -12,7 +11,7 @@ UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 
 bool UBaseUserWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	return bInit;
 }
@@ -21,54 +20,61 @@ void UBaseUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	for (auto& button : Buttons)
+	for (auto& Button : Buttons)
 	{
-		if (button->HasAnyUserFocus())
+		if (Button->HasAnyUserFocus())
 		{
-			button->SetStyle(ButtonStyleHovered);
+			Button->SetStyle(ButtonStyleHovered);
 		}
 		else
 		{
-			button->SetStyle(ButtonStyleDefault);
+			Button->SetStyle(ButtonStyleDefault);
 		}
 	}
 }
 
-APlayerCharacterController* UBaseUserWidget::GetOwningPlayerCharacterController()
+APlayerController* UBaseUserWidget::GetOwningPlayerController() const
 {
-	return OwningCharacterController;
+	return OwningPlayerController;
 }
 
-void UBaseUserWidget::FocusWidget(APlayerCharacterController* Controller, UWidget* WidgetToFocus)
+void UBaseUserWidget::FocusWidget(APlayerController* Controller, UWidget* WidgetToFocus)
 {
 	if (Controller)
 	{
-		UWidget* ActualWidgetToFocus = nullptr;
-
-		if (WidgetToFocus == nullptr && DefaultWidgetToFocus)
-			ActualWidgetToFocus = DefaultWidgetToFocus;
-		else
-			ActualWidgetToFocus = WidgetToFocus;
-
+		UWidget* ActualWidgetToFocus = (WidgetToFocus == nullptr && DefaultWidgetToFocus) ? DefaultWidgetToFocus : WidgetToFocus;
 		WidgetFocusedLast = ActualWidgetToFocus;
 
-		FInputModeGameAndUI Mode;
-		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-		Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
-		
-		Controller->SetInputMode(Mode);
-		Controller->CurrentMouseCursor = EMouseCursor::None;
-		Controller->bShowMouseCursor = false;
-		Controller->bEnableClickEvents = false;
-		Controller->bEnableMouseOverEvents = false;
-		FSlateApplication::Get().OnCursorSet();
+		if (ActualWidgetToFocus)
+		{
+			FInputModeGameAndUI Mode;
+			Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+			Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
 
-		OwningCharacterController = Controller;
-		OnPlayerCharacterControllerSet();
+			Controller->SetInputMode(Mode);
+			Controller->CurrentMouseCursor = EMouseCursor::None;
+			Controller->bShowMouseCursor = false;
+			Controller->bEnableClickEvents = false;
+			Controller->bEnableMouseOverEvents = false;
+			FSlateApplication::Get().OnCursorSet();
+
+			OwningPlayerController = Controller;
+			OnPlayerControllerSet();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No actual widget to focus! Controller name: %s, This widget name: %s"), *Controller->GetName(), *GetName());
+		}
+	}
+	else
+	{
+		// This isn't necessarily bad, it just means the controller is not active.
+		// We always try to focus every controller with their individual MainMenuPlayerWidget for example.
+		UE_LOG(LogTemp, Warning, TEXT("Controller was nullptr! This widget name: %s"), *GetName()); 
 	}
 }
 
-void UBaseUserWidget::OnPlayerCharacterControllerSet()
+void UBaseUserWidget::OnPlayerControllerSet()
 {
 }
 
@@ -81,5 +87,5 @@ void UBaseUserWidget::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEve
 	// In case we want to use this function in blueprint too
 	Super::NativeOnRemovedFromFocusPath(InFocusEvent);
 
-	FocusWidget(OwningCharacterController, WidgetFocusedLast);
+	FocusWidget(OwningPlayerController, WidgetFocusedLast);
 }

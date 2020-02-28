@@ -32,7 +32,7 @@ bool UTaskFactory::ConfigureProperties()
 {
     TaskClass = nullptr;
 
-    FClassViewerModule& ClassViewerModule = FModuleManager::LoadModuleChecked<FClassViewerModule>("ClassViewer");
+    FModuleManager::LoadModuleChecked<FClassViewerModule>("ClassViewer");
     FClassViewerInitializationOptions Options;
     Options.Mode = EClassViewerMode::ClassPicker;
 

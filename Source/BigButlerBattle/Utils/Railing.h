@@ -10,16 +10,17 @@
 // Forward declarations
 class USplineComponent;
 class UStaticMeshComponent;
+class UBoxComponent;
 
 
 UCLASS()
 class BIGBUTLERBATTLE_API ARailing : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Splinepoints"))
-	UDataTable *Splinepoints = nullptr;
+	UDataTable* Splinepoints = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Swap in and out tangents?"))
 	bool bSwapInOutTangents = true;
@@ -36,11 +37,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Tangent multiplier"))
 	float TangentMultiplier = 3.f;
 
+protected:
+
+
+public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RailMesh;
 
 	UPROPERTY(VisibleAnywhere)
 	USplineComponent* SplineComp;
+
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* RailOverlap;
 
 	// Sets default values for this actor's properties
 	ARailing();
@@ -49,6 +57,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable)
+	void BuildSpline();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -56,9 +67,5 @@ public:
 #if WITH_EDITOR
 	void PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent) override;
 #endif
-
-private:
-	UFUNCTION(BlueprintCallable)
-	void BuildSpline();
 
 };

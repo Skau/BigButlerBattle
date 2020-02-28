@@ -7,6 +7,7 @@
 #include "Utils/DataTables.h"
 #include "TaskObject.generated.h"
 
+class ATaskObject;
 class UBoxComponent;
 class UDataTable;
 class UTask;
@@ -27,15 +28,15 @@ public:
 
 	void OnPickedUp();
 
-	void SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics);
+	void SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics) const;
 
-	void Launch(FVector Direction, float Force);
+	void Launch(FVector Direction, float Force) const;
 
 	FVector LaunchVelocity = FVector::ZeroVector;
 
 	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
 
-	void SetSelected(bool Value);
+	void SetSelected(bool Value) const;
 
 	bool bCanHit = false;
 
@@ -55,7 +56,10 @@ private:
 	bool SetDataFromTable();
 	bool SetDataFromAssetData();
 
+	UPROPERTY()
 	UDataTable* DrinksDataTable = nullptr;
+	
+	UPROPERTY()
 	UDataTable* FoodDataTable = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Task")
@@ -92,4 +96,7 @@ private:
 	float TimeSinceThrown = 0.0f;
 
 	bool bRecordingTimeSinceThrown = false;
+
+private:
+	void UpdateDataTables();
 };

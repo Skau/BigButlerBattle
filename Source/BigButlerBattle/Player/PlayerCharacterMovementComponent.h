@@ -10,6 +10,7 @@
 class APlayerCharacter;
 class USplineComponent;
 
+// Enums
 UENUM(BlueprintType)
 enum class ECustomMovementType : uint8
 {
@@ -18,8 +19,46 @@ enum class ECustomMovementType : uint8
 	MOVE_Grinding		UMETA(DisplayName = "Grinding")
 };
 
+// Structs
+USTRUCT(BlueprintType)
+struct FSplineInfo
+{
+	GENERATED_BODY()
+
+	enum ESplineState : uint8
+	{
+		STATE_GodKnowsWhere = 0b0000,
+		STATE_Entering = 0b0001,
+		STATE_OnRail = 0b0010,
+		STATE_Leaving = 0b0011
+	};
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
+	USplineComponent* SkateboardSplineReference = nullptr;
+
+	uint8 bHasValue : 1;
+	int SplineDir : 2;
+	uint8 PlayerState : 2;
+	uint8 PointCount;
+
+	float SplinePos = -1.f;
+	float StartDistanceToCurve;
+	float StartVelocity;
+	FRotator StartRotation;
+	float TravelTime{0.f};
+
+public:
+	FSplineInfo(USplineComponent* Spline = nullptr);
+
+	bool HasValue() const { return bHasValue; }
+};
+
+// Delegates
+DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FCustomMovementChangedSignature, uint8);
+
 /** Custom override of movement component
- * 
+ *
  */
 UCLASS(hideCategories=("Character Movement: Walking", "Character Movement: Swimming", "Character Movement (Networking)"))
 class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterMovementComponent
@@ -27,11 +66,11 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 	GENERATED_BODY()
 
 public:
-	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
+	float GetMaxAccelerationVelocity() const { return CustomMaxAccelerationVelocity; }
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
-	ECustomMovementType CurrentCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
+	ECustomMovementType DefaultCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
 	/**
 	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
@@ -78,13 +117,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
 	bool bAllowBrakingWhileHandbraking = true;
 
-	/// Grinding movement:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
-	USplineComponent* SkateboardSplineReference;
-
-	float SplinePos = -1.f;
-	int SplineDir = 1;
-
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
 
@@ -95,6 +127,11 @@ protected:
 	bool bIsStandstill = false;
 
 public:
+	// Parameter is mode that started
+	FCustomMovementChangedSignature OnCustomMovementStart;
+	// Parameter is mode that ended
+	FCustomMovementChangedSignature OnCustomMovementEnd;
+
 	UPlayerCharacterMovementComponent();
 
 	UFUNCTION(BlueprintPure)
@@ -102,10 +139,14 @@ public:
 
 	bool IsMovingOnGround() const override;
 
+	float GetAudioVolumeMult() const;
+
 	UFUNCTION(BlueprintPure)
 	float GetRotationInput() const { return InputDir.Y; }
 
 	float GetMaxForwardAcceleration() const;
+
+	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
@@ -123,7 +164,7 @@ public:
 	/** Calculates the total acceleration in world space.
 	 * @brief Calculates the total acceleration in world space.
 	 */
-	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float input = 0.f);
+	FVector GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float Input = 0.f);
 
 	/**
 	 * Multiplies kicking acceleration with a factor to make up for different tick speeds.
@@ -133,31 +174,30 @@ public:
 	/**
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
-	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float input = 0.f);
+	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float Input = 0.f);
 
 	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 
 protected:
 	void BeginPlay() override;
 
-	void TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* thisTickFunction) override;
-
-	/** @note Movement update functions should only be called through StartNewPhysics()*/
-	void PhysCustom(float deltaTime, int32 Iterations) override;
-
-	void PhysSkateboard(float deltaTime, int32 Iterations);
-	void PhysGrinding(float deltaTime, int32 Iterations);
-
-	/** Handle falling movement. */
-	void PhysFalling(float deltaTime, int32 Iterations) override;
+	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
+
+	/** @note Movement update functions should only be called through StartNewPhysics()*/
+	void PhysCustom(float DeltaTime, int32 Iterations) override;
+
+	void PhysSkateboard(float deltaTime, int32 Iterations);
+
+	/** Handle falling movement. */
+	void PhysFalling(float DeltaTime, int32 Iterations) override;
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
 
-	void TryFallOff();
+	void TryFallOff() const;
 
 	void CalcSkateboardVelocity(const FHitResult &FloorHitResult, float DeltaTime);
 
@@ -170,11 +210,37 @@ protected:
 	float GetForwardInput() const { return InputDir.X; }
 	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
 	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	float CalcSidewaysBreaking(const FVector& forward) const;
+	float CalcSidewaysBreaking(const FVector& Forward) const;
 
 	/**
 	 * Returns current rotation amount.
 	 * Both normal rotation and handbraking rotation.
 	 */
 	float CalcRotation() const;
+
+
+
+
+	// ================================== Grinding =================================================
+public:
+	/// Grinding movement:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
+	FSplineInfo CurrentSpline;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	bool bUseConstantEnteringSpeed = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
+	float GrindingEnteringSpeed = 1600.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	float RailSpeedMultiplier = 3.f;
+
+	void PhysGrinding(float deltaTime, int32 Iterations);
+
+	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime, APlayerCharacter* Owner);
+	void CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime);
+
+	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
 };

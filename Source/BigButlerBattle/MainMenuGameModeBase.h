@@ -8,7 +8,6 @@
 
 class UMainMenuWidget;
 class UMainMenuPlayWidget;
-class APlayerCharacterController;
 class UButlerGameInstance;
 
 /**
@@ -23,10 +22,10 @@ public:
 	AMainMenuGameModeBase();
 
 	UFUNCTION(BlueprintPure)
-	TArray<APlayerCharacterController*> GetControllers() { return Controllers; }
+	TArray<APlayerController*> GetControllers() const { return Controllers; }
 
 	UFUNCTION(BlueprintPure)
-	bool HasAnyPlayerJoined() { return NumJoinedPlayers != 0; }
+	bool HasAnyPlayerJoined() const { return NumJoinedPlayers != 0; }
 
 protected:
 	void BeginPlay() override;
@@ -53,7 +52,7 @@ protected:
 	FName LevelToPlay = "Main";
 
 private:
-	TArray<APlayerCharacterController*> Controllers;
+	TArray<APlayerController*> Controllers;
 
 	void OnPlayerToggledJoinedGame(bool Value, int ID);
 	void OnPlayerToggledReady(bool Value, int ID);

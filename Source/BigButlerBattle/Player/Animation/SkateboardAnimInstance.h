@@ -34,7 +34,7 @@ protected:
 	float VelocityThreshold = 100.f;
 
 	UPROPERTY(BlueprintReadOnly)
-	UPlayerCharacterMovementComponent* movementComponent = nullptr;
+	UPlayerCharacterMovementComponent* MovementComponent = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* JumpMontage;

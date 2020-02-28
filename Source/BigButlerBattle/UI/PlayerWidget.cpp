@@ -30,11 +30,11 @@ void UPlayerWidget::InitializeTaskWidgets(const TArray<TPair<UTask*, ETaskState>
 	OverlaySize.SizeRule = ESlateSizeRule::Fill;
 	OverlaySize.Value = 1.0f;
 
-	FLinearColor ImageColor(1, 1, 1, 0.09f);
+	const FLinearColor ImageColor(1, 1, 1, 0.09f);
 
 	for (int i = 0; i < Tasks.Num(); ++i)
 	{
-		auto SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+		const auto SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
 		auto HorizontalSlot = TaskBox->AddChildToHorizontalBox(SizeBox);
 		HorizontalSlot->SetSize(SizeBoxSize);
 
@@ -61,38 +61,38 @@ void UPlayerWidget::InitializeTaskWidgets(const TArray<TPair<UTask*, ETaskState>
 		HorizontalSlot->HorizontalAlignment = EHorizontalAlignment::HAlign_Fill;
 	}
 
-	auto SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+	const auto SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
 	auto HorizontalSlot = TaskBox->AddChildToHorizontalBox(SizeBox);
 	HorizontalSlot->SetSize(SizeBoxSize);
 }
 
-void UPlayerWidget::UpdateTaskSlotName(int index, FString name)
+void UPlayerWidget::UpdateTaskSlotName(const int Index, const FString& Name)
 {
-	if (index >= 0 && index < TaskWidgets.Num())
+	if (Index >= 0 && Index < TaskWidgets.Num())
 	{
-		TaskWidgets[index]->TaskBlock->SetText(FText::FromString(name));
+		TaskWidgets[Index]->TaskBlock->SetText(FText::FromString(Name));
 	}
 }
 
-void UPlayerWidget::UpdateTaskState(int index, ETaskState State)
+void UPlayerWidget::UpdateTaskState(const int Index, const ETaskState State)
 {
-	if (index >= 0 && index < TaskWidgets.Num())
+	if (Index >= 0 && Index < TaskWidgets.Num())
 	{
 		switch (State)
 		{
 		case ETaskState::NotPresent:
 		{
-			TaskWidgets[index]->TaskBlock->SetColorAndOpacity(NotPresent);
+			TaskWidgets[Index]->TaskBlock->SetColorAndOpacity(NotPresent);
 		}
 		break;
 		case ETaskState::Present:
 		{
-			TaskWidgets[index]->TaskBlock->SetColorAndOpacity(Present);
+			TaskWidgets[Index]->TaskBlock->SetColorAndOpacity(Present);
 		}
 		break;
 		case ETaskState::Finished:
 		{
-			TaskWidgets[index]->TaskBlock->SetColorAndOpacity(Finished);
+			TaskWidgets[Index]->TaskBlock->SetColorAndOpacity(Finished);
 		}
 		break;
 		default:

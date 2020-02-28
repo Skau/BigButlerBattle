@@ -1,4 +1,0 @@
-Name,Type,Mesh,Material
-Chicken,2,StaticMesh'/Game/Props/TaskObjects/Food/Shape_Torus.Shape_Torus',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Chicken/ChickenMaterial.ChickenMaterial'
-Steak,2,StaticMesh'/Game/Props/TaskObjects/Food/Shape_Torus.Shape_Torus',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Steak/SteakMaterial.SteakMaterial'
-Banana,2,StaticMesh'/Game/Props/TaskObjects/Food/Shape_Torus.Shape_Torus',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Banana/BananaMaterial.BananaMaterial'

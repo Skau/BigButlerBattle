@@ -9,13 +9,13 @@ void USkateboardAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-    auto owner = Cast<APlayerCharacter>(TryGetPawnOwner());
-    if (owner)
+    auto Owner = Cast<APlayerCharacter>(TryGetPawnOwner());
+    if (Owner)
     {
-        auto moveComp = owner->GetMovementComponent();
-        movementComponent = Cast<UPlayerCharacterMovementComponent>(moveComp);
+	    const auto MoveComp = Owner->GetMovementComponent();
+        MovementComponent = Cast<UPlayerCharacterMovementComponent>(MoveComp);
 
-        owner->OnJumpEvent.AddUObject(this, &USkateboardAnimInstance::JumpAnim);
+        Owner->OnJumpEvent.AddUObject(this, &USkateboardAnimInstance::JumpAnim);
     }
 }
 
@@ -29,13 +29,13 @@ void USkateboardAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
     Super::NativeUpdateAnimation(DeltaTime);
 
-    if (!movementComponent)
+    if (!MovementComponent)
         return;
 
-    InputRotation = movementComponent->GetRotationInput();
-    bInAir = movementComponent->IsFalling();
-    Velocity = movementComponent->Velocity.ContainsNaN() ? 0.f : movementComponent->Velocity.Size();
-    bIsStandstill = movementComponent->IsStandstill();
+    InputRotation = MovementComponent->GetRotationInput();
+    bInAir = MovementComponent->IsFalling();
+    Velocity = MovementComponent->Velocity.ContainsNaN() ? 0.f : MovementComponent->Velocity.Size();
+    bIsStandstill = MovementComponent->IsStandstill();
     // Same tick as Event Blueprint Update Animation in anim blueprint
 }
 

@@ -7,9 +7,7 @@
 #include "BigButlerBattleGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Tasks/Task.h"
-#include "King/King.h"
 #include "Tasks/TaskObject.h"
-#include "GameFramework/PlayerStart.h"
 #include "Utils/btd.h"
 #include "ButlerGameInstance.h"
 
@@ -36,6 +34,7 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 		PlayerCharacter->OnTaskObjectPickedUp.BindUObject(this, &APlayerCharacterController::OnPlayerPickedUpObject);
 		PlayerCharacter->OnTaskObjectDropped.BindUObject(this, &APlayerCharacterController::OnPlayerDroppedObject);
 		PlayerCharacter->OnCharacterFell.BindUObject(this, &APlayerCharacterController::OnCharacterFell);
+		PlayerCharacter->OnDeliverTasks.BindUObject(this, &APlayerCharacterController::CheckIfTasksAreDone);
 
 		if (!PlayerWidget && PlayerWidgetType)
 		{
@@ -71,7 +70,7 @@ void APlayerCharacterController::SetupInputComponent()
 
 void APlayerCharacterController::PauseGamePressed()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(this);
+	const auto ID = UGameplayStatics::GetPlayerControllerID(this);
 	OnPausedGame.ExecuteIfBound(ID);
 }
 
@@ -88,7 +87,7 @@ void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETask
 	}
 }
 
-void APlayerCharacterController::SetPlayerTaskName(int Index, FString Name)
+void APlayerCharacterController::SetPlayerTaskName(int Index, const FString& Name) const
 {
 	PlayerWidget->UpdateTaskSlotName(Index, Name);
 }
@@ -137,7 +136,7 @@ void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 {
 	for (int i = 0; i < PlayerTasks.Num(); ++i)
 	{
-		auto PlayerTask = PlayerTasks[i];
+		const auto PlayerTask = PlayerTasks[i];
 		if (PlayerTask.Value == ETaskState::NotPresent)
 		{
 			if (PlayerTask.Key->IsEqual(Object->GetTaskData()))
@@ -150,7 +149,7 @@ void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
 	}
 }
 
-void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, FVector Position)
+void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector Position)
 {
 	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
 	btd::Delay(this, RespawnTime, [=]()
@@ -169,7 +168,7 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, FVector Positi
 			return;
 		}
 
-		auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room, Position);
+		const auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room, Position);
 		RespawnCharacter(Spawnpoint);
 	});
 }
@@ -187,7 +186,7 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 			{
 				if (Inventory[i] != nullptr)
 				{
-					auto Task = Inventory[i]->GetTaskData();
+					const auto Task = Inventory[i]->GetTaskData();
 					if (PlayerTasks[j].Key->IsEqual(Task))
 					{
 						Inventory[i]->Destroy();
@@ -208,7 +207,7 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 			return;
 	}
 
-	auto ID = UGameplayStatics::GetPlayerControllerID(this);
+	const auto ID = UGameplayStatics::GetPlayerControllerID(this);
 	OnGameFinished.ExecuteIfBound(ID);
 }
 
@@ -220,14 +219,14 @@ void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
 		return;
 	}
 	
-	
 	if (Spawnpoint)
 	{
-		auto SpawnTransform = Spawnpoint->GetTransform();
+		const auto SpawnTransform = Spawnpoint->GetTransform();
 
 		PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
-		PlayerCharacter->SetCustomSpringArmLength();
+		if(bUseCustomSpringArmLength)
+			PlayerCharacter->SetCustomSpringArmLength();
 
 		PlayerCharacter->CurrentRoom = Spawnpoint->RoomSpawn;
 

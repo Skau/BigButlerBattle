@@ -23,8 +23,8 @@ public:
 	/* Generates a UI Widget for every task */
 	void InitializeTaskWidgets(const TArray<TPair<UTask*, ETaskState>>& Tasks);
 
-	void UpdateTaskSlotName(int index, FString Name);
-	void UpdateTaskState(int index, ETaskState State);
+	void UpdateTaskSlotName(const int Index, const FString& Name);
+	void UpdateTaskState(int Index, ETaskState State);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

@@ -48,10 +48,10 @@ namespace btd
     * @param How many seconds to wait before call.
     * @param The lambda to call.
     */
-    FORCEINLINE static FTimerHandle Delay(UObject* Context, float Seconds, TFunction<void(void)> lambda)
+    FORCEINLINE static FTimerHandle Delay(UObject* Context, const float Seconds, TFunction<void(void)> Lambda)
     {
         FTimerDelegate TimerCallback;
-        TimerCallback.BindLambda(lambda);
+        TimerCallback.BindLambda(Lambda);
         FTimerHandle Handle;
         Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
         return Handle;
@@ -64,7 +64,7 @@ namespace btd
     * @param How many iterations to call.
     * @param The lambda to call.
     */
-    FORCEINLINE static void Repeat(UObject* Context, float Seconds, int Iterations, TFunction<void(void)> Lambda)
+    FORCEINLINE static void Repeat(UObject* Context, const float Seconds, const int Iterations, TFunction<void(void)> Lambda)
     {
         if (Iterations <= 0)
             return;
@@ -80,14 +80,15 @@ namespace btd
     /**
      * @brief Swaps the values of two elements.
      * Attempts to invoke move semantics on two values to swap the contents of the values.
-     * @param v1 The first value
+     * @param V1 The first value
+     * @param V2 The second value
      */
     template<typename T>
-    FORCEINLINE static void Swap(T& v1, T& v2)
+    FORCEINLINE static void Swap(T& V1, T& V2)
     {
-        T temp{ std::move(v1) };
-        v1 = std::move(v2);
-        v2 = std::move(temp);
+        T Temp{ std::move(V1) };
+        V1 = std::move(V2);
+        V2 = std::move(Temp);
     }
     /*
      Shuffles the given array (out parameter) based on the given FRandomStream.
@@ -98,7 +99,7 @@ namespace btd
         if (!Arr.Num())
             return;
 
-        int LastIndex = Arr.Num() - 1;
+        const int LastIndex = Arr.Num() - 1;
         for (int i = 0; i < LastIndex; ++i)
         {
             int Index = Stream.RandRange(0, LastIndex);
@@ -107,5 +108,12 @@ namespace btd
                 Swap(i, Index);
             }
         }
+    }
+
+    inline static FInputActionBinding BindActionLambda(UInputComponent* Input, FName ActionName, const EInputEvent KeyEvent, TFunction<void(void)> func)
+    {
+        FInputActionBinding ab{ActionName, KeyEvent};
+	    ab.ActionDelegate.GetDelegateForManualSet().BindLambda(func);
+	    return Input->AddActionBinding(MoveTemp(ab));
     }
 }

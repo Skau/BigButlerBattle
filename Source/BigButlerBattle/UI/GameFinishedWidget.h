@@ -22,7 +22,7 @@ class BIGBUTLERBATTLE_API UGameFinishedWidget : public UBaseUserWidget
 public:
     bool Initialize() override;
 
-    void SetWonText(FString Text);
+    void SetWonText(const FString& Text) const;
 
     FQuitGameSignature QuitGame;
 

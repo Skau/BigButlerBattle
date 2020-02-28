@@ -4,7 +4,6 @@
 #include "PauseWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
-#include "Player/PlayerCharacterController.h"
 #include "Kismet/GameplayStatics.h"
 
 bool UPauseWidget::Initialize()
@@ -24,16 +23,16 @@ bool UPauseWidget::Initialize()
 	return bInit;
 }
 
-void UPauseWidget::OnPlayerCharacterControllerSet()
+void UPauseWidget::OnPlayerControllerSet()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
-	PlayerText->SetText(FText::FromString("By Player " + FString::FromInt(ID + 1)));
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
+	PlayerText->SetText(FText::FromString("By Player " + FString::FromInt(ControllerID + 1)));
 }
 
 void UPauseWidget::OnContinuePressed()
 {
-	auto ID = UGameplayStatics::GetPlayerControllerID(GetOwningPlayerCharacterController());
-	ContinueGame.ExecuteIfBound(ID);
+	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
+	ContinueGame.ExecuteIfBound(ControllerID);
 }
 
 void UPauseWidget::OnQuitPressed()
