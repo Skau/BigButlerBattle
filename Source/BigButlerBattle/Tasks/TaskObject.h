@@ -96,4 +96,7 @@ private:
 	float TimeSinceThrown = 0.0f;
 
 	bool bRecordingTimeSinceThrown = false;
+
+private:
+	void UpdateDataTables();
 };
