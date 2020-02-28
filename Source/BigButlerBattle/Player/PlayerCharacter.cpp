@@ -22,6 +22,9 @@
 #include "King/King.h"
 #include "PlayerCharacterController.h"
 #include "Components/AudioComponent.h"
+#include "Utils/Railing.h"
+#include "Components/SplineComponent.h"
+#include "Components/SphereComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -105,6 +108,14 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	// Sound
 	Sound = CreateDefaultSubobject<UAudioComponent>("Audio Component");
 	Sound->SetupAttachment(RootComponent);
+
+	GrindingOverlapThreshold = CreateDefaultSubobject<USphereComponent>("Grinding Overlap Threshold");
+	GrindingOverlapThreshold->SetupAttachment(RootComponent);
+	// Set overlap threshold to ignore everything but the rail's
+	GrindingOverlapThreshold->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
+	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
+	GrindingOverlapThreshold->SetSphereRadius(200.f);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -128,10 +139,20 @@ void APlayerCharacter::BeginPlay()
 	DefaultCameraRotation.Y = SpringArm->GetRelativeRotation().Pitch;
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
-	check(Movement != nullptr);
+	check(Movement != nullptr); // TODO: Remove check in build
+
+	Movement->OnCustomMovementStart.AddLambda([&](uint8 MovementMode){
+		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
+			SetRailCollision(false);
+	});
+
+	Movement->OnCustomMovementEnd.AddLambda([&](uint8 MovementMode){
+		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
+			SetRailCollision(true);
+	});
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	check(GameMode != nullptr);
+	check(GameMode != nullptr); // TODO: Remove check in build
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
 
@@ -144,7 +165,10 @@ void APlayerCharacter::BeginPlay()
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
 
 	PlayersInRangeCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap);
-	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);	
+	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);
+
+	GrindingOverlapThreshold->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapBegin);
+	GrindingOverlapThreshold->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapEnd);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -153,6 +177,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 
 	// Action Mappings
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
+	btd::BindActionLambda(Input, "Jump", EInputEvent::IE_Released, [&](){
+		bHoldingJump = false;
+	});
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
@@ -180,6 +207,14 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (Sound && Movement)
 	{
 		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetAudioVolumeMult());
+	}
+	
+	if (CanGrind())
+	{
+		if (auto rail = GetClosestRail())
+		{
+			StartGrinding(rail);
+		}
 	}
 }
 
@@ -214,7 +249,7 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 
 	Tray->SetSimulatePhysics(true);
 	Tray->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true));
-	
+
 	for (auto& Obj : Inventory)
 	{
 		if (Obj)
@@ -224,7 +259,7 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 	}
 
 	Camera->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true));
-	
+
 
 	// Skateboard
 
@@ -256,10 +291,17 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 
 void APlayerCharacter::StartJump()
 {
-	if (Movement && !Movement->IsFalling())
+	bHoldingJump = true;
+	if (CanGrind())
 	{
-		OnJumpEvent.Broadcast();
+		if (auto rail = GetClosestRail())
+		{
+			StartGrinding(rail);
+		}
 	}
+
+	if (Movement && !Movement->IsFalling())
+		OnJumpEvent.Broadcast();
 }
 
 void APlayerCharacter::MoveForward(float Value)
@@ -340,7 +382,7 @@ void APlayerCharacter::UpdateCameraRotation(const float DeltaTime)
 	CameraRotation.Y = bYNearZero ? DesiredCameraRotation.Y : FMath::Lerp(CameraRotation.Y, DesiredCameraRotation.Y, lerpFactor);
 
 
-	// Set rotation of camera 
+	// Set rotation of camera
 	const auto Point = UKismetMathLibrary::CreateVectorFromYawPitch(CameraRotation.X - 180.f, 0.f) + FVector{0.f, 0.f, CameraRotation.Y};
 	const auto Direction = FVector(0, 0, 0) - Point;
 	const auto NewLocalRot = UKismetMathLibrary::MakeRotFromXZ(Direction, FVector(0, 0, 1));
@@ -356,6 +398,11 @@ void APlayerCharacter::UpdateCameraRotation(const float DeltaTime)
 FRotator APlayerCharacter::GetSkateboardRotation() const
 {
 	return SkateboardMesh->GetRelativeRotation();
+}
+
+FVector APlayerCharacter::GetSkateboardLocation() const
+{
+	return SkateboardMesh->GetRelativeLocation();
 }
 
 bool APlayerCharacter::TraceSkateboard()
@@ -483,13 +530,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 
 			// Turn on falling just in case we are at an edge/incline and the velocity is great enough to get some air
-			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
+			// Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 		// No hits:
 		else
 		{
 			// Turn on falling, because we have no idea where the ground is and we are definitely in the air.
-			Movement->SetMovementMode(EMovementMode::MOVE_Falling);
+			// Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 	}
 }
@@ -528,7 +575,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 			// Attach new object
 			Inventory[i] = Spawned;
 			Spawned->AttachToComponent(
-				Tray, 
+				Tray,
 				FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
 				TraySlotNames[i]);
 
@@ -805,4 +852,70 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 	if (TaskObjectsInPickupRange.Find(ClosestPickup) != INDEX_NONE)
 		OnObjectPickedUp(ClosestPickup);
+}
+
+
+
+
+
+ARailing* APlayerCharacter::GetClosestRail()
+{
+	ARailing* rail{nullptr};
+	float currentRange{MAX_FLT};
+
+	for (auto& item : RailsInRange)
+	{
+		if (item)
+		{
+			auto range = (item->GetActorLocation() - GetActorLocation()).Size();
+			if (range < currentRange)
+			{
+				currentRange = range;
+				rail = item;
+			}
+		}
+	}
+
+	return rail;
+}
+
+void APlayerCharacter::SetRailCollision(bool mode)
+{
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, mode ? ECollisionResponse::ECR_Block : ECollisionResponse::ECR_Ignore);
+}
+
+bool APlayerCharacter::CanGrind() const
+{
+	return Movement->IsFalling() && bHoldingJump && CurrentGrindingRail == nullptr /* && !Movement->CurrentSpline.HasValue() */;
+}
+
+void APlayerCharacter::StartGrinding(ARailing* rail)
+{
+	// Start grinding
+	CurrentGrindingRail = rail;
+	Movement->CurrentSpline = FSplineInfo{rail->SplineComp};
+	Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
+}
+
+void APlayerCharacter::OnGrindingOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	auto rail = Cast<ARailing>(OtherActor);
+	if (rail)
+	{
+		RailsInRange.Add(rail);
+
+		if (CanGrind())
+			StartGrinding(rail);
+	}
+}
+
+void APlayerCharacter::OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	auto rail = Cast<ARailing>(OtherActor);
+	if (rail)
+	{
+		RailsInRange.RemoveSingle(rail);
+		if (CurrentGrindingRail == rail)
+			CurrentGrindingRail = nullptr;
+	}
 }

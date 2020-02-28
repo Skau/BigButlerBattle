@@ -109,4 +109,11 @@ namespace btd
             }
         }
     }
+
+    inline static FInputActionBinding BindActionLambda(UInputComponent* Input, FName ActionName, const EInputEvent KeyEvent, TFunction<void(void)> func)
+    {
+        FInputActionBinding ab{ActionName, KeyEvent};
+	    ab.ActionDelegate.GetDelegateForManualSet().BindLambda(func);
+	    return Input->AddActionBinding(MoveTemp(ab));
+    }
 }

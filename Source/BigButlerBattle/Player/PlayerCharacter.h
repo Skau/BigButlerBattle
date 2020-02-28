@@ -21,6 +21,8 @@ class UBoxComponent;
 class ATaskObject;
 class UTask;
 class UAudioComponent;
+class ARailing;
+class USphereComponent;
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -124,6 +126,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent *Movement = nullptr;
 
+	bool bHoldingJump = false;
+
 public:
 	JumpEventSignature OnJumpEvent;
 
@@ -137,7 +141,7 @@ protected:
 	void MoveRight(float Value);
 
 	void UpdateHandbrake(float Value);
-	
+
 
 
 
@@ -231,6 +235,7 @@ public:
 	USkeletalMeshComponent* GetSkateboardMesh() const { return SkateboardMesh; }
 
 	FRotator GetSkateboardRotation() const;
+	FVector GetSkateboardLocation() const;
 
 	UFUNCTION(BlueprintPure)
 	FSkateboardTraceResult GetSkateboardTraceResults() const { return LastTraceResult;  }
@@ -353,7 +358,31 @@ protected:
 
 
 
-	/// ========================================= Sounds =================================================
+/// ========================================= Sounds =================================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UAudioComponent* Sound;
+
+
+
+
+
+/// ==================================== Grinding =================================================
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Grinding")
+	USphereComponent* GrindingOverlapThreshold;
+
+	TArray<ARailing*> RailsInRange;
+	ARailing* CurrentGrindingRail{nullptr};
+
+	ARailing* GetClosestRail();
+
+public:
+	void SetRailCollision(bool mode);
+	bool CanGrind() const;
+	void StartGrinding(ARailing* rail);
+
+	UFUNCTION()
+	void OnGrindingOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

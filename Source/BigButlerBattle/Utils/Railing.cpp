@@ -3,8 +3,10 @@
 #include "Railing.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "btd.h"
 #include "Utils/DataTables.h"
+#include "Player/PlayerCharacter.h"
 
 /// ------------------------------- FBezierPoint -------------------------------
 
@@ -31,6 +33,10 @@ ARailing::ARailing()
 	SplineComp->ScaleVisualizationWidth = 5.f;
 	SplineComp->bShouldVisualizeScale = true;
 #endif
+
+	RailOverlap = CreateDefaultSubobject<UBoxComponent>(TEXT("RailOverlap"));
+	RailOverlap->SetupAttachment(RootComponent);
+	RailOverlap->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
@@ -48,23 +54,7 @@ void ARailing::Tick(float DeltaTime)
 
 }
 
-#if WITH_EDITOR
-void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
-{
-    //Get the name of the property that was changed  
-    const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;  
-
-    // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name  
-    // in the future this will fail to compile and we can update it.  
-    if (PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) || PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier))
-        BuildSpline();
-
-    // Call the base class version  
-    Super::PostEditChangeProperty(PropertyChangedEvent);  
-}
-#endif
-
-void ARailing::BuildSpline() const
+void ARailing::BuildSpline()
 {
 	if (!SplineComp)
 	{
@@ -129,3 +119,19 @@ void ARailing::BuildSpline() const
 		}
 	}
 }
+
+#if WITH_EDITOR
+void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
+{
+    //Get the name of the property that was changed
+    FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+    // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name
+    // in the future this will fail to compile and we can update it.
+    if (PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) || PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier))
+        BuildSpline();
+
+    // Call the base class version
+    Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+#endif
