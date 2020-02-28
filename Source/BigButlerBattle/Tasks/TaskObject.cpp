@@ -13,6 +13,7 @@
 #include "King/King.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Player/PlayerCharacter.h"
+#include "Misc/FileHelper.h"
 
 ATaskObject::ATaskObject()
 {
@@ -27,21 +28,6 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetSimulatePhysics(true);
-
-
-	const ConstructorHelpers::FObjectFinder<UDataTable> DrinksDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Drinks/DrinksData.DrinksData'"));
-	const auto DrinksDataObject = DrinksDataTableDefinition.Object;
-	if (DrinksDataObject)
-	{
-		DrinksDataTable = DrinksDataObject;
-	}
-
-	const ConstructorHelpers::FObjectFinder<UDataTable> FoodDataTableDefinition(TEXT("DataTable'/Game/Props/TaskObjects/Food/FoodData.FoodData'"));
-	const auto FoodDataObject = FoodDataTableDefinition.Object;
-	if (FoodDataObject)
-	{
-		FoodDataTable = FoodDataObject;
-	}
 }
 
 void ATaskObject::SetSelected(const bool Value) const
@@ -174,6 +160,8 @@ bool ATaskObject::SetDataFromTable()
 	{
 		Stream.GenerateNewSeed();
 	}
+
+	UpdateDataTables();
 
 	UDataTable* DataTableToUse;
 
@@ -341,4 +329,28 @@ void ATaskObject::SetEnable(const bool NewVisiblity, const bool NewCollision, co
 void ATaskObject::Launch(const FVector Direction, const float Force) const
 {
 	MeshComponent->AddImpulse(Direction * Force);
+}
+
+void ATaskObject::UpdateDataTables()
+{
+	DrinksDataTable = NewObject<UDataTable>();
+	DrinksDataTable->RowStruct = FTaskTableData::StaticStruct();
+	DrinksDataTable->bIgnoreExtraFields = true;
+
+	FString File;
+	FString FilePath = FString(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + FString("Taskdata/DrinksData.csv"));
+	bool success = FFileHelper::LoadFileToString(File, *FilePath);
+	check(success == true);
+
+	DrinksDataTable->CreateTableFromCSVString(File);
+
+	FoodDataTable = NewObject<UDataTable>();
+	FoodDataTable->RowStruct = FTaskTableData::StaticStruct();
+	FoodDataTable->bIgnoreExtraFields = true;
+
+	FilePath = FString(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + FString("Taskdata/FoodData.csv"));
+	success = FFileHelper::LoadFileToString(File, *FilePath);
+	check(success == true);
+
+	FoodDataTable->CreateTableFromCSVString(File);
 }
