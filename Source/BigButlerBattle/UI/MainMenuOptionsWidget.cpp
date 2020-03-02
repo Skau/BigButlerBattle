@@ -18,7 +18,7 @@ bool UMainMenuOptionsWidget::Initialize()
 	Button_Sound->OnClicked.AddDynamic(this, &UMainMenuOptionsWidget::OnSoundPressed);
 	Buttons.Add(Button_Sound);
 
-	Button_Back->OnClicked.AddDynamic(this, &UMainMenuOptionsWidget::OnBackPressed);
+	Button_Back->OnClicked.AddDynamic(this, &UMainMenuOptionsWidget::OnBackButtonPressed);
 	Buttons.Add(Button_Back);
 
 	DefaultWidgetToFocus = Button_Sound;
@@ -31,18 +31,14 @@ void UMainMenuOptionsWidget::OnBackButtonPressed()
 	switch (CurrentIndex)
 	{
 	case EWidgetSwitcherIndex::Main:
-		OnBackPressed();
+		SetVisibility(ESlateVisibility::Hidden);
+		MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
+		MainMenuWidget->FocusWidget(OwningPlayerController);
 		break;
 	case EWidgetSwitcherIndex::Sound:
 		SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 		break;
 	}
-}
-
-void UMainMenuOptionsWidget::OnPlayerControllerSet()
-{
-	CurrentIndex = EWidgetSwitcherIndex::Main;
-	Switcher->SetActiveWidgetIndex(static_cast<int>(CurrentIndex));
 }
 
 void UMainMenuOptionsWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
@@ -56,23 +52,14 @@ void UMainMenuOptionsWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex 
 		FocusWidget(OwningPlayerController, Button_Sound);
 		break;
 	case EWidgetSwitcherIndex::Sound:
-		if (SoundSettings->WidgetOwner != this)
-			SoundSettings->WidgetOwner = this;
-
+		if (!SoundSettings->Button_Back->OnClicked.IsBound())
+			SoundSettings->Button_Back->OnClicked.AddDynamic(this, &UMainMenuOptionsWidget::OnBackButtonPressed);
 		SoundSettings->FocusWidget(OwningPlayerController);
 		break;
-	default:;
 	}
 }
 
 void UMainMenuOptionsWidget::OnSoundPressed()
 {
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Sound);
-}
-
-void UMainMenuOptionsWidget::OnBackPressed()
-{
-	SetVisibility(ESlateVisibility::Hidden);
-	MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
-	MainMenuWidget->FocusWidget(OwningPlayerController);
 }

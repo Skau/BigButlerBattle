@@ -44,8 +44,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnBackButtonPressed() override;
 
-	void OnPlayerControllerSet() override;
-
 private:
 	enum class EWidgetSwitcherIndex
 	{
@@ -57,9 +55,6 @@ private:
 
 	UFUNCTION()
 	void OnSoundPressed();
-
-	UFUNCTION()
-	void OnBackPressed();
 
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Main;
 };

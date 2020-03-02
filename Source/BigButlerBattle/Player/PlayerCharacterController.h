@@ -48,6 +48,8 @@ public:
 
 	bool bUseCustomSpringArmLength = false;
 
+	void UpdateCameraSettings();
+
 protected:
 	void BeginPlay() override;
 

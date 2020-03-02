@@ -14,6 +14,7 @@ class UWidgetSwitcher;
 class UTextBlock;
 class UCheckBox;
 class UMainMenuPlayWidget;
+class UCameraSettingsWidget;
 class UButlerGameInstance;
 
 /**
@@ -50,19 +51,7 @@ public:
 	UButton* Button_CameraOptions;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_CameraToggleInvertYaw;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UTextBlock* Text_InvertYaw;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_CameraToggleInvertPitch;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UTextBlock* Text_InvertPitch;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UButton* Button_Back;
+	UCameraSettingsWidget* CameraSettings;
 
 	UMainMenuPlayWidget* MainPlayWidget;
 
@@ -98,18 +87,7 @@ private:
 	UFUNCTION()
 	void OnCameraOptionsPressed();
 
-	UFUNCTION()
-	void OnCameraToggleInvertYawPressed();
-
-	UFUNCTION()
-	void OnCameraToggleInvertPitchPressed();
-
-	UFUNCTION()
-	void OnBackPressed();
-
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
 
 	int ID = -1;
-	UButlerGameInstance* GameInstance;
-
 };

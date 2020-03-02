@@ -51,6 +51,8 @@ void UBaseUserWidget::FocusWidget(APlayerController* Controller, UWidget* Widget
 			Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 			Mode.SetWidgetToFocus(ActualWidgetToFocus->GetCachedWidget());
 
+			//UE_LOG(LogTemp, Warning, TEXT("Focusing %s"), *ActualWidgetToFocus->GetName());
+
 			Controller->SetInputMode(Mode);
 			Controller->CurrentMouseCursor = EMouseCursor::None;
 			Controller->bShowMouseCursor = false;

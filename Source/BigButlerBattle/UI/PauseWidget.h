@@ -11,6 +11,9 @@ DECLARE_DELEGATE(FQuitGameSignature);
 
 class UTextBlock;
 class UButton;
+class UWidgetSwitcher;
+class USoundSettingsWidget;
+class UCameraSettingsWidget;
 
 /**
  * 
@@ -30,7 +33,28 @@ public:
     UButton* Button_Continue;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UButton* Button_Options;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UButton* Button_Quit;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UButton* Button_Sound;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UButton* Button_Camera;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UButton* Button_Back;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UWidgetSwitcher* Switcher;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    USoundSettingsWidget* SoundSettings;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UCameraSettingsWidget* CameraSettings;
 
     FContinueGameSignature ContinueGame;
     FQuitGameSignature QuitGame;
@@ -38,10 +62,34 @@ public:
 protected:
     void OnPlayerControllerSet() override;
 
+    UFUNCTION(BlueprintCallable)
+    void OnBackButtonPressed() override;
+
 private:
+    enum class EWidgetSwitcherIndex
+    {
+        Main,
+        Options,
+        Sound,
+        Camera
+    };
+
+    void SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex);
+
     UFUNCTION()
     void OnContinuePressed();
 
     UFUNCTION()
+    void OnOptionsPressed();
+
+    UFUNCTION()
     void OnQuitPressed();
+
+    UFUNCTION()
+    void OnSoundPressed();
+
+    UFUNCTION()
+    void OnCameraPressed();
+
+    EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Main;
 };
