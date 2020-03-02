@@ -325,7 +325,8 @@ void APlayerCharacter::MoveForward(float Value)
 
 void APlayerCharacter::AddForwardInput()
 {
-	AddMovementInput(FVector::ForwardVector * GetInputAxisValue("Forward"));
+	const auto Value = GetInputAxisValue("Forward");
+	AddMovementInput(FVector::ForwardVector * (FMath::IsNearlyZero(Value) ? 1.f : Value));
 }
 
 void APlayerCharacter::MoveRight(float Value)
