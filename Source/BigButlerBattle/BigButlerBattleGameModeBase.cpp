@@ -147,11 +147,10 @@ void ABigButlerBattleGameModeBase::OnPlayerPaused(int ControllerID) const
 
 void ABigButlerBattleGameModeBase::OnPlayerContinued(const int ControllerID) const
 {
-	auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID);
-
 	if (PauseWidget->IsVisible())
 	{
 		PauseWidget->SetVisibility(ESlateVisibility::Hidden);
+		auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID);
 		Controller->SetInputMode(FInputModeGameOnly());
 		PauseWidget->Reset();
 		UGameplayStatics::SetGamePaused(GetWorld(), false);
