@@ -34,11 +34,17 @@ public:
 
 	TArray<FPlayerOptions> PlayerOptions;
 
-	void SetMainSoundVolume(float Value);
+	float GetMainSoundVolume();
 
-	void SetBackgroundSoundVolume(float Value);
+	float UpdateMainSoundVolume(bool bShouldIncrement);
 
-	void SetSoundEffectsSoundVolume(float Value);
+	float GetBackgroundSoundVolume();
+
+	float UpdateBackgroundSoundVolume(bool bShouldIncrement);
+
+	float GetSoundEffectsSoundVolume();
+
+	float UpdateSoundEffectsSoundVolume(bool bShouldIncrement);
 
 	void LevelChanged(bool bNewLevelIsMainMenu);
 
@@ -50,6 +56,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
 	int Seed = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	float IncrementValue = 0.1f;
 
 	UPROPERTY(EditDefaultsOnly)
 	USoundClass* MainSoundClass;

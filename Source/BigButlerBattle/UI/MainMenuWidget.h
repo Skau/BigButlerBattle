@@ -10,6 +10,7 @@
 class UWidgetSwitcher;
 class UButton;
 class UMainMenuPlayWidget;
+class UMainMenuOptionsWidget;
 
 /**
  * 
@@ -32,6 +33,8 @@ public:
 	UButton* Button_Quit;
 
 	UMainMenuPlayWidget* PlayWidget;
+
+	UMainMenuOptionsWidget* OptionsWidget;
 
 protected:
 	void NativeConstruct() override;

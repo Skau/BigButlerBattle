@@ -41,28 +41,64 @@ void UButlerGameInstance::Init()
 	});
 }
 
-void UButlerGameInstance::SetMainSoundVolume(float Value)
+float UButlerGameInstance::GetMainSoundVolume()
 {
 	if (MainSoundClass)
 	{
-		MainSoundClass->Properties.Volume = Value;
+		return MainSoundClass->Properties.Volume;
 	}
+	return -1.f;
 }
 
-void UButlerGameInstance::SetBackgroundSoundVolume(float Value)
+float UButlerGameInstance::UpdateMainSoundVolume(bool bShouldIncrement)
+{
+	if (MainSoundClass)
+	{
+		MainSoundClass->Properties.Volume += bShouldIncrement ? IncrementValue : -IncrementValue;
+		MainSoundClass->Properties.Volume = FMath::Clamp(MainSoundClass->Properties.Volume, 0.f, 1.f);
+		return MainSoundClass->Properties.Volume;
+	}
+	return -1.f;
+}
+
+float UButlerGameInstance::GetBackgroundSoundVolume()
 {
 	if (BackgroundSoundClass)
 	{
-		BackgroundSoundClass->Properties.Volume = Value;
+		return BackgroundSoundClass->Properties.Volume;
 	}
+	return -1.f;
 }
 
-void UButlerGameInstance::SetSoundEffectsSoundVolume(float Value)
+float UButlerGameInstance::UpdateBackgroundSoundVolume(bool bShouldIncrement)
+{
+	if (BackgroundSoundClass)
+	{
+		BackgroundSoundClass->Properties.Volume += bShouldIncrement ? IncrementValue : -IncrementValue;
+		BackgroundSoundClass->Properties.Volume = FMath::Clamp(BackgroundSoundClass->Properties.Volume, 0.f, 1.f);
+		return BackgroundSoundClass->Properties.Volume;
+	}
+	return -1.f;
+}
+
+float UButlerGameInstance::GetSoundEffectsSoundVolume()
 {
 	if (SoundEffectsSoundClass)
 	{
-		SoundEffectsSoundClass->Properties.Volume = Value;
+		return SoundEffectsSoundClass->Properties.Volume;
 	}
+	return -1.f;
+}
+
+float UButlerGameInstance::UpdateSoundEffectsSoundVolume(bool bShouldIncrement)
+{
+	if (SoundEffectsSoundClass)
+	{
+		SoundEffectsSoundClass->Properties.Volume += bShouldIncrement ? IncrementValue : -IncrementValue;
+		SoundEffectsSoundClass->Properties.Volume = FMath::Clamp(SoundEffectsSoundClass->Properties.Volume, 0.f, 1.f);
+		return SoundEffectsSoundClass->Properties.Volume;
+	}
+	return -1.f;
 }
 
 void UButlerGameInstance::LevelChanged(bool bNewLevelIsMainMenu)

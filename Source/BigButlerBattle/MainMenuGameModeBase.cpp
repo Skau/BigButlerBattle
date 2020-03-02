@@ -4,6 +4,7 @@
 #include "MainMenuGameModeBase.h"
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayWidget.h"
+#include "UI/MainMenuOptionsWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayerWidget.h"
@@ -83,9 +84,17 @@ void AMainMenuGameModeBase::BeginPlay()
 	MainMenuPlayWidgetInstance = CreateWidget<UMainMenuPlayWidget>(Controllers[0], MainMenuPlayWidgetClass);
 	MainMenuPlayWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 	MainMenuPlayWidgetInstance->AddToViewport();
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("Updating play widget on menu widget instance"));
 	MainMenuWidgetInstance->PlayWidget = MainMenuPlayWidgetInstance;
+
+	UE_LOG(LogTemp, Warning, TEXT("Creating main menu options widget instance"));
+	MainMenuOptionsWidgetInstance = CreateWidget<UMainMenuOptionsWidget>(Controllers[0], MainMenuOptionsWidgetClass);
+	MainMenuOptionsWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+	MainMenuOptionsWidgetInstance->AddToViewport();
+	
+	UE_LOG(LogTemp, Warning, TEXT("Updating options widget on menu widget instance"));
+	MainMenuWidgetInstance->OptionsWidget = MainMenuOptionsWidgetInstance;
 	
 	UE_LOG(LogTemp, Warning, TEXT("Binding delegates.."));
 	MainMenuPlayWidgetInstance->PlayerWidget_0->OnToggleJoinedGame.BindUObject(this, &AMainMenuGameModeBase::OnPlayerToggledJoinedGame);

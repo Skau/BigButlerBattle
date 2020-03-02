@@ -8,6 +8,7 @@
 
 class UMainMenuWidget;
 class UMainMenuPlayWidget;
+class UMainMenuOptionsWidget;
 class UButlerGameInstance;
 
 /**
@@ -37,6 +38,9 @@ protected:
 	TSubclassOf<UMainMenuPlayWidget> MainMenuPlayWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UMainMenuOptionsWidget> MainMenuOptionsWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
 	float TimeUntilGameStart = 6.f;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -47,6 +51,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UMainMenuPlayWidget* MainMenuPlayWidgetInstance;
+
+	UPROPERTY(BlueprintReadOnly)
+	UMainMenuOptionsWidget* MainMenuOptionsWidgetInstance;
 
 	UPROPERTY(EditDefaultsOnly)
 	FName LevelToPlay = "Main";

@@ -12,7 +12,7 @@ class UButton;
 /**
  * 
  */
-UCLASS(abstract)
+UCLASS()
 class BIGBUTLERBATTLE_API UBaseUserWidget : public UUserWidget
 {
 	GENERATED_BODY()

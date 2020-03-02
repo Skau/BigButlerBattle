@@ -4,6 +4,7 @@
 #include "MainMenuWidget.h"
 #include "MainMenuPlayWidget.h"
 #include "MainMenuPlayerWidget.h"
+#include "MainMenuOptionsWidget.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -68,8 +69,13 @@ void UMainMenuWidget::OnPlayPressed()
 
 void UMainMenuWidget::OnOptionsPressed()
 {
-	//SetVisibility(ESlateVisibility::Hidden);
+	SetVisibility(ESlateVisibility::Hidden);
+	if (OptionsWidget->MainMenuWidget != this)
+		OptionsWidget->MainMenuWidget = this;
 
+	OptionsWidget->SetVisibility(ESlateVisibility::Visible);
+
+	OptionsWidget->FocusWidget(OwningPlayerController);
 
 	// Open options
 	

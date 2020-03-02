@@ -16,14 +16,6 @@ class UCheckBox;
 class UMainMenuPlayWidget;
 class UButlerGameInstance;
 
-enum class EWidgetSwitcherIndex
-{
-	Join = 0,
-	Main,
-	CameraOptions, 
-	Ready
-};
-
 /**
  * 
  */
@@ -83,6 +75,14 @@ protected:
 	void OnBackButtonPressed() override;
 
 private:
+	enum class EWidgetSwitcherIndex
+	{
+		Join = 0,
+		Main,
+		CameraOptions,
+		Ready
+	};
+
 	void SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex);
 
 	UFUNCTION()
