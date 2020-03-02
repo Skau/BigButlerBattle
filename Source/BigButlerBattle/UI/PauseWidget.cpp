@@ -6,6 +6,7 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "SoundSettingsWidget.h"
+#include "CameraSettingsWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 bool UPauseWidget::Initialize()
@@ -81,6 +82,9 @@ void UPauseWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
 		SoundSettings->FocusWidget(OwningPlayerController);
 		break;
 	case EWidgetSwitcherIndex::Camera:
+		if (!CameraSettings->Button_Back->OnClicked.IsBound())
+			CameraSettings->Button_Back->OnClicked.AddDynamic(this, &UPauseWidget::OnBackButtonPressed);
+		CameraSettings->FocusWidget(OwningPlayerController);
 		break;
 	}
 }
@@ -103,7 +107,7 @@ void UPauseWidget::OnSoundPressed()
 
 void UPauseWidget::OnCameraPressed()
 {
-	//SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Camera);
+	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Camera);
 }
 
 void UPauseWidget::OnQuitPressed()

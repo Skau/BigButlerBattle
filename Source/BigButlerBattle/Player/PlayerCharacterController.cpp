@@ -48,10 +48,7 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 		if (PlayerWidget->Visibility == ESlateVisibility::Hidden)
 			PlayerWidget->SetVisibility(ESlateVisibility::Visible);
 
-		auto GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		check(GameInstance != nullptr);
-		PlayerCharacter->SetCameraInvertYaw(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraYaw);
-		PlayerCharacter->SetCameraInvertPitch(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraPitch);
+		UpdateCameraSettings();
 	}
 }
 
@@ -66,6 +63,13 @@ void APlayerCharacterController::SetupInputComponent()
 	check(InputComponent != nullptr);
 
 	InputComponent->BindAction("PauseGame", EInputEvent::IE_Pressed, this, &APlayerCharacterController::PauseGamePressed);
+}
+
+void APlayerCharacterController::UpdateCameraSettings()
+{
+	auto GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	PlayerCharacter->SetCameraInvertYaw(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraYaw);
+	PlayerCharacter->SetCameraInvertPitch(GameInstance->PlayerOptions[UGameplayStatics::GetPlayerControllerID(this)].InvertCameraPitch);
 }
 
 void APlayerCharacterController::PauseGamePressed()

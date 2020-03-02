@@ -13,6 +13,7 @@ class UTextBlock;
 class UButton;
 class UWidgetSwitcher;
 class USoundSettingsWidget;
+class UCameraSettingsWidget;
 
 /**
  * 
@@ -51,6 +52,9 @@ public:
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     USoundSettingsWidget* SoundSettings;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UCameraSettingsWidget* CameraSettings;
 
     FContinueGameSignature ContinueGame;
     FQuitGameSignature QuitGame;
