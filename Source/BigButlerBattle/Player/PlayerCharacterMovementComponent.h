@@ -235,12 +235,16 @@ protected:
 	float GrindingEnteringSpeed = 1600.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
-	float RailSpeedMultiplier = 3.f;
+	bool bUseConstantGrindingSpeed = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Speed", EditCondition = "bUseContantGrindingSpeed"))
+	float RailGrindingSpeed = 800.f;
 
 	void PhysGrinding(float deltaTime, int32 Iterations);
 
 	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime, APlayerCharacter* Owner);
 	void CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime);
+	float GetNewCurvePoint();
 
 	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
 };

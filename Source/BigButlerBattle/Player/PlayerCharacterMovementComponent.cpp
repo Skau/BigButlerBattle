@@ -669,7 +669,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		// 5. Check if outside curve.
 		if (CurrentSpline.PlayerState == FSplineInfo::STATE_OnRail)
 		{
-			CurrentSpline.SplinePos += timeTick * CurrentSpline.SplineDir * RailSpeedMultiplier;
+			CurrentSpline.SplinePos = GetNewCurvePoint();
 			if (CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f)
 			{
 				// CurrentSpline.PlayerState = FSplineInfo::STATE_Leaving;
@@ -737,34 +737,31 @@ void UPlayerCharacterMovementComponent::CalcGrindingEnteringVelocity(FQuat& NewR
 
 void UPlayerCharacterMovementComponent::CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime)
 {
-	// auto playerCharacter = Cast<APlayerCharacter>(GetOwner());
-	// if (!playerCharacter)
-	// 	return;
-
 	auto& SplineRef = *CurrentSpline.SkateboardSplineReference;
 	FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
-	float NextSplinePos = CurrentSpline.SplinePos + DeltaTime * CurrentSpline.SplineDir * RailSpeedMultiplier;
-	FVector SplineNextWorldPos;
-	// If inside curve, use curve point.
-	if (NextSplinePos < CurrentSpline.PointCount)
-	{
-		SplineNextWorldPos = SplineRef.GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World);
-	}
-	// If not inside curve, calculate a curve point using the curvedirection.
-	else
-	{
-		auto dir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) * CurrentSpline.SplineDir;
-		UE_LOG(LogTemp, Warning, TEXT("dir is %f"), dir.Size());
-		SplineNextWorldPos = SplineWorldPos + dir * DeltaTime;
-	}
+	FVector Dir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) * CurrentSpline.SplineDir;
+
+	float Speed = bUseConstantGrindingSpeed ? RailGrindingSpeed : CurrentSpline.StartVelocity;
+	float NextSplinePos = SplineRef.FindInputKeyClosestToWorldLocation(SplineWorldPos + Dir * DeltaTime * Speed);
+	
+	FVector CurveCorrectedDir = SplineRef.GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World) - SplineWorldPos;
 
 	// Set new velocity
-	Velocity = (SplineNextWorldPos - SplineWorldPos) / DeltaTime;
+	Velocity = CurveCorrectedDir / DeltaTime;
 	// Check velocity
 	if (Velocity.ContainsNaN())
 		Velocity = FVector::ZeroVector;
 
 	NewRotation = UKismetMathLibrary::MakeRotFromZX(FVector::UpVector, Velocity.IsNearlyZero() ? FVector::ForwardVector : Velocity).Quaternion();
+}
+
+float UPlayerCharacterMovementComponent::GetNewCurvePoint()
+{
+	auto playerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!playerCharacter)
+		return CurrentSpline.SplinePos;
+
+	return CurrentSpline.SkateboardSplineReference->FindInputKeyClosestToWorldLocation(GetSkateboardLocation(playerCharacter));
 }
 
 FVector UPlayerCharacterMovementComponent::GetSkateboardLocation(APlayerCharacter* Owner)
