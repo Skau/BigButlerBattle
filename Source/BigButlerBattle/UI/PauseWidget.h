@@ -59,6 +59,8 @@ public:
     FContinueGameSignature ContinueGame;
     FQuitGameSignature QuitGame;
 
+    void Reset();
+
 protected:
     void OnPlayerControllerSet() override;
 

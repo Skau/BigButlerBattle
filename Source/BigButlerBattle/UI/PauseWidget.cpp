@@ -44,6 +44,12 @@ void UPauseWidget::OnPlayerControllerSet()
 	PlayerText->SetText(FText::FromString("By Player " + FString::FromInt(ControllerID + 1)));
 }
 
+void UPauseWidget::Reset()
+{
+	CurrentIndex = EWidgetSwitcherIndex::Main;
+	Switcher->SetActiveWidgetIndex(static_cast<int>(CurrentIndex));
+}
+
 void UPauseWidget::OnBackButtonPressed()
 {
 	switch (CurrentIndex)

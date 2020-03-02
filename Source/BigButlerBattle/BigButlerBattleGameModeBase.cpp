@@ -128,27 +128,32 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(int ControllerID) const
 {
+	const auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID);
+
 	if (!PauseWidget->IsVisible())
 	{
 		PauseWidget->SetVisibility(ESlateVisibility::Visible);
-		const auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
 		PauseWidget->FocusWidget(Controller);
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
 	else
 	{
-		OnPlayerContinued(ControllerID);
+		if (Controller == PauseWidget->GetOwningPlayerController())
+		{
+			OnPlayerContinued(ControllerID);
+		}
 	}
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerContinued(const int ControllerID) const
 {
-	auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
+	auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID);
 
 	if (PauseWidget->IsVisible())
 	{
 		PauseWidget->SetVisibility(ESlateVisibility::Hidden);
 		Controller->SetInputMode(FInputModeGameOnly());
+		PauseWidget->Reset();
 		UGameplayStatics::SetGamePaused(GetWorld(), false);
 	}
 }
