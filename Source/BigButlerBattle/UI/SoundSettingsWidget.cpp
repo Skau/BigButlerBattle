@@ -33,7 +33,6 @@ bool USoundSettingsWidget::Initialize()
 	Button_SFXUp->OnClicked.AddDynamic(this, &USoundSettingsWidget::OnSFXUpPressed);
 	Buttons.Add(Button_SFXUp);
 
-	Button_Back->OnClicked.AddDynamic(this, &USoundSettingsWidget::OnBackButtonPressed);
 	Buttons.Add(Button_Back);
 
 	DefaultWidgetToFocus = Button_Back;
@@ -59,7 +58,7 @@ bool USoundSettingsWidget::Initialize()
 
 void USoundSettingsWidget::OnBackButtonPressed()
 {
-	WidgetOwner->FocusWidget(OwningPlayerController);
+	Button_Back->OnClicked.Broadcast();
 }
 
 void USoundSettingsWidget::OnMasterDownPressed()

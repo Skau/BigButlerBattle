@@ -59,8 +59,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_Back;
 
-	UBaseUserWidget* WidgetOwner = nullptr;
-
 protected:
 	bool Initialize() override;
 
