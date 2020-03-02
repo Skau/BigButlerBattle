@@ -115,7 +115,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GrindingOverlapThreshold->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
 	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
-	GrindingOverlapThreshold->SetSphereRadius(200.f);
+	GrindingOverlapThreshold->SetSphereRadius(300.f);
 }
 
 void APlayerCharacter::BeginPlay()

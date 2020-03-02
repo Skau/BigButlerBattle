@@ -245,6 +245,9 @@ protected:
 	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime, APlayerCharacter* Owner);
 	void CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime);
 	float GetNewCurvePoint();
+	bool InEndInterval() const;
+	bool InEndInterval(int32 LastIndex, bool bForward) const;
+	bool IsAtCurveEnd(float DeltaTime) const;
 
 	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
 };
