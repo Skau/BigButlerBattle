@@ -32,8 +32,6 @@ class BIGBUTLERBATTLE_API APlayerCharacterController : public APlayerController
 	GENERATED_BODY()
 
 public:
-	APlayerCharacterController();
-
 	FPauseGameSignature OnPausedGame;
 	FGameFinishedSignature OnGameFinished;
 
@@ -54,8 +52,6 @@ protected:
 	void BeginPlay() override;
 
 	void OnPossess(APawn* InPawn) override;
-
-	void Tick(float DeltaTime) override;
 
 	void SetupInputComponent() override;
 

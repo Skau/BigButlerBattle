@@ -11,10 +11,6 @@
 #include "Utils/btd.h"
 #include "ButlerGameInstance.h"
 
-APlayerCharacterController::APlayerCharacterController() 
-{
-}
-
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -52,17 +48,15 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 	}
 }
 
-void APlayerCharacterController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
 void APlayerCharacterController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	check(InputComponent != nullptr);
 
-	InputComponent->BindAction("PauseGame", EInputEvent::IE_Pressed, this, &APlayerCharacterController::PauseGamePressed);
+	FInputActionBinding ab{ "PauseGame", EInputEvent::IE_Pressed };
+	ab.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &APlayerCharacterController::PauseGamePressed);
+	ab.bExecuteWhenPaused = true;
+	InputComponent->AddActionBinding(ab);
 }
 
 void APlayerCharacterController::UpdateCameraSettings()
@@ -79,6 +73,7 @@ void APlayerCharacterController::UpdateCameraSettings()
 
 void APlayerCharacterController::PauseGamePressed()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Pause game pressed"));
 	const auto ID = UGameplayStatics::GetPlayerControllerID(this);
 	OnPausedGame.ExecuteIfBound(ID);
 }
