@@ -29,15 +29,11 @@ void UButlerGameInstance::Init()
 
 	btd::Delay(this, 0.5f, [=]()
 	{
-		auto LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
-		auto CurrentlyMainMenu = LevelName == "MainMenu";
 		if (BackgroundMusic)
 		{
 			AudioComponent = UGameplayStatics::CreateSound2D(GetWorld(), BackgroundMusic, 1.0f, 1.0f, 0.0f, SoundConcurrency, true, true);
 			AudioComponent->Play();
 		}
-		else
-			UE_LOG(LogTemp, Error, TEXT("GameInstance: %s sound not set!"), *LevelName)
 	});
 }
 
