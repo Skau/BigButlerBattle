@@ -572,7 +572,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 		remainingTime -= timeTick;
 		// Extra velocity for extra adjustments.
-		FVector extraVelocity = FVector::ZeroVector;
+		FVector oldVelocity = Velocity;
 		auto playerCharacter = Cast<APlayerCharacter>(GetOwner());
 
 
@@ -620,14 +620,15 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			// We subtract the skateboard offset because we want the character centre to be the skateboard centre on the curve.
 			FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) - playerCharacter->GetSkateboardLocation();
 			CurrentSpline.StartDistanceToCurve = (SplineWorldPos - StartWorldPos).Size();
-			UE_LOG(LogTemp, Warning, TEXT("Started grinding movement! Startingpos: %f"), CurrentSpline.SplinePos);
-			// extraVelocity = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) - CharacterOwner->GetActorLocation();
+			// UE_LOG(LogTemp, Warning, TEXT("Started grinding movement! Startingpos: %f"), CurrentSpline.SplinePos);
 			if (!Velocity.IsNearlyZero())
 			{
 				auto splineDir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
 				CurrentSpline.SplineDir = (FVector::DotProduct(splineDir, Velocity) > 0) ? 1 : -1;
 			}
 		}
+
+
 
 		// 2. Find acceleration
 
@@ -647,6 +648,8 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			break;
 		}
 
+		const bool bAtEnd = IsAtCurveEnd(timeTick);
+
 
 
 
@@ -655,7 +658,10 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		// 4. Move
 		if (Velocity.IsNearlyZero())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Calculated velocity is too small!"));
+			// Reset velocity
+			Velocity = oldVelocity;
+			SetMovementMode(EMovementMode::MOVE_Falling);
+			StartNewPhysics(remainingTime, Iterations);
 		}
 		else
 		{
@@ -664,19 +670,16 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			bool bMoveResult = SafeMoveUpdatedComponent(Velocity * timeTick, newRot, true, Hit);
 		}
 
-		// UE_LOG(LogTemp, Warning, TEXT("Current pos: %f"), CurrentSpline.SplinePos);
+
+
+
 
 		// 5. Check if outside curve.
 		if (CurrentSpline.PlayerState == FSplineInfo::STATE_OnRail)
 		{
-			CurrentSpline.SplinePos += timeTick * CurrentSpline.SplineDir * RailSpeedMultiplier;
-			if (CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f)
+			CurrentSpline.SplinePos = GetNewCurvePoint();
+			if (bAtEnd || CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f)
 			{
-				// CurrentSpline.PlayerState = FSplineInfo::STATE_Leaving;
-				// // Reset curve
-				// CurrentSpline.bHasValue = false;
-
-				UE_LOG(LogTemp, Warning, TEXT("Outside of curve, so switching to falling movement."));
 				SetMovementMode(EMovementMode::MOVE_Falling);
 				StartNewPhysics(remainingTime, Iterations);
 			}
@@ -737,34 +740,64 @@ void UPlayerCharacterMovementComponent::CalcGrindingEnteringVelocity(FQuat& NewR
 
 void UPlayerCharacterMovementComponent::CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime)
 {
-	// auto playerCharacter = Cast<APlayerCharacter>(GetOwner());
-	// if (!playerCharacter)
-	// 	return;
-
 	auto& SplineRef = *CurrentSpline.SkateboardSplineReference;
 	FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
-	float NextSplinePos = CurrentSpline.SplinePos + DeltaTime * CurrentSpline.SplineDir * RailSpeedMultiplier;
-	FVector SplineNextWorldPos;
-	// If inside curve, use curve point.
-	if (NextSplinePos < CurrentSpline.PointCount)
-	{
-		SplineNextWorldPos = SplineRef.GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World);
-	}
-	// If not inside curve, calculate a curve point using the curvedirection.
-	else
-	{
-		auto dir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) * CurrentSpline.SplineDir;
-		UE_LOG(LogTemp, Warning, TEXT("dir is %f"), dir.Size());
-		SplineNextWorldPos = SplineWorldPos + dir * DeltaTime;
-	}
+	FVector Dir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) * CurrentSpline.SplineDir;
+
+	float Speed = bUseConstantGrindingSpeed ? RailGrindingSpeed : CurrentSpline.StartVelocity;
+	float NextSplinePos = SplineRef.FindInputKeyClosestToWorldLocation(SplineWorldPos + Dir * DeltaTime * Speed);
+	
+	FVector CurveCorrectedDir = SplineRef.GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World) - SplineWorldPos;
 
 	// Set new velocity
-	Velocity = (SplineNextWorldPos - SplineWorldPos) / DeltaTime;
+	Velocity = CurveCorrectedDir / DeltaTime;
 	// Check velocity
 	if (Velocity.ContainsNaN())
 		Velocity = FVector::ZeroVector;
 
 	NewRotation = UKismetMathLibrary::MakeRotFromZX(FVector::UpVector, Velocity.IsNearlyZero() ? FVector::ForwardVector : Velocity).Quaternion();
+}
+
+float UPlayerCharacterMovementComponent::GetNewCurvePoint()
+{
+	auto playerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!playerCharacter)
+		return CurrentSpline.SplinePos;
+
+	return CurrentSpline.SkateboardSplineReference->FindInputKeyClosestToWorldLocation(GetSkateboardLocation(playerCharacter));
+}
+
+bool UPlayerCharacterMovementComponent::InEndInterval() const
+{
+	const bool bForward = CurrentSpline.SplineDir > 0;
+	const auto lastIndex = bForward ? CurrentSpline.PointCount - 1 : 0;
+	return InEndInterval(lastIndex, bForward);
+}
+
+bool UPlayerCharacterMovementComponent::InEndInterval(int32 LastIndex, bool bForward) const
+{
+	const bool bTwoPoints = CurrentSpline.PointCount == 2;
+	/**
+	 * If pointcount is 2, check if splinepos >= 0 and splinepos <= 1, otherwise:
+	 * 
+	 * If moving forward splinepos has to be greater than lastindex - 1 and less than lastindex,
+	 * if moving backwards splinepos has to be greater than 0 and less than 1.
+	 */
+	return CurrentSpline.SplinePos >= (bTwoPoints ? 0 : LastIndex - bForward) && CurrentSpline.SplinePos <= (bTwoPoints ? 1 : LastIndex + !bForward);
+}
+
+bool UPlayerCharacterMovementComponent::IsAtCurveEnd(float DeltaTime) const
+{
+	const bool bForward = CurrentSpline.SplineDir > 0;
+	const auto lastIndex = bForward ? CurrentSpline.PointCount - 1 : 0;
+
+	if (!InEndInterval(lastIndex, bForward))
+		return false;
+
+	auto splineWorldPos = CurrentSpline.SkateboardSplineReference->GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
+	auto lastPoint = CurrentSpline.SkateboardSplineReference->GetLocationAtSplinePoint(lastIndex, ESplineCoordinateSpace::World);
+	auto nextPoint = splineWorldPos + Velocity * DeltaTime;
+	return FVector::DotProduct(nextPoint - lastPoint, nextPoint - splineWorldPos) > 0.f;
 }
 
 FVector UPlayerCharacterMovementComponent::GetSkateboardLocation(APlayerCharacter* Owner)
