@@ -20,7 +20,7 @@ struct FPlayerOptions
 /**
  * 
  */
-UCLASS()
+UCLASS(config=Game)
 class BIGBUTLERBATTLE_API UButlerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
@@ -30,7 +30,7 @@ public:
 
     void Init() override;
 
-	int GetCurrentRandomSeed() const { return Seed; }
+	int GetCurrentRandomSeed() const { return CustomSeed; }
 
 	TArray<FPlayerOptions> PlayerOptions;
 
@@ -51,11 +51,11 @@ public:
 protected:
 	void Shutdown() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
-	bool bUseCustomSeed = false;
+	UPROPERTY(config)
+	bool bUseCustomSeed;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
-	int Seed = 0;
+	UPROPERTY(config)
+	int CustomSeed;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	float IncrementValue = 0.1f;

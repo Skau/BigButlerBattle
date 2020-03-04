@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "AudioDevice.h"
 #include "Utils/btd.h"
+#include "Utils/BBBSettings.h"
 
 UButlerGameInstance::UButlerGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -17,12 +18,19 @@ UButlerGameInstance::UButlerGameInstance(const FObjectInitializer& ObjectInitial
 void UButlerGameInstance::Init()
 {
 	Super::Init();
+	auto Settings = GetDefault<UBBBSettings>();
+
+	bUseCustomSeed = Settings->bUseCustomSeed;
+	CustomSeed = Settings->CustomSeed;
+
+	UE_LOG(LogTemp, Warning, TEXT("Using custom seed = %i"), bUseCustomSeed);
+	UE_LOG(LogTemp, Warning, TEXT("Seed = %i"), CustomSeed);
 
 	if (!bUseCustomSeed)
 	{
 		FRandomStream Stream;
 		Stream.GenerateNewSeed();
-		Seed = Stream.GetCurrentSeed();
+		CustomSeed = Stream.GetCurrentSeed();
 	}
 
 	PlayerOptions.AddDefaulted(4);
@@ -106,6 +114,8 @@ void UButlerGameInstance::Shutdown()
 {
 	if (AudioComponent && AudioComponent->IsPlaying())
 		AudioComponent->Stop();
+
+	SaveConfig();
 }
 
 void UButlerGameInstance::FadeBetweenMusic(bool bNewLevelIsMainMenu)
