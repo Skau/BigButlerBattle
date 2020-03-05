@@ -30,7 +30,7 @@ public:
 
     void Init() override;
 
-	int GetCurrentRandomSeed() const { return Seed; }
+	int GetCurrentRandomSeed() const { return CustomSeed; }
 
 	TArray<FPlayerOptions> PlayerOptions;
 
@@ -51,11 +51,11 @@ public:
 protected:
 	void Shutdown() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
-	bool bUseCustomSeed = false;
+	UPROPERTY(EditDefaultsOnly)
+	bool bUseCustomSeed;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Random Generator")
-	int Seed = 0;
+	UPROPERTY(EditDefaultsOnly)
+	int CustomSeed;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	float IncrementValue = 0.1f;

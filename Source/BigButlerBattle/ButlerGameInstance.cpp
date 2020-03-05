@@ -22,7 +22,7 @@ void UButlerGameInstance::Init()
 	{
 		FRandomStream Stream;
 		Stream.GenerateNewSeed();
-		Seed = Stream.GetCurrentSeed();
+		CustomSeed = Stream.GetCurrentSeed();
 	}
 
 	PlayerOptions.AddDefaulted(4);
@@ -106,6 +106,8 @@ void UButlerGameInstance::Shutdown()
 {
 	if (AudioComponent && AudioComponent->IsPlaying())
 		AudioComponent->Stop();
+
+	SaveConfig();
 }
 
 void UButlerGameInstance::FadeBetweenMusic(bool bNewLevelIsMainMenu)
