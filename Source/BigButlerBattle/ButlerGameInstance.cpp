@@ -7,7 +7,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "AudioDevice.h"
 #include "Utils/btd.h"
-#include "Utils/BBBSettings.h"
 
 UButlerGameInstance::UButlerGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -18,19 +17,6 @@ UButlerGameInstance::UButlerGameInstance(const FObjectInitializer& ObjectInitial
 void UButlerGameInstance::Init()
 {
 	Super::Init();
-
-#ifdef IF_WITH_EDITOR
-	UE_LOG(LogTemp, Warning, TEXT("WITH EDITOR"));
-	auto Settings = GetDefault<UBBBSettings>();
-	bUseCustomSeed = Settings->bUseCustomSeed;
-	CustomSeed = Settings->CustomSeed;
-#else
-	UE_LOG(LogTemp, Warning, TEXT("NO EDITOR"));
-	LoadConfig();
-#endif
-
-	UE_LOG(LogTemp, Warning, TEXT("Using custom seed = %i"), bUseCustomSeed);
-	UE_LOG(LogTemp, Warning, TEXT("Seed = %i"), CustomSeed);
 
 	if (!bUseCustomSeed)
 	{

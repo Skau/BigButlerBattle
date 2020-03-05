@@ -20,7 +20,7 @@ struct FPlayerOptions
 /**
  * 
  */
-UCLASS(config=Game)
+UCLASS()
 class BIGBUTLERBATTLE_API UButlerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
@@ -51,10 +51,10 @@ public:
 protected:
 	void Shutdown() override;
 
-	UPROPERTY(config)
+	UPROPERTY(EditDefaultsOnly)
 	bool bUseCustomSeed;
 
-	UPROPERTY(config)
+	UPROPERTY(EditDefaultsOnly)
 	int CustomSeed;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
