@@ -50,7 +50,6 @@ private:
 	void OnCameraToggleInvertPitchPressed();
 
 private:
-	UButlerGameInstance* GameInstance;
 	UButlerGameInstance* GetGameInstance();
 
 	int ID = -1;
