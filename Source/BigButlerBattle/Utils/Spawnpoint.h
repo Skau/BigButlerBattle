@@ -14,7 +14,6 @@ enum class ERoomSpawn : uint8
 	Room_Kitchen		UMETA(DisplayName = "Kitchen"),
 	Room_Kitchen2		UMETA(DisplayName = "Kitchen 2nd"),
 	Room_SquareHall		UMETA(DisplayName = "SquareHall"),
-	Room_SquareHall2	UMETA(DisplayName = "SquareHall 2nd"),
 	Room_StairRoom		UMETA(DisplayName = "StairRoom"),
 	Room_StairRoom2		UMETA(DisplayName = "StairRoom 2nd"),
 	Room_Bar			UMETA(DisplayName = "Bar")
