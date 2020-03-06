@@ -26,6 +26,7 @@
 #include "Components/SplineComponent.h"
 #include "Components/SphereComponent.h"
 #include "NiagaraComponent.h"
+#include "Engine/EngineTypes.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -118,7 +119,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
 	GrindingOverlapThreshold->SetSphereRadius(300.f);
 
-	
+
 	// Particles
 	SkateboardParticles = CreateDefaultSubobject<UNiagaraComponent>("Skateboard particles");
 	SkateboardParticles->SetupAttachment(SkateboardMesh);
@@ -215,7 +216,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetAudioVolumeMult());
 	}
-	
+
 	if (CanGrind())
 	{
 		if (auto rail = GetClosestRail())
@@ -507,7 +508,17 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			}
 		}
 	}
-	// Case 2/3: On Ground
+	// Case 2/4: Grinding
+	else if (Movement->IsGrinding())
+	{
+		const auto railNormal = Movement->GetRailNormal();
+		if (railNormal.IsNearlyZero())
+			return;
+
+		auto desiredRotation = GetDesiredRotation(railNormal);
+		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime));
+	}
+	// Case 3/4: On Ground
 	else
 	{
 		// Perform tracing
@@ -533,7 +544,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		// One hit:
 		else if (TraceResults.Front.bBlockingHit || TraceResults.Back.bBlockingHit)
 		{
-			auto& Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
+			auto &Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
 			auto DesiredRotation = GetDesiredRotation(Result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 
@@ -599,26 +610,45 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 
 void APlayerCharacter::DropCurrentObject()
 {
-	if (const auto Obj = Inventory[CurrentItemIndex])
+	auto Obj = Inventory[CurrentItemIndex];
+	if (!Obj)
+		IncrementCurrentItemIndex();
+
+	Obj = Inventory[CurrentItemIndex];
+	if (Obj)
 	{
 		PickupBlacklist.RemoveSingle(Obj);
 
-		//if (bCurrentlyHoldingThrow)
-		//{
-		const auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
-		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
+		FVector Dir = Camera->GetForwardVector();
+
+		FHitResult HitResult;
+
+		float Radius = 300.f;
+
+		FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
+		FVector End = Start + (Dir * 1000.f);
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
+		TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		// Aimbot
+		if (GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, FCollisionObjectQueryParams(TraceObjectTypes), FCollisionShape::MakeSphere(Radius), Params))
+		{
+			auto HitDir = (HitResult.ImpactPoint - Start).GetSafeNormal();
+			auto Angle = btd::GetAngleBetweenNormals(Dir, HitDir);
+
+			if (Angle < 180.f)
+			{
+				Dir = HitDir;
+			}
+		}
 		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
-		const auto FinalVelocity = VelProject + (Dir * ThrowStrength);
-		//}
-		//else
-		//{
-		//	FHitResult HitResult;
-		//	FCollisionQueryParams Params;
-		//	if (GetWorld()->LineTraceSingleByProfile(HitResult, GetActorLocation() + (GetActorForwardVector() * -100.f), GetActorUpVector() * -1000.f, "WorldStatic", Params))
-		//	{
-		//		SpawnPos = HitResult.ImpactPoint;
-		//	}
-		//}
+
+		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
+		const auto FinalVelocity = Dir * VelProject + ThrowStrength;
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
 		IncrementCurrentItemIndex();

@@ -227,6 +227,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
 	FSplineInfo CurrentSpline;
 
+	bool IsGrinding() const;
+
+	FVector GetRailNormal() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
 	bool bUseConstantEnteringSpeed = true;

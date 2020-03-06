@@ -232,6 +232,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
 	float SkateboardRotationAirSpeed = 0.08f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "GrindingRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationGrindingSpeed = 0.4f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation")
 	bool bDebugMovement = false;
 

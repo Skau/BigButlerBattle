@@ -47,9 +47,6 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	USplineComponent* SplineComp;
 
-	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* RailOverlap;
-
 	// Sets default values for this actor's properties
 	ARailing();
 

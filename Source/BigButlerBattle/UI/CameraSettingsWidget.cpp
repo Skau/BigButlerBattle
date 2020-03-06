@@ -28,9 +28,15 @@ bool UCameraSettingsWidget::Initialize()
 void UCameraSettingsWidget::OnPlayerControllerSet()
 {
 	ID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
-	const auto Options = GetGameInstance()->PlayerOptions[ID];
-	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
-	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
+
+	if (auto GameInstance = GetGameInstance())
+	{
+		const auto Options = GetGameInstance()->PlayerOptions[ID];
+		Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
+		Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
+	}
+	else
+		UE_LOG(LogTemp, Error, TEXT("UCameraSettingsWidget::OnPlayerControllerSet: Could not find game instance!"))
 }
 
 void UCameraSettingsWidget::OnBackButtonPressed()
@@ -40,33 +46,41 @@ void UCameraSettingsWidget::OnBackButtonPressed()
 
 void UCameraSettingsWidget::OnCameraToggleInvertPitchPressed()
 {
-	auto& Options = GameInstance->PlayerOptions[ID];
-	Options.InvertCameraPitch = !Options.InvertCameraPitch;
-	Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
-
-	if (auto Controller = Cast<APlayerCharacterController>(OwningPlayerController))
+	if (auto GameInstance = GetGameInstance())
 	{
-		Controller->UpdateCameraSettings();
+		auto& Options = GameInstance->PlayerOptions[ID];
+		Options.InvertCameraPitch = !Options.InvertCameraPitch;
+		Text_InvertPitch->SetText(FText::FromString((Options.InvertCameraPitch) ? "Inverted" : "Regular"));
+
+		if (auto Controller = Cast<APlayerCharacterController>(OwningPlayerController))
+		{
+			Controller->UpdateCameraSettings();
+		}
 	}
+	else
+		UE_LOG(LogTemp, Error, TEXT("UCameraSettingsWidget::OnCameraToggleInvertPitchPressed: Could not find game instance!"))
 }
 
 void UCameraSettingsWidget::OnCameraToggleInvertYawPressed()
 {
-	auto& Options = GameInstance->PlayerOptions[ID];
-	Options.InvertCameraYaw = !Options.InvertCameraYaw;
-	Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
-	
-	if (auto Controller = Cast<APlayerCharacterController>(OwningPlayerController))
+	if (auto GameInstance = GetGameInstance())
 	{
-		Controller->UpdateCameraSettings();
+		auto& Options = GameInstance->PlayerOptions[ID];
+		Options.InvertCameraYaw = !Options.InvertCameraYaw;
+		Text_InvertYaw->SetText(FText::FromString((Options.InvertCameraYaw) ? "Inverted" : "Regular"));
+
+		if (auto Controller = Cast<APlayerCharacterController>(OwningPlayerController))
+		{
+			Controller->UpdateCameraSettings();
+		}
 	}
+	else
+		UE_LOG(LogTemp, Error, TEXT("UCameraSettingsWidget::OnCameraToggleInvertYawPressed: Could not find game instance!"))
 }
 
 UButlerGameInstance* UCameraSettingsWidget::GetGameInstance()
 {
-	if (!GameInstance)
-		GameInstance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	return GameInstance;
+	return Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 }
 
 
