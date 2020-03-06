@@ -501,7 +501,17 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			}
 		}
 	}
-	// Case 2/3: On Ground
+	// Case 2/4: Grinding
+	else if (Movement->IsGrinding())
+	{
+		const auto railNormal = Movement->GetRailNormal();
+		if (railNormal.IsNearlyZero())
+			return;
+
+		auto desiredRotation = GetDesiredRotation(railNormal);
+		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime));
+	}
+	// Case 3/4: On Ground
 	else
 	{
 		// Perform tracing
@@ -527,7 +537,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		// One hit:
 		else if (TraceResults.Front.bBlockingHit || TraceResults.Back.bBlockingHit)
 		{
-			auto& Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
+			auto &Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
 			auto DesiredRotation = GetDesiredRotation(Result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 
