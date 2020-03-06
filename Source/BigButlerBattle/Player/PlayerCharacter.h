@@ -23,6 +23,7 @@ class UTask;
 class UAudioComponent;
 class ARailing;
 class USphereComponent;
+class UNiagaraComponent;
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -125,6 +126,9 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent *Movement = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent *SkateboardParticles = nullptr;
 
 	bool bHoldingJump = false;
 

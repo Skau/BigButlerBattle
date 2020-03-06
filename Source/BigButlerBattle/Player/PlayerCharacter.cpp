@@ -25,6 +25,7 @@
 #include "Utils/Railing.h"
 #include "Components/SplineComponent.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraComponent.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -116,6 +117,12 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
 	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
 	GrindingOverlapThreshold->SetSphereRadius(300.f);
+
+	
+	// Particles
+	SkateboardParticles = CreateDefaultSubobject<UNiagaraComponent>("Skateboard particles");
+	SkateboardParticles->SetupAttachment(SkateboardMesh);
+	SkateboardParticles->SetRelativeScale3D(FVector{0.1f, 0.1f, 0.1f});
 }
 
 void APlayerCharacter::BeginPlay()
@@ -287,8 +294,7 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 
 
 
-
-
+/// ==================================== Movement =================================================
 void APlayerCharacter::StartJump()
 {
 	bHoldingJump = true;
@@ -346,6 +352,7 @@ void APlayerCharacter::UpdateHandbrake(float Value)
 
 
 
+/// ==================================== Camera =================================================
 void APlayerCharacter::SetCustomSpringArmLength()
 {
 	DefaultSpringArmLength = SpringArm->TargetArmLength = CustomSpringArmLength;
