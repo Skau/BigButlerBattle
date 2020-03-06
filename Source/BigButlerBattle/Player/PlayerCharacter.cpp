@@ -177,6 +177,22 @@ void APlayerCharacter::BeginPlay()
 
 	GrindingOverlapThreshold->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapBegin);
 	GrindingOverlapThreshold->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapEnd);
+
+
+	// Particles
+	Movement->OnCustomMovementStart.AddLambda([&](uint8 movementMode){
+		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+		{
+			SkateboardParticles->SetVariableBool(FName{"User.EmittersEnabled"}, true);
+		}
+	});
+
+	Movement->OnCustomMovementEnd.AddLambda([&](uint8 movementMode) {
+		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+		{
+			SkateboardParticles->SetVariableBool(FName{"User.EmittersEnabled"}, false);
+		}
+	});
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
