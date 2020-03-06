@@ -85,6 +85,4 @@ protected:
 	
 private:
 	UButlerGameInstance* GetGameInstance();
-
-	UButlerGameInstance* GameInstance;
 };

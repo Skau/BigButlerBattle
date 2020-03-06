@@ -25,6 +25,7 @@
 #include "Utils/Railing.h"
 #include "Components/SplineComponent.h"
 #include "Components/SphereComponent.h"
+#include "Engine/EngineTypes.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -592,26 +593,45 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 
 void APlayerCharacter::DropCurrentObject()
 {
-	if (const auto Obj = Inventory[CurrentItemIndex])
+	auto Obj = Inventory[CurrentItemIndex];
+	if (!Obj)
+		IncrementCurrentItemIndex();
+
+	Obj = Inventory[CurrentItemIndex];
+	if (Obj)
 	{
 		PickupBlacklist.RemoveSingle(Obj);
 
-		//if (bCurrentlyHoldingThrow)
-		//{
-		const auto Dir = (GetActorLocation() - Camera->GetComponentLocation()).GetSafeNormal();
-		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir);
+		FVector Dir = Camera->GetForwardVector();
+
+		FHitResult HitResult;
+
+		float Radius = 300.f;
+
+		FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
+		FVector End = Start + (Dir * 1000.f);
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
+		TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		// Aimbot
+		if (GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, FCollisionObjectQueryParams(TraceObjectTypes), FCollisionShape::MakeSphere(Radius), Params))
+		{
+			auto HitDir = (HitResult.ImpactPoint - Start).GetSafeNormal();
+			auto Angle = btd::GetAngleBetweenNormals(Dir, HitDir);
+
+			if (Angle < 180.f)
+			{
+				Dir = HitDir;
+			}
+		}
 		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
-		const auto FinalVelocity = VelProject + (Dir * ThrowStrength);
-		//}
-		//else
-		//{
-		//	FHitResult HitResult;
-		//	FCollisionQueryParams Params;
-		//	if (GetWorld()->LineTraceSingleByProfile(HitResult, GetActorLocation() + (GetActorForwardVector() * -100.f), GetActorUpVector() * -1000.f, "WorldStatic", Params))
-		//	{
-		//		SpawnPos = HitResult.ImpactPoint;
-		//	}
-		//}
+
+		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
+		const auto FinalVelocity = Dir * VelProject + ThrowStrength;
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
 		IncrementCurrentItemIndex();

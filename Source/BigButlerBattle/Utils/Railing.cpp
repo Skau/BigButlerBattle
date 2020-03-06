@@ -33,10 +33,6 @@ ARailing::ARailing()
 	SplineComp->ScaleVisualizationWidth = 5.f;
 	SplineComp->bShouldVisualizeScale = true;
 #endif
-
-	RailOverlap = CreateDefaultSubobject<UBoxComponent>(TEXT("RailOverlap"));
-	RailOverlap->SetupAttachment(RootComponent);
-	RailOverlap->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
