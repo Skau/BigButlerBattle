@@ -532,7 +532,13 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			return;
 
 		auto desiredRotation = GetDesiredGrindingRotation(railNormal);
-		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime));
+		float alpha = (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime;
+		if (AnimInstance)
+		{
+			AnimInstance->LeftLegJointRotation = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, alpha);
+			AnimInstance->RightLegJointRotation = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, alpha);
+		}
+		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, alpha));
 	}
 	// Case 3/4: On Ground
 	else
@@ -574,6 +580,23 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			// Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 	}
+
+	// Reset joint locations
+	if ((GetMovementComponent()->IsFalling() || !Movement->IsGrinding()) && AnimInstance)
+	{
+		const float alpha = (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime;
+		if (!AnimInstance->LeftLegJointRotation.IsIdentity())
+		{
+			const auto lerp = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat::Identity, alpha);
+			AnimInstance->LeftLegJointRotation = lerp.IsIdentity(0.0001f) ? FQuat::Identity : lerp;
+		}
+
+		if (!AnimInstance->RightLegJointRotation.IsIdentity())
+		{
+			const auto lerp = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat::Identity, alpha);
+			AnimInstance->RightLegJointRotation = lerp.IsIdentity(0.0001f) ? FQuat::Identity : lerp;
+		}
+	}
 }
 
 
@@ -589,7 +612,12 @@ FQuat APlayerCharacter::GetDesiredRotation(const FVector& DestinationNormal) con
 
 FQuat APlayerCharacter::GetDesiredGrindingRotation(const FVector &DestinationNormal) const
 {
-	return GetDesiredRotation(DestinationNormal) * FQuat{DestinationNormal, PI / 2};
+	const FVector Right = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
+	const FVector Forward = FVector::CrossProduct(GetActorForwardVector(), DestinationNormal);
+
+	const FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
+
+	return Rot.Quaternion();
 }
 
 

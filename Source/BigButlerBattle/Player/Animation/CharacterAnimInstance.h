@@ -18,15 +18,17 @@ class BIGBUTLERBATTLE_API UCharacterAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
+	UCharacterAnimInstance();
+
 	void JumpAnim();
 
 	void ForwardKick();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 bLeftLegIK = true;
+	uint8 bLeftLegIK : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 bRightLegIK = true;
+	uint8 bRightLegIK : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector LeftFootTarget;
@@ -34,15 +36,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector RightFootTarget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
 	FVector LeftLegJointLocation = FVector{50.f, 100.f, 0.f};
 
-	FQuat LeftLegJointRotation;
+	FQuat LeftLegJointRotation{FQuat::Identity};
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadOnly)
+	FVector LeftLegJointLocationFinal;
+
+	UPROPERTY(EditAnywhere)
 	FVector RightLegJointLocation = FVector{-50.f, 100.f, 0.f};
 
-	FQuat RightLegJointRotation;
+	FQuat RightLegJointRotation{FQuat::Identity};
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector RightLegJointLocationFinal;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator SkateboardRotationOffset;
