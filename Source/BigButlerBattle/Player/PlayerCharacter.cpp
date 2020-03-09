@@ -64,7 +64,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 	TaskObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
-	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
+	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 190.f, 150.f});
 
 	TaskObjectCameraCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
 	TaskObjectCameraCollision->SetupAttachment(Camera);
@@ -74,9 +74,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
 	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
-	TaskObjectCameraCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
+	TaskObjectCameraCollision->SetRelativeLocation(FVector{580.f, -80.f, 0.f});
 	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f + SpringArm->GetRelativeRotation().Pitch, 0.f, 0.f));
-	TaskObjectCameraCollision->InitCapsuleSize(128.f, 256.f);
+	TaskObjectCameraCollision->InitCapsuleSize(324.f, 410.f);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
