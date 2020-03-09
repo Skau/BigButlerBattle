@@ -531,7 +531,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		if (railNormal.IsNearlyZero())
 			return;
 
-		auto desiredRotation = GetDesiredRotation(railNormal);
+		auto desiredRotation = GetDesiredGrindingRotation(railNormal);
 		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime));
 	}
 	// Case 3/4: On Ground
@@ -587,6 +587,10 @@ FQuat APlayerCharacter::GetDesiredRotation(const FVector& DestinationNormal) con
 	return Rot.Quaternion();
 }
 
+FQuat APlayerCharacter::GetDesiredGrindingRotation(const FVector &DestinationNormal) const
+{
+	return GetDesiredRotation(DestinationNormal) * FQuat{DestinationNormal, PI / 2};
+}
 
 
 

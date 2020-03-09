@@ -22,6 +22,12 @@ public:
 
 	void ForwardKick();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 bLeftLegIK = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 bRightLegIK = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector LeftFootTarget;
 
@@ -31,8 +37,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector LeftLegJointLocation = FVector{50.f, 100.f, 0.f};
 
+	FQuat LeftLegJointRotation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector RightLegJointLocation = FVector{-50.f, 100.f, 0.f};
+
+	FQuat RightLegJointRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator SkateboardRotationOffset;
