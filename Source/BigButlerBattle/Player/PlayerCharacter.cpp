@@ -25,6 +25,7 @@
 #include "Utils/Railing.h"
 #include "Components/SplineComponent.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraComponent.h"
 #include "Engine/EngineTypes.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
@@ -117,6 +118,12 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
 	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
 	GrindingOverlapThreshold->SetSphereRadius(300.f);
+
+
+	// Particles
+	SkateboardParticles = CreateDefaultSubobject<UNiagaraComponent>("Skateboard particles");
+	SkateboardParticles->SetupAttachment(SkateboardMesh);
+	SkateboardParticles->SetRelativeScale3D(FVector{0.1f, 0.1f, 0.1f});
 }
 
 void APlayerCharacter::BeginPlay()
@@ -170,6 +177,22 @@ void APlayerCharacter::BeginPlay()
 
 	GrindingOverlapThreshold->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapBegin);
 	GrindingOverlapThreshold->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnGrindingOverlapEnd);
+
+
+	// Particles
+	Movement->OnCustomMovementStart.AddLambda([&](uint8 movementMode){
+		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+		{
+			SkateboardParticles->SetVariableBool(FName{"User.EmittersEnabled"}, true);
+		}
+	});
+
+	Movement->OnCustomMovementEnd.AddLambda([&](uint8 movementMode) {
+		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+		{
+			SkateboardParticles->SetVariableBool(FName{"User.EmittersEnabled"}, false);
+		}
+	});
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
@@ -209,7 +232,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetAudioVolumeMult());
 	}
-	
+
 	if (CanGrind())
 	{
 		if (auto rail = GetClosestRail())
@@ -288,8 +311,7 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 
 
 
-
-
+/// ==================================== Movement =================================================
 void APlayerCharacter::StartJump()
 {
 	bHoldingJump = true;
@@ -347,6 +369,7 @@ void APlayerCharacter::UpdateHandbrake(float Value)
 
 
 
+/// ==================================== Camera =================================================
 void APlayerCharacter::SetCustomSpringArmLength()
 {
 	DefaultSpringArmLength = SpringArm->TargetArmLength = CustomSpringArmLength;
@@ -501,7 +524,17 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			}
 		}
 	}
-	// Case 2/3: On Ground
+	// Case 2/4: Grinding
+	else if (Movement->IsGrinding())
+	{
+		const auto railNormal = Movement->GetRailNormal();
+		if (railNormal.IsNearlyZero())
+			return;
+
+		auto desiredRotation = GetDesiredRotation(railNormal);
+		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime));
+	}
+	// Case 3/4: On Ground
 	else
 	{
 		// Perform tracing
@@ -527,7 +560,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		// One hit:
 		else if (TraceResults.Front.bBlockingHit || TraceResults.Back.bBlockingHit)
 		{
-			auto& Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
+			auto &Result = TraceResults.Front.bBlockingHit ? TraceResults.Front : TraceResults.Back;
 			auto DesiredRotation = GetDesiredRotation(Result.ImpactNormal);
 			SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime));
 

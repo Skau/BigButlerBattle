@@ -23,6 +23,7 @@ class UTask;
 class UAudioComponent;
 class ARailing;
 class USphereComponent;
+class UNiagaraComponent;
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -126,6 +127,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent *Movement = nullptr;
 
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent *SkateboardParticles = nullptr;
+
 	bool bHoldingJump = false;
 
 public:
@@ -227,6 +231,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "AirRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
 	float SkateboardRotationAirSpeed = 0.08f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation", meta = (DisplayName = "GrindingRotation Speed", ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float SkateboardRotationGrindingSpeed = 0.4f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skateboard Rotation")
 	bool bDebugMovement = false;

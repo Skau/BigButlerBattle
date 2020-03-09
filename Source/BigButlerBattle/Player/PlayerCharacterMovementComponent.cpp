@@ -558,6 +558,21 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 
 
 // ================================== Grinding =================================================
+bool UPlayerCharacterMovementComponent::IsGrinding() const
+{
+	return MovementMode == MOVE_Custom && CustomMovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding);
+}
+
+FVector UPlayerCharacterMovementComponent::GetRailNormal() const
+{
+	if (!IsGrinding() || !CurrentSpline.HasValue())
+		return FVector::ZeroVector;
+
+	auto owner = GetOwner();
+	auto splineDir = CurrentSpline.SkateboardSplineReference->GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
+	return FVector::CrossProduct(splineDir * CurrentSpline.SplineDir, owner->GetActorRightVector()).GetSafeNormal();
+}
+
 void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iterations)
 {
 	if (deltaTime < MIN_TICK_TIME)
@@ -571,8 +586,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		Iterations++;
 		float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 		remainingTime -= timeTick;
-		// Extra velocity for extra adjustments.
-		FVector oldVelocity = Velocity;
+		const FVector oldVelocity = Velocity;
 		auto playerCharacter = Cast<APlayerCharacter>(GetOwner());
 
 
