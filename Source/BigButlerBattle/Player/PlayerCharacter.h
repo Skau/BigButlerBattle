@@ -256,6 +256,7 @@ protected:
 	void UpdateSkateboardRotation(float DeltaTime);
 
 	FQuat GetDesiredRotation(const FVector& DestinationNormal) const;
+	FQuat GetDesiredGrindingRotation(const FVector& DestinationNormal) const;
 
 
 

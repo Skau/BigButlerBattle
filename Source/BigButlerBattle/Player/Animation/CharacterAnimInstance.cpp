@@ -4,6 +4,13 @@
 #include "CharacterAnimInstance.h"
 #include "Player/PlayerCharacter.h"
 
+UCharacterAnimInstance::UCharacterAnimInstance()
+	: Super()
+{
+	bLeftLegIK = true;
+	bRightLegIK = true;
+}
+
 void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
