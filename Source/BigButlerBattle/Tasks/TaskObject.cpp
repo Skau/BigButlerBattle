@@ -78,6 +78,9 @@ void ATaskObject::Tick(float DeltaTime)
 	{
 		TimeSinceThrown += DeltaTime;
 
+		if (Instigator && TimeSinceThrown > 0.5f)
+			Instigator = nullptr;
+
 		if (TimeSinceThrown > CountAsPlayerTaskThreshold)
 		{
 			bRecordingTimeSinceThrown = false;

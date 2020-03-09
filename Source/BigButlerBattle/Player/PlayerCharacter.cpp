@@ -600,7 +600,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		{
 			// Disable picked up object
 			Object->OnPickedUp();
-			PickupBlacklist.Add(Object);
+
 			// Spawn new object
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
@@ -628,19 +628,20 @@ void APlayerCharacter::DropCurrentObject()
 {
 	auto Obj = Inventory[CurrentItemIndex];
 	if (!Obj)
+	{
 		IncrementCurrentItemIndex();
+		Obj = Inventory[CurrentItemIndex];
+		if (!Obj)
+			return;
+	}
 
-	Obj = Inventory[CurrentItemIndex];
 	if (Obj)
 	{
-		PickupBlacklist.RemoveSingle(Obj);
-
 		FVector Dir = Camera->GetForwardVector();
 
 		FHitResult HitResult;
 
 		float Radius = 300.f;
-
 		FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
 		FVector End = Start + (Dir * 1000.f);
 
@@ -662,9 +663,13 @@ void APlayerCharacter::DropCurrentObject()
 			}
 		}
 		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
-
-		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
-		const auto FinalVelocity = Dir * VelProject + ThrowStrength;
+		float VelProject = 0.f;
+		if (FMath::IsNearlyZero(Movement->Velocity.SizeSquared()))
+		{
+			VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
+		}
+		
+		const auto FinalVelocity = Dir * (VelProject + ThrowStrength);
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
 		IncrementCurrentItemIndex();
@@ -677,12 +682,10 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 	{
 		// Disable old object
 		Object->SetEnable(false, false, false);
-		PickupBlacklist.RemoveSingle(Object);
 
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Object->GetTaskData());
-		PickupBlacklist.Add(Spawned);
 
 		// Spawn transform
 		auto transform = Object->GetTransform();
@@ -699,6 +702,9 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 
 		// Set velocity
 		Spawned->LaunchVelocity = LaunchVelocity;
+
+		// Instigator
+		Spawned->Instigator = this;
 
 		// Finish
 		UGameplayStatics::FinishSpawningActor(Spawned, transform);
@@ -785,9 +791,10 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
-		if(TaskObject == ClosestPickup && PickupBlacklist.Find(TaskObject) == INDEX_NONE)
+		if(TaskObject == ClosestPickup)
 		{
-			OnObjectPickedUp(TaskObject);
+			if(TaskObject->Instigator != this)
+				OnObjectPickedUp(TaskObject);
 		}
 		else
 		{
@@ -804,7 +811,6 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 {
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
-		PickupBlacklist.RemoveSingle(TaskObject);
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 	}
 }
@@ -867,7 +873,8 @@ void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent
 {
 	if (auto Other = Cast<APlayerCharacter>(OtherActor))
 	{
-		PlayersInRange.AddUnique(Other);
+		if(Other != this)
+			PlayersInRange.AddUnique(Other);
 	}
 }
 
@@ -893,6 +900,9 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
+		if (TaskObjectsInCameraRange[i]->Instigator == this)
+			continue;
+
 		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{
