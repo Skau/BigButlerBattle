@@ -1,0 +1,2 @@
+Name,Type,Mesh,Material
+Plate,3,StaticMesh'/Game/Props/TaskObjects/Cutlery/Plate/Plate_Mesh.Plate_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Cutlery/Plate/Plate_Material.Plate_Material'

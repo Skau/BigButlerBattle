@@ -62,6 +62,9 @@ private:
 	UPROPERTY()
 	UDataTable* FoodDataTable = nullptr;
 
+	UPROPERTY()
+	UDataTable* CutleryDataTable = nullptr;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Task")
 	UStaticMesh* DefaultMesh = nullptr;
 

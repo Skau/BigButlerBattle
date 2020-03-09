@@ -1,4 +1,4 @@
 Name,Type,Mesh,Material
-Wine,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Shape_Cone.Shape_Cone',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Wine/WineMaterial.WineMaterial'
-Whiskey,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Shape_Cone.Shape_Cone',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Whiskey/WhiskeyMaterial.WhiskeyMaterial'
-Soda,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Shape_Cone.Shape_Cone',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Soda/SodaMaterial.SodaMaterial'
+Wine,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Wine/Wine_Mesh.Wine_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Wine/Wine_Material.Wine_Material'
+Whiskey,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Whiskey/Whiskey_Mesh.Whiskey_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Whiskey/Whiskey_Material.Whiskey_Material'
+Soda,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Soda/Soda_Mesh.Soda_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Soda/Soda_Material.Soda_Material'

@@ -130,6 +130,20 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			SetDefault();
 		}
 	}
+	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, CutleryDataTable)))
+	{
+		if (TaskType == EObjectType::Cutlery && CutleryDataTable)
+		{
+			if (!SetDataFromTable())
+			{
+				SetDefault();
+			}
+		}
+		else
+		{
+			SetDefault();
+		}
+	}
 	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, TaskData)))
 	{
 		if (TaskData && TaskData->Type != EObjectType::None)
@@ -175,6 +189,11 @@ bool ATaskObject::SetDataFromTable()
 	case EObjectType::Food:
 	{
 		DataTableToUse = FoodDataTable;
+		break;
+	}
+	case EObjectType::Cutlery:
+	{
+		DataTableToUse = CutleryDataTable;
 		break;
 	}
 	default:
@@ -353,4 +372,14 @@ void ATaskObject::UpdateDataTables()
 	check(success == true);
 
 	FoodDataTable->CreateTableFromCSVString(File);
+
+	CutleryDataTable = NewObject<UDataTable>();
+	CutleryDataTable->RowStruct = FTaskTableData::StaticStruct();
+	CutleryDataTable->bIgnoreExtraFields = true;
+
+	FilePath = FString(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + FString("Taskdata/CutleryData.csv"));
+	success = FFileHelper::LoadFileToString(File, *FilePath);
+	check(success == true);
+
+	CutleryDataTable->CreateTableFromCSVString(File);
 }

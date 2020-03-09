@@ -207,7 +207,8 @@ void ABigButlerBattleGameModeBase::BeginTaskGeneration()
 	TMap<EObjectType, FIntRange> Ranges
 	{
 		{EObjectType::Drink, WineRange},
-		{EObjectType::Food, FoodRange}
+		{EObjectType::Food, FoodRange},
+		{EObjectType::Cutlery, CutleryRange}
 	};
 
 	// Get all tasks available in the world

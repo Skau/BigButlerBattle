@@ -11,7 +11,8 @@ enum class EObjectType : uint8
 {
     None,
     Drink,
-    Food
+    Food,
+    Cutlery
 };
 
 USTRUCT(BlueprintType)

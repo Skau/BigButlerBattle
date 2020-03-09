@@ -1,4 +1,5 @@
 Name,Type,Mesh,Material
-Chicken,2,StaticMesh'/Game/Props/TaskObjects/Food/Shape_Torus.Shape_Torus',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Chicken/ChickenMaterial.ChickenMaterial'
-Steak,2,StaticMesh'/Game/Props/TaskObjects/Food/Shape_Torus.Shape_Torus',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Steak/SteakMaterial.SteakMaterial'
-Banana,2,StaticMesh'/Game/Props/TaskObjects/Food/Shape_Torus.Shape_Torus',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Banana/BananaMaterial.BananaMaterial'
+Chicken,2,StaticMesh'/Game/Props/TaskObjects/Food/Chicken/Chicken_Mesh.Chicken_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Chicken/Chicken_Material.Chicken_Material'
+Steak,2,StaticMesh'/Game/Props/TaskObjects/Food/Steak/Steak_Mesh.Steak_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Steak/Steak_Material.Steak_Material'
+Banana,2,StaticMesh'/Game/Props/TaskObjects/Food/Banana/Banana_Mesh.Banana_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Food/Banana/Banana_Material.Banana_Material'
+,"","",""
