@@ -124,6 +124,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SkateboardParticles = CreateDefaultSubobject<UNiagaraComponent>("Skateboard particles");
 	SkateboardParticles->SetupAttachment(SkateboardMesh);
 	SkateboardParticles->SetRelativeScale3D(FVector{0.1f, 0.1f, 0.1f});
+	SkateboardParticles->SetRelativeRotation(FRotator{0.f, 90.f, 0.f});
 }
 
 void APlayerCharacter::BeginPlay()
