@@ -63,7 +63,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectPickupCollision->SetGenerateOverlapEvents(true);
 	TaskObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
-	TaskObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
+	TaskObjectPickupCollision->SetRelativeLocation(FVector{85.f, 0.f, 0.f});
 	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 190.f, 150.f});
 
 	TaskObjectCameraCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
@@ -74,7 +74,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
 	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
-	TaskObjectCameraCollision->SetRelativeLocation(FVector{580.f, -80.f, 0.f});
+	TaskObjectCameraCollision->SetRelativeLocation(FVector{630.f, -80.f, 4.f});
 	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f + SpringArm->GetRelativeRotation().Pitch, 0.f, 0.f));
 	TaskObjectCameraCollision->InitCapsuleSize(324.f, 410.f);
 
@@ -674,9 +674,9 @@ void APlayerCharacter::DropCurrentObject()
 
 		FHitResult HitResult;
 
-		float Radius = 300.f;
-		FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
-		FVector End = Start + (Dir * 1000.f);
+		const float Radius = 300.f;
+		const FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
+		const FVector End = Start + (Dir * AimbotMaxDistance);
 
 		TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
 		TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
