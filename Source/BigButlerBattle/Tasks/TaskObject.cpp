@@ -29,7 +29,7 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetSimulatePhysics(true);
 	MeshComponent->SetRenderCustomDepth(true);
-	MeshComponent->CustomDepthStencilValue = static_cast<int32>(true);
+	MeshComponent->CustomDepthStencilValue = 100;
 }
 
 void ATaskObject::SetSelected(const bool Value)
