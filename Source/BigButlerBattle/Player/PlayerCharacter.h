@@ -291,7 +291,10 @@ protected:
 	ATaskObject* ClosestPickup;
 
 	UPROPERTY(EditDefaultsOnly)
-	float ThrowStrength = 4000.f;
+	float ThrowStrength = 5000.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float AimbotMaxDistance = 3000.f;
 
 	bool bCurrentlyHoldingThrow = false;
 
