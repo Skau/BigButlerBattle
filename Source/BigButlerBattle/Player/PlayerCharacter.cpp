@@ -330,7 +330,7 @@ void APlayerCharacter::StartJump()
 
 void APlayerCharacter::MoveForward(float Value)
 {
-	if (HasEnabledRagdoll() || !Movement || (Movement->IsFalling()))
+	if (HasEnabledRagdoll() || !Movement || Movement->IsFalling() || Movement->IsGrinding())
 		return;
 
 	bool bBraking = false;
