@@ -684,25 +684,52 @@ void APlayerCharacter::DropCurrentObject()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 
-		// Aimbot
-		if (GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, FCollisionObjectQueryParams(TraceObjectTypes), FCollisionShape::MakeSphere(Radius), Params))
-		{
-			auto HitDir = (HitResult.ImpactPoint - Start).GetSafeNormal();
-			auto Angle = btd::GetAngleBetweenNormals(Dir, HitDir);
-
-			if (Angle < 180.f)
-			{
-				Dir = HitDir;
-			}
-		}
-		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
-		float VelProject = 0.f;
+		// Calculate projectile velocity (constant + projected velocity on direction to throw)
+		float ProjectileVelocity = ThrowStrength;
 		if (FMath::IsNearlyZero(Movement->Velocity.SizeSquared()))
 		{
-			VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
+			ProjectileVelocity += UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
 		}
-		
-		const auto FinalVelocity = Dir * (VelProject + ThrowStrength);
+
+		// Check if aimbot found any player
+		if (GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, FCollisionObjectQueryParams(TraceObjectTypes), FCollisionShape::MakeSphere(Radius), Params))
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Aimbot: Found %s"), *HitResult.GetActor()->GetName());
+
+			// Location of other
+			const auto TargetLocation = HitResult.GetActor()->GetActorLocation();
+
+			// Only activate aimbot if target is within 180 degrees of us (should always be true tbh)
+			const auto Angle = btd::GetAngleBetweenNormals(Dir, (TargetLocation - Start).GetSafeNormal());
+			if (Angle < 180.f)
+			{
+				auto TargetVelocity = HitResult.GetActor()->GetVelocity();
+
+				// So slow moving, that we will just go with the initial location
+				if (TargetVelocity.SizeSquared() < 10.f)
+				{
+					Dir = (TargetLocation - GetActorLocation()).GetSafeNormal();
+				}
+				else
+				{
+					// Time to hit target based on our initial projectile velocity
+					const auto Time = (GetActorLocation() - TargetLocation).Size() / ProjectileVelocity;
+
+					// The predicted location of the target based on their current location, velocity and time
+					const auto PredictedLocation = TargetLocation + TargetVelocity * Time;
+
+					// Visualize predicted location
+					//DrawDebugSphere(GetWorld(), predictedPos, 10.f, 4, FColor::Red, false, 2.f, 0, 10.f);
+
+					// Get new direction
+					Dir = (PredictedLocation - GetActorLocation()).GetSafeNormal();
+				}
+			}
+		}
+
+		const auto FinalVelocity = Dir * ProjectileVelocity;
+
+		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
 		IncrementCurrentItemIndex();
@@ -826,7 +853,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
 		if(TaskObject == ClosestPickup)
 		{
-			if(TaskObject->Instigator != this)
+			if(!TaskObject->Instigator)
 				OnObjectPickedUp(TaskObject);
 		}
 		else
@@ -933,7 +960,7 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
-		if (TaskObjectsInCameraRange[i]->Instigator == this)
+		if (TaskObjectsInCameraRange[i]->Instigator)
 			continue;
 
 		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
