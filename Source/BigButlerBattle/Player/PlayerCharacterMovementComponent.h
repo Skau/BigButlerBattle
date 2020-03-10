@@ -44,7 +44,7 @@ public:
 
 	float SplinePos = -1.f;
 	float StartDistanceToCurve;
-	float StartVelocity;
+	FVector StartVelocity;
 	FRotator StartRotation;
 	float TravelTime{0.f};
 
