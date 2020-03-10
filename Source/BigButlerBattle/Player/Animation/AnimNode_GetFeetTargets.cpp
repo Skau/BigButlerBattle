@@ -37,7 +37,7 @@ void FAnimNode_GetFeetTargets::EvaluateComponentSpace_AnyThread(FComponentSpaceP
     Pose.EvaluateComponentSpace(Output);
 
     auto animInstance = Cast<UCharacterAnimInstance>(Output.AnimInstanceProxy->GetAnimInstanceObject());
-    if (IsValid(animInstance))
+    if (IsValid(animInstance) && (animInstance->bLeftLegIK || animInstance->bRightLegIK))
     {
         auto character = Cast<APlayerCharacter>(animInstance->TryGetPawnOwner());
         if (IsValid(character))
@@ -50,9 +50,21 @@ void FAnimNode_GetFeetTargets::EvaluateComponentSpace_AnyThread(FComponentSpaceP
             // Get rotation offset
             const auto RotationOffset = animInstance->SkateboardRotationOffset = bMeshValid ? GetSkateboardRotationOffset(*SkateboardMesh) : FRotator{};
 
+
             // Get left and right foot targets
-            animInstance->LeftFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, true) : FVector{}, Output.Pose, RotationOffset.Quaternion(), true);
-            animInstance->RightFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, false) : FVector{}, Output.Pose, RotationOffset.Quaternion(), false);
+            if (animInstance->bLeftLegIK)
+                animInstance->LeftFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, true) : FVector{}, Output.Pose, RotationOffset.Quaternion(), true);
+
+            if (animInstance->bRightLegIK)
+                animInstance->RightFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, false) : FVector{}, Output.Pose, RotationOffset.Quaternion(), false);
+
+
+            // Get left and right joint targets
+            if (animInstance->bLeftLegIK)
+                animInstance->LeftLegJointLocationFinal = animInstance->LeftLegJointRotation * animInstance->LeftLegJointLocation;
+
+            if (animInstance->bRightLegIK)
+                animInstance->RightLegJointLocationFinal = animInstance->RightLegJointRotation * animInstance->RightLegJointLocation;
         }
     }
 }

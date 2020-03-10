@@ -64,7 +64,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 	TaskObjectPickupCollision->SetRelativeLocation(FVector{75.f, 0.f, 0.f});
-	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 128.f, 96.f});
+	TaskObjectPickupCollision->SetBoxExtent(FVector{64.f, 190.f, 150.f});
 
 	TaskObjectCameraCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
 	TaskObjectCameraCollision->SetupAttachment(Camera);
@@ -74,9 +74,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
 	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
-	TaskObjectCameraCollision->SetRelativeLocation(FVector{624.f, 0.f, 0.f});
+	TaskObjectCameraCollision->SetRelativeLocation(FVector{580.f, -80.f, 0.f});
 	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f + SpringArm->GetRelativeRotation().Pitch, 0.f, 0.f));
-	TaskObjectCameraCollision->InitCapsuleSize(128.f, 256.f);
+	TaskObjectCameraCollision->InitCapsuleSize(324.f, 410.f);
 
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
@@ -124,6 +124,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SkateboardParticles = CreateDefaultSubobject<UNiagaraComponent>("Skateboard particles");
 	SkateboardParticles->SetupAttachment(SkateboardMesh);
 	SkateboardParticles->SetRelativeScale3D(FVector{0.1f, 0.1f, 0.1f});
+	SkateboardParticles->SetRelativeRotation(FRotator{0.f, 90.f, 0.f});
 }
 
 void APlayerCharacter::BeginPlay()
@@ -531,8 +532,14 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		if (railNormal.IsNearlyZero())
 			return;
 
-		auto desiredRotation = GetDesiredRotation(railNormal);
-		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime));
+		auto desiredRotation = GetDesiredGrindingRotation(railNormal);
+		float alpha = (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime;
+		if (AnimInstance)
+		{
+			AnimInstance->LeftLegJointRotation = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, alpha);
+			AnimInstance->RightLegJointRotation = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, alpha);
+		}
+		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, alpha));
 	}
 	// Case 3/4: On Ground
 	else
@@ -574,6 +581,23 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 			// Movement->SetMovementMode(EMovementMode::MOVE_Falling);
 		}
 	}
+
+	// Reset joint locations
+	if ((GetMovementComponent()->IsFalling() || !Movement->IsGrinding()) && AnimInstance)
+	{
+		const float alpha = (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime;
+		if (!AnimInstance->LeftLegJointRotation.IsIdentity())
+		{
+			const auto lerp = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat::Identity, alpha);
+			AnimInstance->LeftLegJointRotation = lerp.IsIdentity(0.0001f) ? FQuat::Identity : lerp;
+		}
+
+		if (!AnimInstance->RightLegJointRotation.IsIdentity())
+		{
+			const auto lerp = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat::Identity, alpha);
+			AnimInstance->RightLegJointRotation = lerp.IsIdentity(0.0001f) ? FQuat::Identity : lerp;
+		}
+	}
 }
 
 
@@ -587,6 +611,15 @@ FQuat APlayerCharacter::GetDesiredRotation(const FVector& DestinationNormal) con
 	return Rot.Quaternion();
 }
 
+FQuat APlayerCharacter::GetDesiredGrindingRotation(const FVector &DestinationNormal) const
+{
+	const FVector Right = FVector::CrossProduct(GetActorRightVector(), DestinationNormal);
+	const FVector Forward = FVector::CrossProduct(GetActorForwardVector(), DestinationNormal);
+
+	const FRotator Rot = UKismetMathLibrary::MakeRotFromXY(Forward, Right);
+
+	return Rot.Quaternion();
+}
 
 
 
@@ -600,7 +633,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		{
 			// Disable picked up object
 			Object->OnPickedUp();
-			PickupBlacklist.Add(Object);
+
 			// Spawn new object
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
@@ -628,19 +661,20 @@ void APlayerCharacter::DropCurrentObject()
 {
 	auto Obj = Inventory[CurrentItemIndex];
 	if (!Obj)
+	{
 		IncrementCurrentItemIndex();
+		Obj = Inventory[CurrentItemIndex];
+		if (!Obj)
+			return;
+	}
 
-	Obj = Inventory[CurrentItemIndex];
 	if (Obj)
 	{
-		PickupBlacklist.RemoveSingle(Obj);
-
 		FVector Dir = Camera->GetForwardVector();
 
 		FHitResult HitResult;
 
 		float Radius = 300.f;
-
 		FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
 		FVector End = Start + (Dir * 1000.f);
 
@@ -662,9 +696,13 @@ void APlayerCharacter::DropCurrentObject()
 			}
 		}
 		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
-
-		const auto VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
-		const auto FinalVelocity = Dir * VelProject + ThrowStrength;
+		float VelProject = 0.f;
+		if (FMath::IsNearlyZero(Movement->Velocity.SizeSquared()))
+		{
+			VelProject = UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
+		}
+		
+		const auto FinalVelocity = Dir * (VelProject + ThrowStrength);
 
 		DetachObject(Obj, SpawnPos, FinalVelocity);
 		IncrementCurrentItemIndex();
@@ -677,12 +715,10 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 	{
 		// Disable old object
 		Object->SetEnable(false, false, false);
-		PickupBlacklist.RemoveSingle(Object);
 
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Object->GetTaskData());
-		PickupBlacklist.Add(Spawned);
 
 		// Spawn transform
 		auto transform = Object->GetTransform();
@@ -699,6 +735,9 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 
 		// Set velocity
 		Spawned->LaunchVelocity = LaunchVelocity;
+
+		// Instigator
+		Spawned->Instigator = this;
 
 		// Finish
 		UGameplayStatics::FinishSpawningActor(Spawned, transform);
@@ -785,9 +824,10 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 	if (OtherActor->IsA(ATaskObject::StaticClass()))
 	{
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
-		if(TaskObject == ClosestPickup && PickupBlacklist.Find(TaskObject) == INDEX_NONE)
+		if(TaskObject == ClosestPickup)
 		{
-			OnObjectPickedUp(TaskObject);
+			if(TaskObject->Instigator != this)
+				OnObjectPickedUp(TaskObject);
 		}
 		else
 		{
@@ -804,7 +844,6 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 {
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
-		PickupBlacklist.RemoveSingle(TaskObject);
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 	}
 }
@@ -867,7 +906,8 @@ void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent
 {
 	if (auto Other = Cast<APlayerCharacter>(OtherActor))
 	{
-		PlayersInRange.AddUnique(Other);
+		if(Other != this)
+			PlayersInRange.AddUnique(Other);
 	}
 }
 
@@ -893,6 +933,9 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
+		if (TaskObjectsInCameraRange[i]->Instigator == this)
+			continue;
+
 		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{

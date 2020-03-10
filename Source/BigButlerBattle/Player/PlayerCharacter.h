@@ -256,6 +256,7 @@ protected:
 	void UpdateSkateboardRotation(float DeltaTime);
 
 	FQuat GetDesiredRotation(const FVector& DestinationNormal) const;
+	FQuat GetDesiredGrindingRotation(const FVector& DestinationNormal) const;
 
 
 
@@ -281,7 +282,6 @@ protected:
 	UCapsuleComponent* TaskObjectCameraCollision;
 
 	TArray<ATaskObject*> Inventory;
-	TArray<ATaskObject*> PickupBlacklist;
 	TArray<FName> TraySlotNames;
 
 	TArray<ATaskObject*> TaskObjectsInCameraRange;
@@ -291,7 +291,7 @@ protected:
 	ATaskObject* ClosestPickup;
 
 	UPROPERTY(EditDefaultsOnly)
-	float ThrowStrength = 2000.f;
+	float ThrowStrength = 4000.f;
 
 	bool bCurrentlyHoldingThrow = false;
 

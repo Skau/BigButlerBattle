@@ -40,6 +40,8 @@ public:
 
 	bool bCanHit = false;
 
+	APlayerCharacter* Instigator = nullptr;
+
 protected:
 	void BeginPlay() override;
 
@@ -97,7 +99,6 @@ private:
 	void SetDefault();
 
 	float TimeSinceThrown = 0.0f;
-
 	bool bRecordingTimeSinceThrown = false;
 
 private:
