@@ -8,17 +8,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayerWidget.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
-#include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
 #include "ButlerGameInstance.h"
-
-AMainMenuGameModeBase::AMainMenuGameModeBase()
-{
-
-}
 
 void AMainMenuGameModeBase::BeginPlay()
 {
@@ -44,6 +37,7 @@ void AMainMenuGameModeBase::BeginPlay()
 
 	Controllers.Sort([](APlayerController& p1, APlayerController& p2)
 	{
+			UE_LOG(LogTemp, Warning, TEXT("Controller sort"));
 			return UGameplayStatics::GetPlayerControllerID(&p1) < UGameplayStatics::GetPlayerControllerID(&p2);
 	});
 
@@ -123,17 +117,7 @@ void AMainMenuGameModeBase::OnPlayerToggledJoinedGame(const bool Value, const in
 		PlayerNotJoinedIDs.Add(ID);
 	}
 
-	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
-	{
-		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
-	}
-
-	if (GetWorldTimerManager().IsTimerActive(HandleStartGame))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Game countdown reset"));
-		GetWorldTimerManager().ClearTimer(HandleStartGame);
-		ElapsedCountdownTime = 0.0f;
-	}
+	EndCountdown();
 }
 
 void AMainMenuGameModeBase::OnPlayerToggledReady(const bool Value, const int ID)
@@ -142,32 +126,29 @@ void AMainMenuGameModeBase::OnPlayerToggledReady(const bool Value, const int ID)
 
 	Value ? NumReadiedPlayers++ : NumReadiedPlayers--;
 
-	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
-	{
-		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
-	}
-
-	if (GetWorldTimerManager().IsTimerActive(HandleStartGame))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Game countdown reset"));
-		GetWorldTimerManager().ClearTimer(HandleStartGame);
-		ElapsedCountdownTime = 0.0f;
-	}
+	EndCountdown();
 
 	if (NumJoinedPlayers >= MinimumPlayersToStartGame && NumReadiedPlayers == NumJoinedPlayers)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Starting game countdown.."));
-		GetWorldTimerManager().SetTimer(HandleStartGame, this, &AMainMenuGameModeBase::GameStartCountdown, .1f, true, 0.0f);
+		StartCountdown();
 	}
 }
 
-void AMainMenuGameModeBase::GameStartCountdown()
+
+void AMainMenuGameModeBase::StartCountdown()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Starting game countdown.."));
+
 	if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Visible)
 	{
 		MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Visible);
-	}
 
+		GetWorldTimerManager().SetTimer(HandleStartGame, this, &AMainMenuGameModeBase::Countdown, .1f, true, 0.0f);
+	}
+}
+
+void AMainMenuGameModeBase::Countdown()
+{
 	ElapsedCountdownTime += GetWorldTimerManager().GetTimerElapsed(HandleStartGame);
 	const float TimeLeft = TimeUntilGameStart - ElapsedCountdownTime;
 
@@ -181,7 +162,7 @@ void AMainMenuGameModeBase::GameStartCountdown()
 			if (const auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Removing Controller ID %i, because it never joined."), ID);
-				UGameplayStatics::RemovePlayer(controller, false);
+				UGameplayStatics::RemovePlayer(controller, true);
 			}
 		}
 		Cast<UButlerGameInstance>(GetGameInstance())->LevelChanged(false);
@@ -190,5 +171,21 @@ void AMainMenuGameModeBase::GameStartCountdown()
 	else
 	{
 		MainMenuPlayWidgetInstance->GameStartTime->SetText(FText::FromString(FString::FromInt(TimeLeft)));
+	}
+}
+
+void AMainMenuGameModeBase::EndCountdown()
+{
+	if (GetWorldTimerManager().IsTimerActive(HandleStartGame))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Ending game countdown.."));
+
+		GetWorldTimerManager().ClearTimer(HandleStartGame);
+		ElapsedCountdownTime = 0.0f;
+
+		if (MainMenuPlayWidgetInstance->GameTimerBox->Visibility != ESlateVisibility::Hidden)
+		{
+			MainMenuPlayWidgetInstance->GameTimerBox->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }

@@ -9,7 +9,6 @@
 class UMainMenuWidget;
 class UMainMenuPlayWidget;
 class UMainMenuOptionsWidget;
-class UButlerGameInstance;
 
 /**
  * 
@@ -20,25 +19,19 @@ class BIGBUTLERBATTLE_API AMainMenuGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	AMainMenuGameModeBase();
-
-	UFUNCTION(BlueprintPure)
-	TArray<APlayerController*> GetControllers() const { return Controllers; }
-
-	UFUNCTION(BlueprintPure)
 	bool HasAnyPlayerJoined() const { return NumJoinedPlayers != 0; }
 
 protected:
 	void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
+	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UMainMenuPlayWidget> MainMenuPlayWidgetClass;
+	TSubclassOf<UMainMenuPlayWidget> MainMenuPlayWidgetClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UMainMenuOptionsWidget> MainMenuOptionsWidgetClass;
+	TSubclassOf<UMainMenuOptionsWidget> MainMenuOptionsWidgetClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	float TimeUntilGameStart = 6.f;
@@ -46,34 +39,28 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	int MinimumPlayersToStartGame = 1;
 
-	UPROPERTY(BlueprintReadOnly)
-	UMainMenuWidget* MainMenuWidgetInstance;
-
-	UPROPERTY(BlueprintReadOnly)
-	UMainMenuPlayWidget* MainMenuPlayWidgetInstance;
-
-	UPROPERTY(BlueprintReadOnly)
-	UMainMenuOptionsWidget* MainMenuOptionsWidgetInstance;
-
 	UPROPERTY(EditDefaultsOnly)
-	FName LevelToPlay = "Main";
+	FName LevelToPlay = "NewLevel";
 
 private:
-	TArray<APlayerController*> Controllers;
-
 	void OnPlayerToggledJoinedGame(bool Value, int ID);
 	void OnPlayerToggledReady(bool Value, int ID);
 
-	void GameStartCountdown();
+	void StartCountdown();
+	void Countdown();
+	void EndCountdown();
+
+	TArray<APlayerController*> Controllers;
+
+	TArray<int> PlayerNotJoinedIDs = { 0, 1, 2, 3 };
+
+	UMainMenuWidget* MainMenuWidgetInstance = nullptr;
+	UMainMenuPlayWidget* MainMenuPlayWidgetInstance = nullptr;
+	UMainMenuOptionsWidget* MainMenuOptionsWidgetInstance = nullptr;
+
+	FTimerHandle HandleStartGame;
+	float ElapsedCountdownTime = 0.0f;
 
 	int NumJoinedPlayers = 0;
 	int NumReadiedPlayers = 0;
-
-	float ElapsedCountdownTime = 0.0f;
-
-	FTimerHandle HandleStartGame;
-
-	UButlerGameInstance* Instance;
-
-	TArray<int> PlayerNotJoinedIDs = {0, 1, 2, 3};
 };
