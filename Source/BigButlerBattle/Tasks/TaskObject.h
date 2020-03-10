@@ -28,11 +28,9 @@ public:
 
 	void OnPickedUp();
 
-	void SetEnable(bool NewVisiblity, bool NewCollision, bool NewPhysics) const;
+	void Enable(bool NewVisiblity, bool NewCollision, bool NewPhysics) const;
 
-	void Launch(FVector Direction, float Force) const;
-
-	FVector LaunchVelocity = FVector::ZeroVector;
+	void Launch(const FVector& LaunchVelocity);
 
 	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
 

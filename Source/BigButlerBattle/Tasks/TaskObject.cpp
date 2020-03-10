@@ -14,6 +14,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Player/PlayerCharacter.h"
 #include "Misc/FileHelper.h"
+#include "Utils/btd.h"
 
 ATaskObject::ATaskObject()
 {
@@ -58,13 +59,6 @@ void ATaskObject::BeginPlay()
 
 	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &ATaskObject::OnCollisionBeginOverlap);
 	MeshComponent->OnComponentHit.AddDynamic(this, &ATaskObject::OnHit);
-
-	if (LaunchVelocity != FVector::ZeroVector)
-	{
-		SetEnable(true, true, true);
-		MeshComponent->AddImpulse(LaunchVelocity);
-		bRecordingTimeSinceThrown = true;
-	}
 	
 	DynamicMaterial = MeshComponent->CreateDynamicMaterialInstance(0, MeshComponent->GetMaterial(0));
 }
@@ -321,36 +315,44 @@ void ATaskObject::SetDefault()
 
 void ATaskObject::OnPickedUp()
 {
-	SetEnable(false, false, false);
+	Enable(false, false, false);
 
 	if (bRespawn)
 	{
-		FTimerDelegate TimerCallback;
-		TimerCallback.BindLambda([&]
-			{
-				SetEnable(true, true, true);
-			});
+		btd::Delay(this, RespawnTime, [&]()
+		{
+			if (IsValid(this))
+				return;
 
-		FTimerHandle Handle;
-		GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, RespawnTime, false);
+			Enable(true, true, true);
+		});
 	}
 }
 
-void ATaskObject::SetEnable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics) const
+void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics) const
 {
-	MeshComponent->SetVisibility(NewVisiblity, true);
+	if (MeshComponent != nullptr)
+	{
+		MeshComponent->SetVisibility(NewVisiblity);
 
-	MeshComponent->SetSimulatePhysics(NewPhysics);
-	MeshComponent->SetEnableGravity(NewPhysics);
-	MeshComponent->SetMassOverrideInKg(NAME_None, 1.f);
+		MeshComponent->SetSimulatePhysics(NewPhysics);
+		MeshComponent->SetEnableGravity(NewPhysics);
+		MeshComponent->SetMassOverrideInKg(NAME_None, 1.f);
 
-	MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
-	MeshComponent->SetGenerateOverlapEvents(NewCollision);
+		MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+		MeshComponent->SetGenerateOverlapEvents(NewCollision);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("ERROR[%s]: MeshComponent was nullptr!"), *GetName());
+	}
 }
 
-void ATaskObject::Launch(const FVector Direction, const float Force) const
+void ATaskObject::Launch(const FVector& LaunchVelocity)
 {
-	MeshComponent->AddImpulse(Direction * Force);
+	Enable(true, true, true);
+	MeshComponent->AddImpulse(LaunchVelocity);
+	bRecordingTimeSinceThrown = true;
 }
 
 void ATaskObject::UpdateDataTables()

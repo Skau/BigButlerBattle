@@ -637,7 +637,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 			// Spawn new object
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
-			Spawned->SetEnable(true, false, false);
+			Spawned->Enable(true, false, false);
 			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 
 			// Attach new object
@@ -741,7 +741,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 	if (Object)
 	{
 		// Disable old object
-		Object->SetEnable(false, false, false);
+		Object->Enable(false, false, false);
 
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
@@ -760,14 +760,12 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 			Spawned->bCanHit = true;
 		}
 
-		// Set velocity
-		Spawned->LaunchVelocity = LaunchVelocity;
-
 		// Instigator
 		Spawned->Instigator = this;
 
 		// Finish
-		UGameplayStatics::FinishSpawningActor(Spawned, transform);
+		Spawned = Cast<ATaskObject>(UGameplayStatics::FinishSpawningActor(Spawned, transform));
+		Spawned->Launch(LaunchVelocity);
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 

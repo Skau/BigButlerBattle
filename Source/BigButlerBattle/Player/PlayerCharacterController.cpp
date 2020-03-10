@@ -158,6 +158,9 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
 	btd::Delay(this, RespawnTime, [=]()
 	{
+		if (!GetPawn() || !this || !IsValid(PlayerCharacter))
+			return;
+
 		if (PlayerCharacter)
 		{
 			bAutoManageActiveCameraTarget = false;

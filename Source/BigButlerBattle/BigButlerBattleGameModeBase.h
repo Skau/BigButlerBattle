@@ -50,6 +50,8 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 public:
 	ASpawnpoint* GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position);
 
+	void StartToLeaveMap() override;
+
 protected:
 	void BeginPlay() override;
 

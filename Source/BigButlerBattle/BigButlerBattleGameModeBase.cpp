@@ -17,6 +17,26 @@
 #include "UI/GameFinishedWidget.h"
 #include "Utils/Spawnpoint.h"
 
+void ABigButlerBattleGameModeBase::StartToLeaveMap()
+{
+	Super::StartToLeaveMap();
+
+	// Clear timers
+	for (TActorIterator<ATaskObject> Itr(GetWorld()); Itr; ++Itr)
+	{
+		if (!Itr)
+			continue;
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
+	}
+
+	for (TActorIterator<APlayerController> Itr(GetWorld()); Itr; ++Itr)
+	{
+		if (!Itr)
+			continue;
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
+	}
+}
+
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
