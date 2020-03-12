@@ -91,7 +91,7 @@ protected:
 	 * How much current velocity will have an impact on acceleration
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Velocity Acceleration Multiplier", ClampMin = "0", UIMin = "0"))
-	float SkateboardFwrdVelAccMult = 0.4f;
+	float SkateboardFwrdVelAccMult = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardSidewaysGroundDeceleration = 4096.f;
