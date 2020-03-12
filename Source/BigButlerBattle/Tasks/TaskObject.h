@@ -34,7 +34,7 @@ public:
 
 	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
 
-	void SetSelected(bool Value);
+	void SetSelected(bool Value) const;
 
 	bool bCanHit = false;
 

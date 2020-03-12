@@ -29,12 +29,11 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetSimulatePhysics(true);
-	MeshComponent->SetRenderCustomDepth(true);
 }
 
-void ATaskObject::SetSelected(const bool Value)
+void ATaskObject::SetSelected(const bool Value) const
 {
-	MeshComponent->SetCustomDepthStencilValue(static_cast<int32>(Value));
+	DynamicMaterial->SetScalarParameterValue("Selected", static_cast<float>(Value));
 }
 
 void ATaskObject::BeginPlay()
