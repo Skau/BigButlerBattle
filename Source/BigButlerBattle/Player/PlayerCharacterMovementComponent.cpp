@@ -553,6 +553,10 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 		const float RotSpeed = FMath::Lerp(StandstillRotationSpeed, HandbrakeRotationFactor, Alpha);
 		return GetHandbrakeAmount() * GetRotationInput() * RotSpeed;
 	}
+	else if (IsFalling())
+	{
+		return GetRotationInput() * SkateboardAirRotationSpeed;
+	}
 	else
 	{
 		return GetRotationInput() * (bIsStandstill ? StandstillRotationSpeed : SkateboardRotationSpeed);
