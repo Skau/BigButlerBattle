@@ -8,6 +8,8 @@
 #include "Components/SplineComponent.h"
 #include "Tasks/TaskObject.h"
 #include "Utils/btd.h"
+#include "Curves/CurveFloat.h"
+#include "Kismet/GameplayStatics.h"
 
 FSplineInfo::FSplineInfo(USplineComponent* Spline)
 	: SplineDir{1}, PlayerState{static_cast<uint8>(EGrindingMovementState::STATE_GodKnowsWhere)}, PointCount{0}
@@ -85,6 +87,22 @@ void UPlayerCharacterMovementComponent::BeginPlay()
 			CurrentSpline.Invalidate();
 		}
 	});
+
+	OnMovementStart.AddLambda([&](EMovementMode movementMode){
+		if (movementMode == EMovementMode::MOVE_Falling)
+		{
+			AirTime = GetWorld()->GetTimeSeconds();
+		}
+	});
+
+	OnMovementEnd.AddLambda([&](EMovementMode movementMode){
+		if (movementMode == EMovementMode::MOVE_Falling)
+		{
+			AirTime = GetWorld()->GetTimeSeconds() - AirTime;
+			BurstApplyTimer = 0.f;
+			BurstVerticalEnergy = FMath::Abs(Velocity.Z);
+		}
+	});
 }
 
 void UPlayerCharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -97,6 +115,13 @@ void UPlayerCharacterMovementComponent::TickComponent(float DeltaTime, enum ELev
 void UPlayerCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
+
+	if (PreviousMovementMode != MovementMode)
+	{
+		OnMovementStart.Broadcast(MovementMode);
+
+		OnMovementEnd.Broadcast(PreviousMovementMode);
+	}
 
 	if (PreviousCustomMode != CustomMovementMode)
 	{
@@ -265,22 +290,6 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float DeltaTime, int32 It
 	}
 }
 
-void UPlayerCharacterMovementComponent::PhysFalling(float DeltaTime, int32 Iterations)
-{
-	Super::PhysFalling(DeltaTime, Iterations);
-
-	// Apply rotation based on input
-	const auto rotAmount = CalcRotation() * DeltaTime;
-	if (!FMath::IsNearlyZero(rotAmount))
-	{
-		GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
-
-		// Set velocity to be facing same direction as forward dir.
-		if (!Velocity.IsNearlyZero())
-			Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
-	}
-}
-
 void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
 {
 	if (Velocity.IsZero() || !HasValidData() || HasAnimRootMotion() || DeltaTime < MIN_TICK_TIME)
@@ -402,8 +411,9 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 		Velocity += slopeAcceleration * DeltaTime;
 	}
 
-	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
+	ApplySpeedBurst(DeltaTime);
 
+	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	ApplyRotation(DeltaTime);
 }
@@ -579,6 +589,54 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 		return GetRotationInput() * (bIsStandstill ? StandstillRotationSpeed : SkateboardRotationSpeed);
 	}
 }
+
+
+
+
+
+// ================================== Air Movement =================================================
+void UPlayerCharacterMovementComponent::PhysFalling(float DeltaTime, int32 Iterations)
+{
+	Super::PhysFalling(DeltaTime, Iterations);
+
+	// Apply rotation based on input
+	const auto rotAmount = CalcRotation() * DeltaTime;
+	if (!FMath::IsNearlyZero(rotAmount))
+	{
+		GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
+
+		// Set velocity to be facing same direction as forward dir.
+		if (!Velocity.IsNearlyZero())
+			Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+	}
+}
+
+void UPlayerCharacterMovementComponent::ApplySpeedBurst(float DeltaTime)
+{
+	if (BurstApplyTimer >= AirBurstLength)
+		return;
+
+	if (!AirBurstEffectCurve)
+	{
+		AirBurstEffectCurve = NewObject<UCurveFloat>(this, TEXT("Default Curve"));
+		const auto errors = AirBurstEffectCurve->CreateCurveFromCSVString("0,1\n1,0\n");
+		for (const auto &err : errors)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Err: %s"), *err);
+		}
+		if (0 < errors.Num())
+			return;
+	}
+	
+	const float factor = FMath::Clamp(BurstApplyTimer / AirBurstLength, 0.f, 1.f);
+	const float speedBurst = BurstVerticalEnergy * AirBurstVelocityMultiplier * AirBurstEffectCurve->GetFloatValue(factor);
+	UE_LOG(LogTemp, Warning, TEXT("val: %f"), AirBurstEffectCurve->GetFloatValue(factor));
+
+	Velocity += Velocity.GetSafeNormal() * speedBurst;
+
+	BurstApplyTimer += DeltaTime;
+}
+
 
 
 

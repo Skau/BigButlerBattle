@@ -9,6 +9,7 @@
 // Forward declarations
 class APlayerCharacter;
 class USplineComponent;
+class UCurveFloat;
 
 // Enums
 UENUM(BlueprintType)
@@ -31,6 +32,7 @@ enum class EGrindingMovementState : uint8
 
 // Delegates
 DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FCustomMovementChangedSignature, uint8);
+DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FMovementChangedSignature, EMovementMode);
 DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FSplineStateChangedSignature, EGrindingMovementState);
 
 // Structs
@@ -69,7 +71,7 @@ public:
  */
 UCLASS(hideCategories = ("Character Movement: Walking", "Character Movement: Swimming", "Character Movement (Networking)"),
 	   autoExpandCategories = ("Character Movement: Custom Movement", "Character Movement: Skateboard Movement", "Character Movement: Grinding Movement",
-							   "Character Movement: Grinding Movement|Start", "Character Movement: Grinding Movement|On Rail"))
+							   "Character Movement: Grinding Movement|Start", "Character Movement: Grinding Movement|On Rail", "Character Movement: Skateboard Movement|Air"))
 class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
@@ -89,6 +91,12 @@ protected:
 
 	bool bStandstill = false;
 
+
+
+
+
+	// ================================== Skateboard Movement =================================================
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
 	float StandstillThreshold = 10.f;
 
@@ -126,9 +134,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
 	bool bAllowBrakingWhileHandbraking = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Air Rotation Speed"))
-	float SkateboardAirRotationSpeed = 40.f;
-
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
 
@@ -143,6 +148,9 @@ public:
 	FCustomMovementChangedSignature OnCustomMovementStart;
 	// Parameter is mode that ended
 	FCustomMovementChangedSignature OnCustomMovementEnd;
+
+	FMovementChangedSignature OnMovementStart;
+	FMovementChangedSignature OnMovementEnd;
 
 	UPlayerCharacterMovementComponent();
 
@@ -202,9 +210,6 @@ protected:
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
 
-	/** Handle falling movement. */
-	void PhysFalling(float DeltaTime, int32 Iterations) override;
-
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
@@ -229,6 +234,43 @@ protected:
 	 * Both normal rotation and handbraking rotation.
 	 */
 	float CalcRotation() const;
+
+
+
+
+
+	// ================================== Air Movement =================================================
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Rotation Speed"))
+	float SkateboardAirRotationSpeed = 40.f;
+
+	/**
+	 * Time in seconds to apply the speed burst gained after doing airtime.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Length"))
+	float AirBurstLength = 2.f;
+
+	/**
+	 * How big impact vertical velocity has on the speed burst.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Velocity Multiplier"))
+	float AirBurstVelocityMultiplier = 0.1f;
+
+	/**
+	 * Optional curve to use when applying speed burst.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Curve"))
+	UCurveFloat* AirBurstEffectCurve = nullptr;
+
+	float AirTime;
+	float BurstApplyTimer;
+	float BurstVerticalEnergy;
+
+	/** Handle falling movement. */
+	void PhysFalling(float DeltaTime, int32 Iterations) override;
+
+	void ApplySpeedBurst(float DeltaTime);
+
 
 
 
