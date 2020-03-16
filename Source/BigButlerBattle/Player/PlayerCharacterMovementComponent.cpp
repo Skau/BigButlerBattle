@@ -639,7 +639,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 			CurrentSpline.PlayerState = static_cast<uint8>(FSplineInfo::STATE_Entering);
 			auto StartWorldPos = playerCharacter->GetActorLocation();
 			CurrentSpline.StartVelocity = Velocity;
-			CurrentSpline.StartVelocitySize = Velocity.Size();
+			CurrentSpline.StartVelocitySize = bOnlyUseHorizontalVelocityInGrindingEntering ? Velocity.Size2D() : Velocity.Size();
 			CurrentSpline.StartRotation = CharacterOwner->GetActorRotation();
 			CurrentSpline.SplinePos = SplineRef.FindInputKeyClosestToWorldLocation(StartWorldPos);
 			// We subtract the skateboard offset because we want the character centre to be the skateboard centre on the curve.
@@ -746,6 +746,10 @@ void UPlayerCharacterMovementComponent::CalcGrindingEnteringVelocity(FQuat& NewR
 	{
 		Velocity = dist / DeltaTime;
 		CurrentSpline.PlayerState = static_cast<uint8>(FSplineInfo::STATE_OnRail);
+		CurrentSpline.TravelTime = 0.f;
+
+		if (bOnlyUseHorizontalVelocityInGrindingEntering ^ bOnlyUseHorizontalVelocityInGrindingStart)
+			CurrentSpline.StartVelocitySize = bOnlyUseHorizontalVelocityInGrindingStart ? CurrentSpline.StartVelocity.Size2D() : CurrentSpline.StartVelocity.Size();
 	}
 	else
 	{
@@ -765,11 +769,14 @@ void UPlayerCharacterMovementComponent::CalcGrindingEnteringVelocity(FQuat& NewR
 
 void UPlayerCharacterMovementComponent::CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime)
 {
+	CurrentSpline.TravelTime += DeltaTime;
+
 	auto& SplineRef = *CurrentSpline.SkateboardSplineReference;
 	FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
 	FVector Dir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) * CurrentSpline.SplineDir;
 
-	float Speed = bUseConstantGrindingSpeed ? RailGrindingSpeed : CurrentSpline.StartVelocitySize;
+	float Speed = (bUseConstantGrindingSpeed ? RailGrindingSpeed : CurrentSpline.StartVelocitySize)
+		+ CurrentSpline.TravelTime * GrindingAcceleration;
 	float NextSplinePos = SplineRef.FindInputKeyClosestToWorldLocation(SplineWorldPos + Dir * DeltaTime * Speed);
 	
 	FVector CurveCorrectedDir = SplineRef.GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World) - SplineWorldPos;
@@ -779,6 +786,14 @@ void UPlayerCharacterMovementComponent::CalcGrindingVelocity(FQuat& NewRotation,
 	// Check velocity
 	if (Velocity.ContainsNaN())
 		Velocity = FVector::ZeroVector;
+
+
+	const auto vDir = Velocity.GetSafeNormal();
+	// Add acceleration:
+	// Velocity += vDir * GrindingAcceleration * DeltaTime;
+
+	// Clamp Velocity
+	Velocity = vDir * FMath::Clamp(Velocity.Size(), 0.f, GrindingMaxSpeed);
 
 	NewRotation = UKismetMathLibrary::MakeRotFromZX(FVector::UpVector, Velocity.IsNearlyZero() ? FVector::ForwardVector : Velocity).Quaternion();
 }

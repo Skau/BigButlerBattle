@@ -119,7 +119,7 @@ protected:
 	bool bAllowBrakingWhileHandbraking = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Air Rotation Speed"))
-	float SkateboardAirRotationSpeed = 100.f;
+	float SkateboardAirRotationSpeed = 40.f;
 
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
@@ -242,11 +242,34 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
 	float GrindingEnteringSpeed = 1600.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
-	bool bUseConstantGrindingSpeed = true;
+	/**
+	 * Whether to only use velocity in x and y direction (horizontal velocity) as the entering speed
+	 * for grinding, as opposed to also counting speed in the z direction (from falling and jumping).
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (EditCondition = "!bUseConstantEnteringSpeed"))
+	bool bOnlyUseHorizontalVelocityInGrindingEntering = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Speed", EditCondition = "bUseContantGrindingSpeed"))
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	bool bUseConstantGrindingSpeed = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Constant Grinding Speed", EditCondition = "bUseConstantGrindingSpeed"))
 	float RailGrindingSpeed = 800.f;
+
+	/**
+	 * Whether to only use velocity in x and y direction (horizontal velocity) as the start speed
+	 * for grinding, as opposed to also counting speed in the z direction (from falling and jumping).
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (EditCondition = "!bUseConstantGrindingSpeed"))
+	bool bOnlyUseHorizontalVelocityInGrindingStart = true;
+
+	/**
+	 * Speed acceleration applied when grinding on the rail (not applied when entering rail)
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	float GrindingAcceleration = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Max Speed"))
+	float GrindingMaxSpeed = 8192.f;
 
 	void PhysGrinding(float deltaTime, int32 Iterations);
 
