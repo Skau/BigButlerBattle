@@ -278,7 +278,7 @@ protected:
 	 * Speed acceleration applied when grinding on the rail (not applied when entering rail)
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail")
-	float GrindingAcceleration = 100.f;
+	float GrindingAcceleration = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
 	float GrindingMaxSpeed = 8192.f;
