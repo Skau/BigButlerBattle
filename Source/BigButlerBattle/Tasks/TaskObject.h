@@ -40,6 +40,9 @@ public:
 
 	APlayerCharacter* Instigator = nullptr;
 
+	UPROPERTY(EditAnywhere)
+	bool bIsMainItem = false;
+
 protected:
 	void BeginPlay() override;
 

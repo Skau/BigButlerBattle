@@ -638,6 +638,7 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 			Spawned->SetTaskData(Object->GetTaskData());
 			Spawned->Enable(true, false, false);
+			Spawned->bIsMainItem = Object->bIsMainItem;
 			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 
 			// Attach new object
@@ -746,6 +747,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Object->GetTaskData());
+		Spawned->bIsMainItem = Object->bIsMainItem;
 
 		// Spawn transform
 		auto transform = Object->GetTransform();
@@ -859,9 +861,12 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 			TaskObjectsInPickupRange.Add(TaskObject);
 		}
 	}
-	else if(OtherActor->IsA(AKing::StaticClass()))
+	else if(auto King = Cast<AKing>(OtherActor))
 	{
-		OnDeliverTasks.ExecuteIfBound(Inventory);
+		if (King->GetCanReceiveMainItem())
+		{
+			OnDeliverTasks.ExecuteIfBound(Inventory);
+		}
 	}
 }
 
