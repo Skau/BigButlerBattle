@@ -248,7 +248,7 @@ protected:
 	 * Time in seconds to apply the speed burst gained after doing airtime.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Length"))
-	float AirBurstLength = 2.f;
+	float AirBurstLength = 0.2f;
 
 	/**
 	 * How big impact vertical velocity has on the speed burst.
