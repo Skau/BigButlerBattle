@@ -16,6 +16,14 @@
 #include "Utils/btd.h"
 #include "UI/GameFinishedWidget.h"
 #include "Utils/Spawnpoint.h"
+#include "UI/GameWidget.h"
+#include "King/King.h"
+
+
+ABigButlerBattleGameModeBase::ABigButlerBattleGameModeBase()
+{
+	PrimaryActorTick.bCanEverTick = true;
+}
 
 void ABigButlerBattleGameModeBase::StartToLeaveMap()
 {
@@ -102,6 +110,9 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		// Delegates
 		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
 		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
+
+		Controllers[i]->OnMainItemPickedUp.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemPickedUp);
+		Controllers[i]->OnMainItemDropped.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemDropped);
 	}
 
 	// Pause widget setup
@@ -133,17 +144,59 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		GameFinishedWidget->QuitGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerQuit);
 	}
 
+	if (!GameWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Game Widget Class not setup in Gamemode!"));
+	}
+	else
+	{
+		GameWidget = CreateWidget<UGameWidget>(Controllers[0], GameWidgetClass);
+		GameWidget->UpdateTimer(FString::FromInt(static_cast<int>(TotalSecondsToHold)));
+		GameWidget->AddToViewport();
+	}
+
 	// Spawnpoints
 
 	SetupSpawnpoints();
 
+
+	King = Cast<AKing>(UGameplayStatics::GetActorOfClass(GetWorld(), AKing::StaticClass()));
+	if (!IsValid(King))
+	{
+		UE_LOG(LogTemp, Error, TEXT("No King present in map!"));
+	}
+
 	// Wait a bit for task objects to finish
 
-	btd::Delay(this, 0.1f, [=]()
+	//btd::Delay(this, 0.1f, [=]()
+	//{
+	//	TaskGenerationStartTime = FPlatformTime::Seconds();
+	//	BeginTaskGeneration();
+	//});
+}
+
+
+void ABigButlerBattleGameModeBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!bTimeDone && bItemCurrentlyBeingHeld)
 	{
-		TaskGenerationStartTime = FPlatformTime::Seconds();
-		BeginTaskGeneration();
-	});
+		TotalSecondsToHold -= DeltaTime;
+
+		if (TotalSecondsToHold <= 0.f)
+		{
+			if (King)
+			{
+				King->UpdateCanReceiveMainItem();
+				GameWidget->UpdateTimer("Deliver Item!");
+				bTimeDone = true;
+				return;
+			}
+		}
+
+		GameWidget->UpdateTimer(FString::FromInt(static_cast<int>(TotalSecondsToHold)));
+	}
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerPaused(int ControllerID) const
@@ -470,6 +523,16 @@ void ABigButlerBattleGameModeBase::GenerateExtraTask()
 
 	auto Tasks = ProcessWorldTasks(TaskData[Types[FMath::RandRange(0, Types.Num() - 1)]], Stream, 1, 1);
 	GeneratePlayerTasks(Tasks);
+}
+
+void ABigButlerBattleGameModeBase::OnMainItemPickedUp()
+{
+	bItemCurrentlyBeingHeld = true;
+}
+
+void ABigButlerBattleGameModeBase::OnMainItemDropped()
+{
+	bItemCurrentlyBeingHeld = false;
 }
 
 ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position)

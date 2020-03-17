@@ -13,6 +13,8 @@ class UPauseWidget;
 class UTask;
 class UGameFinishedWidget;
 class ASpawnpoint;
+class UGameWidget;
+class AKing;
 
 UENUM()
 enum class ETaskState
@@ -48,12 +50,16 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+	ABigButlerBattleGameModeBase();
+
 	ASpawnpoint* GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position);
 
 	void StartToLeaveMap() override;
 
 protected:
 	void BeginPlay() override;
+
+	void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPauseWidget> PauseWidgetClass;
@@ -133,4 +139,26 @@ private:
 
 	TMap<ERoomSpawn, TArray<ASpawnpoint*>> Spawnpoints;
 
+	/****** Test ******/
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	float TotalSecondsToHold = 30.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameWidget> GameWidgetClass;
+
+	UGameWidget* GameWidget = nullptr;
+
+	bool bItemCurrentlyBeingHeld = false;
+	bool bTimeDone = false;
+
+private:
+	UFUNCTION()
+	void OnMainItemPickedUp();
+
+	UFUNCTION()
+	void OnMainItemDropped();
+
+	AKing* King = nullptr;
 };
