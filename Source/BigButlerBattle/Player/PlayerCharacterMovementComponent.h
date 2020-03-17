@@ -9,6 +9,7 @@
 // Forward declarations
 class APlayerCharacter;
 class USplineComponent;
+class UCurveFloat;
 
 // Enums
 UENUM(BlueprintType)
@@ -19,25 +20,28 @@ enum class ECustomMovementType : uint8
 	MOVE_Grinding		UMETA(DisplayName = "Grinding")
 };
 
+UENUM(BlueprintType)
+enum class EGrindingMovementState : uint8
+{
+	// Note: Manually specifying the 0. enum state to silence warnings in UENUM
+	STATE_GodKnowsWhere = 0			UMETA(DisplayName = "God Knows Where"),
+	STATE_Entering = 0b0001			UMETA(DisplayName = "Entering"),
+	STATE_OnRail = 0b0010			UMETA(DisplayName = "On Rail"),
+	STATE_Leaving = 0b0011			UMETA(DisplayName = "Leaving")
+};
+
+// Delegates
+DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FCustomMovementChangedSignature, uint8);
+DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FMovementChangedSignature, EMovementMode);
+DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FSplineStateChangedSignature, EGrindingMovementState);
+
 // Structs
-USTRUCT(BlueprintType)
 struct FSplineInfo
 {
-	GENERATED_BODY()
-
-	enum ESplineState : uint8
-	{
-		STATE_GodKnowsWhere = 0b0000,
-		STATE_Entering = 0b0001,
-		STATE_OnRail = 0b0010,
-		STATE_Leaving = 0b0011
-	};
-
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference = nullptr;
 
-	uint8 bHasValue : 1;
 	int SplineDir : 2;
 	uint8 PlayerState : 2;
 	uint8 PointCount;
@@ -49,19 +53,25 @@ public:
 	FRotator StartRotation;
 	float TravelTime{0.f};
 
+	FSplineStateChangedSignature OnSplineChanged;
+
 public:
 	FSplineInfo(USplineComponent* Spline = nullptr);
 
-	bool HasValue() const { return bHasValue; }
-};
+	bool HasValue() const { return SkateboardSplineReference != nullptr; }
 
-// Delegates
-DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FCustomMovementChangedSignature, uint8);
+	void SetState(EGrindingMovementState NewState);
+
+	// Helper function to reset curve. Just calls SetState(STATE_leaving);
+	void Invalidate();
+};
 
 /** Custom override of movement component
  *
  */
-UCLASS(hideCategories=("Character Movement: Walking", "Character Movement: Swimming", "Character Movement (Networking)"))
+UCLASS(hideCategories = ("Character Movement: Walking", "Character Movement: Swimming", "Character Movement (Networking)"),
+	   autoExpandCategories = ("Character Movement: Custom Movement", "Character Movement: Skateboard Movement", "Character Movement: Grinding Movement",
+							   "Character Movement: Grinding Movement|Start", "Character Movement: Grinding Movement|On Rail", "Character Movement: Skateboard Movement|Air"))
 class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
@@ -81,6 +91,12 @@ protected:
 
 	bool bStandstill = false;
 
+
+
+
+
+	// ================================== Skateboard Movement =================================================
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Standstill Threshold", ClampMin = "0", UIMin = "0"))
 	float StandstillThreshold = 10.f;
 
@@ -132,6 +148,9 @@ public:
 	FCustomMovementChangedSignature OnCustomMovementStart;
 	// Parameter is mode that ended
 	FCustomMovementChangedSignature OnCustomMovementEnd;
+
+	FMovementChangedSignature OnMovementStart;
+	FMovementChangedSignature OnMovementEnd;
 
 	UPlayerCharacterMovementComponent();
 
@@ -191,9 +210,6 @@ protected:
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
 
-	/** Handle falling movement. */
-	void PhysFalling(float DeltaTime, int32 Iterations) override;
-
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
@@ -222,37 +238,114 @@ protected:
 
 
 
+
+	// ================================== Air Movement =================================================
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Rotation Speed"))
+	float SkateboardAirRotationSpeed = 40.f;
+
+	/**
+	 * Time in seconds to apply the speed burst gained after doing airtime.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Length"))
+	float AirBurstLength = 0.2f;
+
+	/**
+	 * How big impact vertical velocity has on the speed burst.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Velocity Multiplier"))
+	float AirBurstVelocityMultiplier = 0.1f;
+
+	/**
+	 * Optional curve to use when applying speed burst.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Curve"))
+	UCurveFloat* AirBurstEffectCurve = nullptr;
+
+	float AirTime;
+	float BurstApplyTimer;
+	float BurstVerticalEnergy;
+
+	/** Handle falling movement. */
+	void PhysFalling(float DeltaTime, int32 Iterations) override;
+
+	void ApplySpeedBurst(float DeltaTime);
+
+
+
+
+
 	// ================================== Grinding =================================================
 public:
-	/// Grinding movement:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
-	FSplineInfo CurrentSpline;
+	template<typename... Args>
+	void SetSpline(Args&&... args);
 
 	bool IsGrinding() const;
 
 	FVector GetRailNormal() const;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement")
+	FSplineInfo CurrentSpline;
+
+	FQuat GrindingRotation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|Start")
 	bool bUseConstantEnteringSpeed = true;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|Start", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
 	float GrindingEnteringSpeed = 1600.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement")
-	bool bUseConstantGrindingSpeed = true;
+	/**
+	 * Whether to only use velocity in x and y direction (horizontal velocity) as the entering speed
+	 * for grinding, as opposed to also counting speed in the z direction (from falling and jumping).
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|Start", meta = (EditCondition = "!bUseConstantEnteringSpeed"))
+	bool bOnlyUseHorizontalVelocityInGrindingEntering = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Speed", EditCondition = "bUseContantGrindingSpeed"))
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail")
+	bool bUseConstantGrindingSpeed = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Constant Grinding Speed", EditCondition = "bUseConstantGrindingSpeed"))
 	float RailGrindingSpeed = 800.f;
+
+	/**
+	 * Whether to only use velocity in x and y direction (horizontal velocity) as the start speed
+	 * for grinding, as opposed to also counting speed in the z direction (from falling and jumping).
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (EditCondition = "!bUseConstantGrindingSpeed"))
+	bool bOnlyUseHorizontalVelocityInGrindingStart = true;
+
+	/**
+	 * Speed acceleration applied when grinding on the rail (not applied when entering rail)
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail")
+	float GrindingAcceleration = 300.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
+	float GrindingMaxSpeed = 8192.f;
 
 	void PhysGrinding(float deltaTime, int32 Iterations);
 
-	void CalcGrindingEnteringVelocity(FQuat& NewRotation, float DeltaTime, APlayerCharacter* Owner);
-	void CalcGrindingVelocity(FQuat& NewRotation, float DeltaTime);
+	void CalcGrindingVelocity(float DeltaTime);
+
+	void CalcGrindingEnteringVelocity(float DeltaTime);
+	void CalcGrindingRailVelocity(float DeltaTime);
 	float GetNewCurvePoint();
 	bool InEndInterval() const;
 	bool InEndInterval(int32 LastIndex, bool bForward) const;
 	bool IsAtCurveEnd(float DeltaTime) const;
 
 	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
+
+	UFUNCTION()
+	void OnSplineChangedImplementation(EGrindingMovementState NewState);
 };
+
+
+template <typename... Args>
+void UPlayerCharacterMovementComponent::SetSpline(Args&&... args)
+{
+	CurrentSpline = FSplineInfo{std::move(args)...};
+	CurrentSpline.OnSplineChanged.AddUObject(this, &UPlayerCharacterMovementComponent::OnSplineChangedImplementation);
+}
