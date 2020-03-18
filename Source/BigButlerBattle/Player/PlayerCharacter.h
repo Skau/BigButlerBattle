@@ -132,6 +132,8 @@ protected:
 
 	bool bHoldingJump = false;
 
+	bool bLastInputFromKeyboard = false;
+
 public:
 	JumpEventSignature OnJumpEvent;
 
