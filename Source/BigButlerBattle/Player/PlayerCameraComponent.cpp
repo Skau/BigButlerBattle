@@ -9,6 +9,8 @@
 UPlayerCameraComponent::UPlayerCameraComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	FieldOfView = 105.f;
 }
 
 void UPlayerCameraComponent::BeginPlay()

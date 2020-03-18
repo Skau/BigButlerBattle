@@ -46,12 +46,13 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
 	DefaultWaterMovementMode = EMovementMode::MOVE_Custom;
 	MaxCustomMovementSpeed = 4196.f;
-	JumpZVelocity = 1600.f;
+	JumpZVelocity = 2048.f;
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
-	MaxAcceleration = 1200.f;
-	GravityScale = 3.0f;
+	MaxAcceleration = 1160.f;
+	GravityScale = 5.0f;
+	BrakingFrictionFactor = 2.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(DefaultCustomMovementMode));
 }
@@ -630,7 +631,6 @@ void UPlayerCharacterMovementComponent::ApplySpeedBurst(float DeltaTime)
 	
 	const float factor = FMath::Clamp(BurstApplyTimer / AirBurstLength, 0.f, 1.f);
 	const float speedBurst = BurstVerticalEnergy * AirBurstVelocityMultiplier * AirBurstEffectCurve->GetFloatValue(factor);
-	UE_LOG(LogTemp, Warning, TEXT("val: %f"), AirBurstEffectCurve->GetFloatValue(factor));
 
 	Velocity += Velocity.GetSafeNormal() * speedBurst;
 

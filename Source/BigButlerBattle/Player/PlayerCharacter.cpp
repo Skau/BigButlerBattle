@@ -33,6 +33,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	JumpMaxHoldTime = 0.2f;
+
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Skateboard Mesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
 	SkateboardMesh->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
@@ -46,11 +48,12 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->SetRelativeLocation(FVector(0, 80.f, 0.f));
 	SpringArm->SetRelativeRotation(FRotator(5.f, 0, 0));
-	SpringArm->TargetArmLength = 200.f;
+	SpringArm->TargetArmLength = 150.f;
 	SpringArm->bEnableCameraLag = true;
-	SpringArm->CameraLagSpeed = 100.f;
+	SpringArm->CameraLagSpeed = 10.f;
 	SpringArm->bEnableCameraRotationLag = true;
 	SpringArm->CameraRotationLagSpeed = 15.f;
+	SpringArm->CameraLagMaxDistance = 70.f;
 
 	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
@@ -204,6 +207,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
 	btd::BindActionLambda(Input, "Jump", EInputEvent::IE_Released, [&](){
 		bHoldingJump = false;
+		StopJumping();
 	});
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);

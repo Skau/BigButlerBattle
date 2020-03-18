@@ -101,7 +101,7 @@ protected:
 	float StandstillThreshold = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardForwardGroundDeceleration = 100.f;
+	float SkateboardForwardGroundDeceleration = 306.f;
 
 	/**
 	 * How much current velocity will have an impact on acceleration
@@ -113,10 +113,10 @@ protected:
 	float SkateboardSidewaysGroundDeceleration = 4096.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardBreakingDeceleration = 2600.f;
+	float SkateboardBreakingDeceleration = 1356.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Rotation Speed", ClampMin = "0", UIMin = "0"))
-	float SkateboardRotationSpeed = 100.f;
+	float SkateboardRotationSpeed = 155.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement",
 		meta = (DisplayName = "Standtill Rotation Factor", ClampMin = "0", UIMin = "0"))
@@ -242,19 +242,19 @@ protected:
 	// ================================== Air Movement =================================================
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Rotation Speed"))
-	float SkateboardAirRotationSpeed = 40.f;
+	float SkateboardAirRotationSpeed = 77.f;
 
 	/**
 	 * Time in seconds to apply the speed burst gained after doing airtime.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Length"))
-	float AirBurstLength = 0.2f;
+	float AirBurstLength = 0.105f;
 
 	/**
 	 * How big impact vertical velocity has on the speed burst.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Velocity Multiplier"))
-	float AirBurstVelocityMultiplier = 0.1f;
+	float AirBurstVelocityMultiplier = 0.03f;
 
 	/**
 	 * Optional curve to use when applying speed burst.
@@ -320,10 +320,10 @@ protected:
 	 * Speed acceleration applied when grinding on the rail (not applied when entering rail)
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail")
-	float GrindingAcceleration = 300.f;
+	float GrindingAcceleration = 200.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
-	float GrindingMaxSpeed = 8192.f;
+	float GrindingMaxSpeed = 1440.f;
 
 	void PhysGrinding(float deltaTime, int32 Iterations);
 

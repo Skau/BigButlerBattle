@@ -26,7 +26,7 @@ protected:
 	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(EditDefaultsOnly)
-	float FieldOfViewSpeedChange = 5.f;
+	float FieldOfViewSpeedChange = 17.f;
 
 	UPROPERTY(EditDefaultsOnly)
 	float MinFOV = 115.f;
