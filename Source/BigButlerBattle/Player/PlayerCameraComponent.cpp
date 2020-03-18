@@ -32,7 +32,7 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	{
 		const auto MoveComp = Player->GetPlayerCharacterMovementComponent();
 		const auto MaxVel = MoveComp->MaxCustomMovementSpeed;
-		const auto CurrentVel = Player->GetVelocity().Size();
+		const auto CurrentVel = bConstrainFOVChangeToVelocityInXYDirections ? Player->GetVelocity().Size2D() : Player->GetVelocity().Size();
 
 		const auto DesiredFOV = FMath::Lerp(MinFOV, MaxFOV, CurrentVel / MaxVel);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);

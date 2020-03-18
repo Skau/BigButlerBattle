@@ -15,7 +15,7 @@ class UPlayerCharacterMovementComponent;
 class USkeletalMeshComponent;
 class UCharacterAnimInstance;
 class UPlayerCameraComponent;
-class USpringArmComponent;
+class UPlayerSpringArmComponent;
 class USkeletalMeshSocket;
 class UBoxComponent;
 class ATaskObject;
@@ -184,7 +184,7 @@ protected:
 	UPlayerCameraComponent* Camera;
 
 	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent *SpringArm;
+	UPlayerSpringArmComponent *SpringArm;
 
 
 	FVector2D DefaultCameraRotation = {};

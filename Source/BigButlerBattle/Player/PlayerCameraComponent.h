@@ -34,6 +34,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float MaxFOV = 130.f;
 
+	/**
+	 * Whether to only use velocity in the x and y axis when figuring out current FOV
+	 * as opposed to also taking into account the z axis.
+	 */
+	UPROPERTY(EditDefaultsOnly, meta = (DisplayName = "Constrain FOV Change To Velocity In XY Directions"))
+	bool bConstrainFOVChangeToVelocityInXYDirections = true;
+
 private:
 	APlayerCharacter* Player;
 };

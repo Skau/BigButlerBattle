@@ -4,7 +4,7 @@
 #include "PlayerCharacter.h"
 #include "PlayerCharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "GameFramework/SpringArmComponent.h"
+#include "PlayerSpringArmComponent.h"
 #include "PlayerCameraComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -44,7 +44,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GetCapsuleComponent()->SetCapsuleHalfHeight(100.f);
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
 
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
+	SpringArm = CreateDefaultSubobject<UPlayerSpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->SetRelativeLocation(FVector(0, 80.f, 0.f));
 	SpringArm->SetRelativeRotation(FRotator(5.f, 0, 0));
@@ -54,8 +54,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SpringArm->bEnableCameraRotationLag = true;
 	SpringArm->CameraRotationLagSpeed = 15.f;
 	SpringArm->CameraLagMaxDistance = 70.f;
+	SpringArm->ProbeSize = 18.f;
 
-	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
+		Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
 	TaskObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
