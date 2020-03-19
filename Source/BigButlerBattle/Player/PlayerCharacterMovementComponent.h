@@ -110,7 +110,7 @@ protected:
 	float SkateboardFwrdVelAccMult = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardSidewaysGroundDeceleration = 4096.f;
+	float SkateboardSidewaysGroundDeceleration = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardBreakingDeceleration = 1356.f;
@@ -132,7 +132,13 @@ protected:
 	float HandbrakeVelocityThreshold = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
-	bool bAllowBrakingWhileHandbraking = true;
+	bool bAllowBrakingWhileHandbraking = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
+	float HandbrakeAcceleration = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
+	float HandbrakeMaxVelocity = 1000.f;
 
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
@@ -144,6 +150,8 @@ protected:
 	bool bIsStandstill = false;
 
 public:
+	bool bHandbrake = false;
+
 	// Parameter is mode that started
 	FCustomMovementChangedSignature OnCustomMovementStart;
 	// Parameter is mode that ended
@@ -195,6 +203,8 @@ public:
 	 * Returns GetInputAcceleration but zero-ed out if above max acceleration velocity.
 	 */
 	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float Input = 0.f);
+
+	FVector GetClampedHandbrakeAcceleration(float DeltaTime, float Input = 0.f);
 
 	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 

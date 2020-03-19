@@ -331,7 +331,7 @@ void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float Del
 		RemainingTime -= DT;
 
 		// apply friction and braking
-		Velocity = Velocity + (-Friction * Velocity + RevForwardAcceleration + RevSidewaysAcceleration) * DT;
+		Velocity = Velocity + (-Friction * Velocity + RevForwardAcceleration + !bHandbrake * RevSidewaysAcceleration) * DT;
 
 		// Don't reverse direction
 		if ((Velocity | OldVel) <= 0.f)
@@ -377,7 +377,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());
 
 	// Apply braking or deceleration
-	const bool bZeroAcceleration = Acceleration.IsZero();
 	const bool bVelocityOverMax = IsExceedingMaxSpeed(MaxSpeed);
 
 	const FVector OldVelocity = Velocity;
@@ -389,6 +388,10 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 
 	bIsStandstill = Velocity.Size() < StandstillThreshold;
 	const bool bShouldStopCompletely = bBraking && bIsStandstill;
+
+	// Acceleration += GetClampedHandbrakeAcceleration(DeltaTime);
+
+	const bool bZeroAcceleration = Acceleration.IsZero();
 
 	// Apply acceleration if there is any, and a braking deceleration if trying to reverse
 	if (!bZeroAcceleration)
@@ -425,7 +428,7 @@ void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
 	const auto rotAmount = CalcRotation() * DeltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 	// Rotate velocity the same amount as forward dir.
-	if (!IsHandbraking() && !Velocity.IsNearlyZero())
+	if (/*!IsHandbraking() && */!Velocity.IsNearlyZero())
 		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
 }
 
@@ -472,17 +475,17 @@ bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &Acce
 
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, const float DeltaTime, const bool bMovingBackwards) const
 {
-	return !IsHandbraking() && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
+	return /*!IsHandbraking() &&*/ (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
 }
 
 bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, const bool bBrakingIn, const float DeltaTime) const
 {
-	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime);
+	return /*bBrakingIn || */CanForwardAccelerate(AccelerationIn, DeltaTime);
 }
 
 bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, const bool bBrakingIn, const float DeltaTime, const bool bMovingBackwards) const
 {
-	return bBrakingIn || CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
+	return /*bBrakingIn || */CanForwardAccelerate(AccelerationIn, DeltaTime, bMovingBackwards);
 }
 
 FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBrakingOut, bool &bMovingBackwardsOut, float Input)
@@ -490,21 +493,21 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBrakingOu
 	if (Input == 0)
 	{
 		Input = GetForwardInput();
-		if (Input == 0)
-		{
-			return FVector::ZeroVector;
-		}
+		// if (Input == 0)
+		// {
+		// 	return FVector::ZeroVector;
+		// }
 	}
 
 	// If input is negative, we are currently braking on the controller.
 	bBrakingOut = Input < 0.f;
 
-	// Scale braking with rotation, 0% rotation equals 100% braking
-	if (bBrakingOut)
-		Input *= 1.f - FMath::Abs(GetRotationInput());
+	// // Scale braking with rotation, 0% rotation equals 100% braking
+	// if (bBrakingOut)
+	// 	Input *= 1.f - FMath::Abs(GetRotationInput());
 
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
-	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && bBrakingOut);
+	const bool bCanMoveVertically = /* !IsHandbraking() || (bAllowBrakingWhileHandbraking && bBrakingOut) */ true;
 	const float Factor = bCanMoveVertically * Input * (bBrakingOut ? FMath::Abs(SkateboardBreakingDeceleration) : GetMaxForwardAcceleration());
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * Factor;
 
@@ -535,7 +538,40 @@ FVector UPlayerCharacterMovementComponent::GetClampedInputAcceleration(bool &bBr
 	bool bMovingBackwards;
 	auto a = GetInputAcceleration(bBrakingOut, bMovingBackwards, Input);
 	a = GetInputAccelerationTimeNormalized(a, bBrakingOut, DeltaTime);
+	// UE_LOG(LogTemp, Warning, TEXT("acceleration: %s"), *a.ToString());
+	return a;
 	return CanAccelerate(a, bBrakingOut, DeltaTime, bMovingBackwards) ? a : FVector::ZeroVector;
+}
+
+FVector UPlayerCharacterMovementComponent::GetClampedHandbrakeAcceleration(float DeltaTime, float Input)
+{
+	if (!bHandbrake)
+	{
+		return FVector::ZeroVector;
+	}
+
+	if (FMath::IsNearlyZero(Input))
+	{
+		Input = GetRotationInput();
+		if (FMath::IsNearlyZero(Input))
+		{
+			return FVector::ZeroVector;
+		}
+	}
+
+	// Apply handbrake sideways
+	if (HandbrakeAcceleration < 0.001f)
+		return FVector::ZeroVector;
+
+	const float str = bHandbrake * Input * HandbrakeAcceleration;
+	FVector a = GetOwner()->GetActorRightVector() * -str;
+
+	auto newVelocity = Velocity + a * DeltaTime;
+	auto velInRightDir = newVelocity.ProjectOnTo(a);
+
+	// UE_LOG(LogTemp, Warning, TEXT("Size: %f"), velInRightDir.Size());
+
+	return velInRightDir.SizeSquared() < FMath::Pow(HandbrakeMaxVelocity, 2.f) ? a : FVector::ZeroVector;
 }
 
 void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, const float TimeSlice, const FVector& MoveDelta)
@@ -570,16 +606,20 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
 
-	if (IsHandbraking() && !IsFalling())
-	{
-		float Alpha = Velocity.Size() / HandbrakeVelocityThreshold;
-		const bool bWithinThreshold = Alpha <= 1.f;
-		// If above threshold remember to clamp to threshold.
-		if (!bWithinThreshold)
-			Alpha = 1.f;
+	// if (IsHandbraking() && !IsFalling())
+	// {
+	// 	float Alpha = Velocity.Size() / HandbrakeVelocityThreshold;
+	// 	const bool bWithinThreshold = Alpha <= 1.f;
+	// 	// If above threshold remember to clamp to threshold.
+	// 	if (!bWithinThreshold)
+	// 		Alpha = 1.f;
 
-		const float RotSpeed = FMath::Lerp(StandstillRotationSpeed, HandbrakeRotationFactor, Alpha);
-		return GetHandbrakeAmount() * GetRotationInput() * RotSpeed;
+	// 	const float RotSpeed = FMath::Lerp(StandstillRotationSpeed, HandbrakeRotationFactor, Alpha);
+	// 	return GetHandbrakeAmount() * GetRotationInput() * RotSpeed;
+	// }
+	if (bHandbrake)
+	{
+		return GetRotationInput() * HandbrakeRotationFactor;
 	}
 	else if (IsFalling())
 	{
