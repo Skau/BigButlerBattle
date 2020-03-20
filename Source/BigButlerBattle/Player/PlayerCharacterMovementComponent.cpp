@@ -461,7 +461,7 @@ inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVect
 
 float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
 {
-	return FMath::Max(FMath::Abs(GetMaxAcceleration()) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
 }
 
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, const float DeltaTime) const
@@ -472,7 +472,7 @@ bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &Acce
 
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, const float DeltaTime, const bool bMovingBackwards) const
 {
-	return !IsHandbraking() && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(CustomMaxAccelerationVelocity)));
+	return !IsHandbraking() && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(MaxInputSpeed)));
 }
 
 bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, const bool bBrakingIn, const float DeltaTime) const

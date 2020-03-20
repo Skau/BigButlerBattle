@@ -77,17 +77,17 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 	GENERATED_BODY()
 
 public:
-	float GetMaxAccelerationVelocity() const { return CustomMaxAccelerationVelocity; }
+	float GetMaxInputSpeed() const { return MaxInputSpeed; }
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType DefaultCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
 
 	/**
-	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from terrain get's applied.
+	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from other sources get's applied.
 	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Acceleration Velocity"))
-	float CustomMaxAccelerationVelocity = 3600.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Input Speed"))
+	float MaxInputSpeed = 3600.f;
 
 	bool bStandstill = false;
 
@@ -102,6 +102,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardForwardGroundDeceleration = 306.f;
+
+	/**
+	 * The acceleration force that is applied by kicking, scaled by input strength
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Kicking Acceleration"))
+	float SkateboardKickingAcceleration = 1160.f;
 
 	/**
 	 * How much current velocity will have an impact on acceleration
@@ -166,7 +172,7 @@ public:
 
 	float GetMaxForwardAcceleration() const;
 
-	float GetMaxAccelerationVelocity() { return CustomMaxAccelerationVelocity; }
+	float GetMaxInputSpeed() { return MaxInputSpeed; }
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
