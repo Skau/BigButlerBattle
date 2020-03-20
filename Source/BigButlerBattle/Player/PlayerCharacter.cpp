@@ -346,12 +346,12 @@ void APlayerCharacter::MoveForward(float Value)
 	bool bMovingBackwards = false;
 	auto acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
 
-	if (!bBraking && Value != 0)
+	if (!bBraking && Value != 0 && AnimInstance && !AnimInstance->IsAnyMontagePlaying())
 	{
 		// Normalize with time
 		const float deltaTime = GetWorld()->GetDeltaSeconds();
 		acceleration = Movement->GetInputAccelerationTimeNormalized(acceleration, bBraking, deltaTime);
-		if (Movement->CanForwardAccelerate(acceleration, deltaTime, bMovingBackwards) && AnimInstance)
+		if (Movement->CanForwardAccelerate(acceleration, deltaTime, bMovingBackwards))
 			AnimInstance->ForwardKick();
 	}
 }
