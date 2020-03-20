@@ -420,7 +420,9 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 
 	ApplySpeedBurst(DeltaTime);
 
-	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
+	const auto forwardDeceleration = (bApplySeparateDecelerationWhenAboveMaxInputSpeed && IsAboveInputSpeed())
+		? SkateboardForwardGroundDecelerationAboveInputSpeed : SkateboardForwardGroundDeceleration;
+	ApplySkateboardVelocityBraking(DeltaTime, forwardDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	ApplyRotation(DeltaTime);
 
@@ -428,6 +430,8 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	{
 		Velocity = Velocity.GetSafeNormal() * MaxSkateboardMovementSpeed;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Velocity: %f"), Velocity.Size());
 }
 
 void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)

@@ -79,6 +79,8 @@ class BIGBUTLERBATTLE_API UPlayerCharacterMovementComponent : public UCharacterM
 public:
 	float GetMaxInputSpeed() const { return MaxInputSpeed; }
 
+	bool IsAboveInputSpeed() const { return FMath::Square(MaxInputSpeed) < Velocity.SizeSquared(); }
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement")
 	ECustomMovementType DefaultCustomMovementMode = ECustomMovementType::MOVE_Skateboard;
@@ -102,6 +104,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardForwardGroundDeceleration = 306.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
+	bool bApplySeparateDecelerationWhenAboveMaxInputSpeed = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Ground Forward Deceleration Above Max Input Speed", EditCondition = "bApplySeparateDecelerationWhenAboveMaxInputSpeed"))
+	float SkateboardForwardGroundDecelerationAboveInputSpeed = 306.f;
 
 	/**
 	 * The acceleration force that is applied by kicking, scaled by input strength
