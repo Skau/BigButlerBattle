@@ -13,6 +13,9 @@ DECLARE_DELEGATE_OneParam(FPauseGameSignature, int);
 // Broadcasted when the player finishes all tasks at the king
 DECLARE_DELEGATE_OneParam(FGameFinishedSignature, int);
 
+DECLARE_DELEGATE(FMainItemPickedUpSignature);
+DECLARE_DELEGATE(FMainItemDroppedSignature);
+
 class UBaseUserWidget;
 class UPlayerWidget;
 class APlayerCharacter;
@@ -34,6 +37,9 @@ class BIGBUTLERBATTLE_API APlayerCharacterController : public APlayerController
 public:
 	FPauseGameSignature OnPausedGame;
 	FGameFinishedSignature OnGameFinished;
+
+	FMainItemPickedUpSignature OnMainItemPickedUp;
+	FMainItemDroppedSignature OnMainItemDropped;
 
 	void SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks);
 

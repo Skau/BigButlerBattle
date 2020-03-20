@@ -104,14 +104,24 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 
 void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 {
-	UpdatePlayerTasks();
+	if (Object->bIsMainItem)
+	{
+		OnMainItemPickedUp.ExecuteIfBound();
+	}
+
+	//UpdatePlayerTasks();
 }
 
 void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 {
-	UpdatePlayerTasks();
+	if (Object->bIsMainItem)
+	{
+		OnMainItemDropped.ExecuteIfBound();
+	}
 
-	Object->OnTaskObjectDelivered.BindUObject(this, &APlayerCharacterController::OnTaskObjectDelivered);
+	//UpdatePlayerTasks();
+
+	//Object->OnTaskObjectDelivered.BindUObject(this, &APlayerCharacterController::OnTaskObjectDelivered);
 }
 
 void APlayerCharacterController::UpdatePlayerTasks()
@@ -182,40 +192,50 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 
 void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory)
 {
+
+
 	for (int i = 0; i < Inventory.Num(); ++i)
 	{
-		if (Inventory[i] == nullptr)
+		auto Item = Inventory[i];
+
+		if (Item == nullptr)
 			continue;
 
-		for (int j = 0; j < PlayerTasks.Num(); ++j)
+		if (Item->bIsMainItem)
 		{
-			if (PlayerTasks[j].Value == ETaskState::Present)
-			{
-				if (Inventory[i] != nullptr)
-				{
-					const auto Task = Inventory[i]->GetTaskData();
-					if (PlayerTasks[j].Key->IsEqual(Task))
-					{
-						Inventory[i]->Destroy();
-						Inventory[i] = nullptr;
-						SetPlayerTaskState(j, ETaskState::Finished);
-
-						if(PlayerCharacter->GetCurrentItemIndex() == i)
-							PlayerCharacter->IncrementCurrentItemIndex();
-					}
-				}
-			}
+			UE_LOG(LogTemp, Warning, TEXT("Item is main, game is won"));
+			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
+			OnGameFinished.ExecuteIfBound(ID);
 		}
+
+		//for (int j = 0; j < PlayerTasks.Num(); ++j)
+		//{
+		//	if (PlayerTasks[j].Value == ETaskState::Present)
+		//	{
+		//		if (Item != nullptr)
+		//		{
+		//			const auto Task = Item->GetTaskData();
+		//			if (PlayerTasks[j].Key->IsEqual(Task))
+		//			{
+		//				Item->Destroy();
+		//				Item = nullptr;
+		//				SetPlayerTaskState(j, ETaskState::Finished);
+
+		//				if(PlayerCharacter->GetCurrentItemIndex() == i)
+		//					PlayerCharacter->IncrementCurrentItemIndex();
+		//			}
+		//		}
+		//	}
+		//}
 	}
 
-	for (auto& Task : PlayerTasks)
-	{
-		if (Task.Value != ETaskState::Finished)
-			return;
-	}
+	//for (auto& Task : PlayerTasks)
+	//{
+	//	if (Task.Value != ETaskState::Finished)
+	//		return;
+	//}
 
-	const auto ID = UGameplayStatics::GetPlayerControllerID(this);
-	OnGameFinished.ExecuteIfBound(ID);
+
 }
 
 void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
