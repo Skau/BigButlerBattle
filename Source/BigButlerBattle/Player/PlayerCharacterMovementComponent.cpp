@@ -162,6 +162,12 @@ void UPlayerCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterat
 		default:
 			break;
 	}
+
+	// Clamp all movement to custom max movement speed
+	if (!Velocity.IsNearlyZero() && MaxCustomMovementSpeed * MaxCustomMovementSpeed < Velocity.SizeSquared())
+	{
+		Velocity = Velocity.GetSafeNormal() * MaxCustomMovementSpeed;
+	}
 }
 
 void UPlayerCharacterMovementComponent::PhysSkateboard(float DeltaTime, int32 Iterations)
@@ -417,6 +423,11 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	ApplySkateboardVelocityBraking(DeltaTime, SkateboardForwardGroundDeceleration, SkateboardSidewaysGroundDeceleration);
 
 	ApplyRotation(DeltaTime);
+
+	if (!Velocity.IsNearlyZero() && MaxSkateboardMovementSpeed * MaxSkateboardMovementSpeed < Velocity.SizeSquared())
+	{
+		Velocity = Velocity.GetSafeNormal() * MaxSkateboardMovementSpeed;
+	}
 }
 
 void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
