@@ -140,6 +140,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
 	float HandbrakeMaxVelocity = 1000.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
+	float HandbrakeLerpSpeed = 1.f;
+
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
 
@@ -205,6 +208,7 @@ public:
 	FVector GetClampedInputAcceleration(bool &bBrakingOut, float DeltaTime = 0.f, float Input = 0.f);
 
 	FVector GetClampedHandbrakeAcceleration(float DeltaTime, float Input = 0.f);
+	FVector GetHandbrakeVelocity(float DeltaTime);
 
 	void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.f, const FVector& MoveDelta = FVector::ZeroVector) override;
 

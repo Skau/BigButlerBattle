@@ -389,7 +389,8 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	bIsStandstill = Velocity.Size() < StandstillThreshold;
 	const bool bShouldStopCompletely = bBraking && bIsStandstill;
 
-	// Acceleration += GetClampedHandbrakeAcceleration(DeltaTime);
+	Acceleration += GetClampedHandbrakeAcceleration(DeltaTime);
+	// Velocity = GetHandbrakeVelocity(DeltaTime);
 
 	const bool bZeroAcceleration = Acceleration.IsZero();
 
@@ -563,7 +564,9 @@ FVector UPlayerCharacterMovementComponent::GetClampedHandbrakeAcceleration(float
 	if (HandbrakeAcceleration < 0.001f)
 		return FVector::ZeroVector;
 
-	const float str = bHandbrake * Input * HandbrakeAcceleration;
+	const float speedAccelerationFactor = Velocity.Size() * DeltaTime;
+	const float str = bHandbrake * Input * HandbrakeAcceleration * speedAccelerationFactor;
+	UE_LOG(LogTemp, Warning, TEXT("Acceleration str: %f"), str);
 	FVector a = GetOwner()->GetActorRightVector() * -str;
 
 	auto newVelocity = Velocity + a * DeltaTime;
@@ -572,6 +575,29 @@ FVector UPlayerCharacterMovementComponent::GetClampedHandbrakeAcceleration(float
 	// UE_LOG(LogTemp, Warning, TEXT("Size: %f"), velInRightDir.Size());
 
 	return velInRightDir.SizeSquared() < FMath::Pow(HandbrakeMaxVelocity, 2.f) ? a : FVector::ZeroVector;
+}
+
+FVector UPlayerCharacterMovementComponent::GetHandbrakeVelocity(float DeltaTime)
+{
+	static float currentLerp{0.f};
+
+	if (!bHandbrake)
+	{
+		currentLerp = 0.f;
+		return Velocity;
+	}
+
+	auto fwdDirVel = Velocity.ProjectOnToNormal(GetOwner()->GetActorForwardVector());
+
+	auto otherVel = Velocity - fwdDirVel;
+
+	currentLerp = FMath::Clamp(currentLerp + GetRotationInput() * HandbrakeLerpSpeed * DeltaTime, -0.7f, 0.7f);
+	// currentLerp = /
+	auto angleFactor = currentLerp * HALF_PI;
+	auto dir = FVector { FMath::Cos(angleFactor), FMath::Sin(angleFactor), 0.f};
+	UE_LOG(LogTemp, Warning, TEXT("Dir: %s"), *dir.ToString());
+
+	return otherVel + dir * fwdDirVel;
 }
 
 void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, const float TimeSlice, const FVector& MoveDelta)
