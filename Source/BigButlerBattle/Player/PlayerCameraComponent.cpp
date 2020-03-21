@@ -11,6 +11,52 @@ UPlayerCameraComponent::UPlayerCameraComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	FieldOfView = 105.f;
+
+	// =================== Postprocessing ====================================
+	PostProcessSettings.bOverride_BloomIntensity = true;
+	PostProcessSettings.bOverride_Bloom1Tint = true;
+	PostProcessSettings.bOverride_Bloom2Tint = true;
+	PostProcessSettings.bOverride_Bloom3Tint = true;
+	PostProcessSettings.bOverride_Bloom4Tint = true;
+	PostProcessSettings.bOverride_SceneFringeIntensity = true;
+	PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
+	PostProcessSettings.bOverride_LensFlareIntensity = true;
+	PostProcessSettings.bOverride_LensFlareTint = true;
+	PostProcessSettings.bOverride_LensFlareBokehSize = true;
+	PostProcessSettings.bOverride_LensFlareThreshold = true;
+	PostProcessSettings.bOverride_VignetteIntensity = true;
+	PostProcessSettings.bOverride_GrainJitter = true;
+	PostProcessSettings.bOverride_GrainIntensity = true;
+	PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+	PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = true;
+	PostProcessSettings.bOverride_WhiteTemp = true;
+	PostProcessSettings.bOverride_ColorGamma = true;
+	PostProcessSettings.bOverride_ColorGainShadows = true;
+	PostProcessSettings.bOverride_MotionBlurTargetFPS = true;
+	PostProcessSettings.bOverride_ReflectionsType = true;
+
+	PostProcessSettings.BloomIntensity = 2.427381f;
+	PostProcessSettings.Bloom1Tint = FLinearColor { 0.782849f, 0.3465f, 0.3465f };
+	PostProcessSettings.Bloom2Tint = FLinearColor{0.138f, 0.138f, 0.328476f};
+	PostProcessSettings.Bloom3Tint = FLinearColor{0.012862f, 0.116085f, 0.1176f};
+	PostProcessSettings.Bloom3Tint = FLinearColor{0.066f, 0.009738f, 0.063632f};
+	PostProcessSettings.SceneFringeIntensity = 1.476191f;
+	PostProcessSettings.ChromaticAberrationStartOffset = 0.466667f;
+	PostProcessSettings.LensFlareIntensity = 0.152381f;
+	PostProcessSettings.LensFlareTint = FLinearColor { 1.f, 0.861075f, 0.670596f};
+	PostProcessSettings.LensFlareBokehSize = 2.438096f;
+	PostProcessSettings.LensFlareThreshold = 25.924765f;
+	PostProcessSettings.VignetteIntensity = 0.67619f;
+	PostProcessSettings.GrainJitter = 0.076191f;
+	PostProcessSettings.GrainIntensity = 0.095239f;
+	PostProcessSettings.DepthOfFieldFocalDistance = 286.68573f;
+	PostProcessSettings.DepthOfFieldDepthBlurRadius = 1.104762f;
+	PostProcessSettings.WhiteTemp = 6757.143066f;
+	PostProcessSettings.ColorGamma = FVector4 { 0.946601f, 0.971328f, 1.f, 1.f };
+	PostProcessSettings.ColorGainShadows = FVector4 { 0.621799f, 0.758338f, 1.f, 1.f};
+
+	// PostProsessSettings.MotionBlurTargetFPS = 61;
+	// PostProcessSettings.ReflectionsType = EReflectionsType::ScreenSpace;
 }
 
 void UPlayerCameraComponent::BeginPlay()
