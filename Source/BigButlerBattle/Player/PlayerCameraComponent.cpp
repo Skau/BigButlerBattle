@@ -54,9 +54,8 @@ UPlayerCameraComponent::UPlayerCameraComponent()
 	PostProcessSettings.WhiteTemp = 6757.143066f;
 	PostProcessSettings.ColorGamma = FVector4 { 0.946601f, 0.971328f, 1.f, 1.f };
 	PostProcessSettings.ColorGainShadows = FVector4 { 0.621799f, 0.758338f, 1.f, 1.f};
-
-	// PostProsessSettings.MotionBlurTargetFPS = 61;
-	// PostProcessSettings.ReflectionsType = EReflectionsType::ScreenSpace;
+	PostProcessSettings.MotionBlurTargetFPS = 61;
+	PostProcessSettings.ReflectionsType = EReflectionsType::ScreenSpace;
 }
 
 void UPlayerCameraComponent::BeginPlay()
