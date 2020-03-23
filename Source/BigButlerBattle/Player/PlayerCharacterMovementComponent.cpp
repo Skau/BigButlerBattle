@@ -430,8 +430,6 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 	{
 		Velocity = Velocity.GetSafeNormal() * MaxSkateboardMovementSpeed;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Velocity: %f"), Velocity.Size());
 }
 
 void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
@@ -440,8 +438,8 @@ void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
 	const auto rotAmount = CalcRotation() * DeltaTime;
 	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 	// Rotate velocity the same amount as forward dir.
-	if (!IsHandbraking() && !Velocity.IsNearlyZero())
-		Velocity = Velocity.RotateAngleAxis(rotAmount, FVector(0, 0, 1));
+	if (!Velocity.IsNearlyZero())
+		Velocity = Velocity.RotateAngleAxis(rotAmount * (1.f - GetHandbrakeAmount()), FVector(0, 0, 1));
 }
 
 FVector UPlayerCharacterMovementComponent::GetSlopeAcceleration(const FHitResult &FloorHitResult) const
@@ -479,6 +477,11 @@ float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
 	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
 }
 
+bool UPlayerCharacterMovementComponent::CanKickWhileHandbraking() const
+{
+	return !bAllowBrakingWhileHandbraking && bAllowKickingWhileHandbraking;
+}
+
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, const float DeltaTime) const
 {
 	const bool bMovingBackwards = FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) < 0.f;
@@ -487,7 +490,7 @@ bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &Acce
 
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, const float DeltaTime, const bool bMovingBackwards) const
 {
-	return !IsHandbraking() && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(MaxInputSpeed)));
+	return (!IsHandbraking() || CanKickWhileHandbraking())  && (bMovingBackwards || (DeltaTime >= MIN_TICK_TIME && (Velocity + AccelerationIn * DeltaTime).SizeSquared() < FMath::Square(MaxInputSpeed)));
 }
 
 bool UPlayerCharacterMovementComponent::CanAccelerate(const FVector &AccelerationIn, const bool bBrakingIn, const float DeltaTime) const
@@ -519,7 +522,7 @@ FVector UPlayerCharacterMovementComponent::GetInputAcceleration(bool &bBrakingOu
 		Input *= 1.f - FMath::Abs(GetRotationInput());
 
 	// Remove vertical input if handbraking and not normal braking with bAllowBrakingWhileHandbraking enabled.
-	const bool bCanMoveVertically = !IsHandbraking() || (bAllowBrakingWhileHandbraking && bBrakingOut);
+	const bool bCanMoveVertically = !IsHandbraking() || CanKickWhileHandbraking() || (bAllowBrakingWhileHandbraking && bBraking);
 	const float Factor = bCanMoveVertically * Input * (bBrakingOut ? FMath::Abs(SkateboardBreakingDeceleration) : GetMaxForwardAcceleration());
 	auto a = UpdatedComponent->GetForwardVector().GetSafeNormal() * Factor;
 
@@ -585,24 +588,14 @@ float UPlayerCharacterMovementComponent::CalcRotation() const
 {
 	const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
 
-	if (IsHandbraking() && !IsFalling())
-	{
-		float Alpha = Velocity.Size() / HandbrakeVelocityThreshold;
-		const bool bWithinThreshold = Alpha <= 1.f;
-		// If above threshold remember to clamp to threshold.
-		if (!bWithinThreshold)
-			Alpha = 1.f;
-
-		const float RotSpeed = FMath::Lerp(StandstillRotationSpeed, HandbrakeRotationFactor, Alpha);
-		return GetHandbrakeAmount() * GetRotationInput() * RotSpeed;
-	}
-	else if (IsFalling())
+	if (IsFalling())
 	{
 		return GetRotationInput() * SkateboardAirRotationSpeed;
 	}
 	else
 	{
-		return GetRotationInput() * (bIsStandstill ? StandstillRotationSpeed : SkateboardRotationSpeed);
+		const auto speed = (bIsStandstill ? StandstillRotationSpeed : FMath::Lerp(SkateboardRotationSpeed, HandbrakeRotationSpeed, GetHandbrakeAmount()));
+		return GetRotationInput() * speed;
 	}
 }
 

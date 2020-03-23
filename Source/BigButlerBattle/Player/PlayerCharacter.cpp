@@ -373,7 +373,7 @@ void APlayerCharacter::MoveRight(float Value)
 
 void APlayerCharacter::UpdateHandbrake(float Value)
 {
-	AddMovementInput(FVector::BackwardVector * Value);
+	AddMovementInput(FVector::UpVector * Value);
 }
 
 
