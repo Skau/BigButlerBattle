@@ -337,6 +337,11 @@ void APlayerCharacter::StartJump()
 		OnJumpEvent.Broadcast();
 }
 
+FVector APlayerCharacter::GetInputAxis() const
+{
+	return FVector{GetInputAxisValue("Forward"), GetInputAxisValue("Right"), 0.f};
+}
+
 void APlayerCharacter::MoveForward(float Value)
 {
 	if (HasEnabledRagdoll() || !Movement || Movement->IsFalling() || Movement->IsGrinding())

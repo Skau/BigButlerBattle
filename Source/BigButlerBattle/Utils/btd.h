@@ -116,4 +116,11 @@ namespace btd
 	    ab.ActionDelegate.GetDelegateForManualSet().BindLambda(func);
 	    return Input->AddActionBinding(MoveTemp(ab));
     }
+
+    template<typename T>
+    inline static int sign(const T& v, float tolerance = SMALL_NUMBER)
+    {
+        auto zero = T{};
+        return FMath::IsNearlyEqual(v, zero, tolerance) ? 0 : (v < zero + tolerance ? -1 : 1);
+    }
 }

@@ -141,6 +141,8 @@ public:
 
 	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() const { return Movement; }
 
+	FVector GetInputAxis() const;
+
 protected:
 	void MoveForward(float Value);
 

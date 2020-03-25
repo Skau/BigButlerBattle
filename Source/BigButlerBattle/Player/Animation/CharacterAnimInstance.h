@@ -58,9 +58,22 @@ public:
 protected:
 	void NativeBeginPlay() override;
 
+	void NativeUpdateAnimation(float DeltaTime) override;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* JumpMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage* ForwardMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsFalling;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bChangedDirections;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector Input;
+
+	APlayerCharacter *Character = nullptr;
 };

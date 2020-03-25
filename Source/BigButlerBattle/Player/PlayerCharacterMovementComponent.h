@@ -176,6 +176,8 @@ public:
 
 	bool IsMovingOnGround() const override;
 
+	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
+
 	float GetAudioVolumeMult() const;
 
 	UFUNCTION(BlueprintPure)
@@ -184,6 +186,18 @@ public:
 	float GetMaxForwardAcceleration() const;
 
 	float GetMaxInputSpeed() { return MaxInputSpeed; }
+
+	FVector GetInput() const {return InputDir; }
+	float GetForwardInput() const { return InputDir.X; }
+	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
+	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	float CalcSidewaysBreaking(const FVector& Forward) const;
+
+	/**
+	 * Returns current rotation amount.
+	 * Both normal rotation and handbraking rotation.
+	 */
+	float CalcRotation() const;
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
@@ -238,19 +252,7 @@ protected:
 	// Applies this frames current rotation multiplied by deltaTime
 	void ApplyRotation(float DeltaTime);
 
-	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
-
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
-	float GetForwardInput() const { return InputDir.X; }
-	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
-	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	float CalcSidewaysBreaking(const FVector& Forward) const;
-
-	/**
-	 * Returns current rotation amount.
-	 * Both normal rotation and handbraking rotation.
-	 */
-	float CalcRotation() const;
 
 
 

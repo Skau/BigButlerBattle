@@ -469,14 +469,39 @@ FVector UPlayerCharacterMovementComponent::GetSlopeAcceleration(const FHitResult
 	return a;
 }
 
+float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
+{
+	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+}
+
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector &Forward) const
 {
 	return 1.f - FMath::Abs(FVector::DotProduct(Forward, Velocity));
 }
 
-float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
+float UPlayerCharacterMovementComponent::CalcRotation() const
 {
-	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+	const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
+
+	if (IsHandbraking() && !IsFalling())
+	{
+		float Alpha = Velocity.Size() / HandbrakeVelocityThreshold;
+		const bool bWithinThreshold = Alpha <= 1.f;
+		// If above threshold remember to clamp to threshold.
+		if (!bWithinThreshold)
+			Alpha = 1.f;
+
+		const float RotSpeed = FMath::Lerp(StandstillRotationSpeed, HandbrakeRotationFactor, Alpha);
+		return GetHandbrakeAmount() * GetRotationInput() * RotSpeed;
+	}
+	else if (IsFalling())
+	{
+		return GetRotationInput() * SkateboardAirRotationSpeed;
+	}
+	else
+	{
+		return GetRotationInput() * (bIsStandstill ? StandstillRotationSpeed : SkateboardRotationSpeed);
+	}
 }
 
 bool UPlayerCharacterMovementComponent::CanForwardAccelerate(const FVector &AccelerationIn, const float DeltaTime) const
@@ -578,31 +603,6 @@ void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, cons
 	else
 	{
 		Super::HandleImpact(Hit, TimeSlice, MoveDelta);
-	}
-}
-
-float UPlayerCharacterMovementComponent::CalcRotation() const
-{
-	const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
-
-	if (IsHandbraking() && !IsFalling())
-	{
-		float Alpha = Velocity.Size() / HandbrakeVelocityThreshold;
-		const bool bWithinThreshold = Alpha <= 1.f;
-		// If above threshold remember to clamp to threshold.
-		if (!bWithinThreshold)
-			Alpha = 1.f;
-
-		const float RotSpeed = FMath::Lerp(StandstillRotationSpeed, HandbrakeRotationFactor, Alpha);
-		return GetHandbrakeAmount() * GetRotationInput() * RotSpeed;
-	}
-	else if (IsFalling())
-	{
-		return GetRotationInput() * SkateboardAirRotationSpeed;
-	}
-	else
-	{
-		return GetRotationInput() * (bIsStandstill ? StandstillRotationSpeed : SkateboardRotationSpeed);
 	}
 }
 
