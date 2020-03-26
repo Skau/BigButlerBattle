@@ -69,6 +69,7 @@ void UPlayerCameraComponent::BeginPlay()
 	// Ensure max and min are actual max and min.
 	MinFOV = FMath::Max(FMath::Min(MinFOV, FMath::Min(MaxFOV, MaxPlayerInputFOV)), 1.f);
 	MaxFOV = FMath::Min(FMath::Max(MinFOV, FMath::Max(MaxFOV, MaxPlayerInputFOV)), 180.f);
+	MaxPlayerInputFOV = FMath::Clamp(MaxPlayerInputFOV, MinFOV, MaxFOV);
 
 	if (!IsValid(FOVCurve))
 	{
@@ -102,7 +103,7 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 		auto range = FMath::Max(CurrentVel / MaxInputVel, 0.f);
 		if (1.f < range)
-			range = FMath::Min(CurrentVel / MaxVel, 1.f);
+			range = 1.f + FMath::Min(CurrentVel / MaxVel, 1.f);
 
 		const auto DesiredFOV = FMath::Clamp(FOVCurve->GetFloatValue(range), MinFOV, MaxFOV);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);
