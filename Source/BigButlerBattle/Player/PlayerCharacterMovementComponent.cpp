@@ -439,7 +439,10 @@ void UPlayerCharacterMovementComponent::ApplyRotation(float DeltaTime)
 	GetOwner()->AddActorWorldRotation(FRotator{0.f, rotAmount, 0.f});
 	// Rotate velocity the same amount as forward dir.
 	if (!Velocity.IsNearlyZero())
-		Velocity = Velocity.RotateAngleAxis(rotAmount * (1.f - GetHandbrakeAmount()), FVector(0, 0, 1));
+	{
+		float vImpactFactor = FMath::Lerp(1.f, MinHandbrakeRotationVelocityImpact, GetHandbrakeAmount());
+		Velocity = Velocity.RotateAngleAxis(rotAmount * vImpactFactor, FVector(0, 0, 1));
+	}
 }
 
 FVector UPlayerCharacterMovementComponent::GetSlopeAcceleration(const FHitResult &FloorHitResult) const

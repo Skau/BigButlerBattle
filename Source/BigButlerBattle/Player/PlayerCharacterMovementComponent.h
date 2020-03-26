@@ -151,6 +151,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (EditCondition = "!bAllowBrakingWhileHandbraking"))
 	bool bAllowKickingWhileHandbraking = true;
 
+	/**
+	 * The minimun amount of impact handbrake rotation will have on velocity. Default is 0.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float MinHandbrakeRotationVelocityImpact = 0.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Max Movement Speed"))
 	float MaxSkateboardMovementSpeed = 4196.f;
 
