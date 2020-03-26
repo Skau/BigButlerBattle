@@ -8,6 +8,7 @@
 
 
 class APlayerCharacter;
+class UCurveFloat;
 
 /**
  * 
@@ -28,11 +29,26 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float FieldOfViewSpeedChange = 17.f;
 
+	/**
+	 * Minimum FOV. FOV will never go below this.
+	 */
 	UPROPERTY(EditDefaultsOnly)
 	float MinFOV = 115.f;
 
+	/**
+	 * Maximum FOV under max input speed (the speed you can manually kick youself up to)
+	 */
+	UPROPERTY(EditDefaultsOnly)
+	float MaxPlayerInputFOV = 120.f;
+
+	/**
+	 * Maximim FOV. FOV will never surpass this.
+	 */
 	UPROPERTY(EditDefaultsOnly)
 	float MaxFOV = 130.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* FOVCurve = nullptr;
 
 	/**
 	 * Whether to only use velocity in the x and y axis when figuring out current FOV
