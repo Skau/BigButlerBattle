@@ -124,7 +124,7 @@ protected:
 	float SkateboardFwrdVelAccMult = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardSidewaysGroundDeceleration = 4096.f;
+	float SkateboardSidewaysGroundDeceleration = 1300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
 	float SkateboardBreakingDeceleration = 1356.f;
@@ -140,13 +140,22 @@ protected:
 	float SlopeGravityMultiplier = 2048.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Rotation"))
-	float HandbrakeRotationFactor = 300.f;
+	float HandbrakeRotationSpeed = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Velocity Threshold"))
 	float HandbrakeVelocityThreshold = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
-	bool bAllowBrakingWhileHandbraking = true;
+	bool bAllowBrakingWhileHandbraking = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (EditCondition = "!bAllowBrakingWhileHandbraking"))
+	bool bAllowKickingWhileHandbraking = true;
+
+	/**
+	 * The minimun amount of impact handbrake rotation will have on velocity. Default is 0.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float MinHandbrakeRotationVelocityImpact = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Max Movement Speed"))
 	float MaxSkateboardMovementSpeed = 4196.f;
@@ -184,6 +193,8 @@ public:
 	float GetMaxForwardAcceleration() const;
 
 	float GetMaxInputSpeed() { return MaxInputSpeed; }
+
+	bool CanKickWhileHandbraking() const;
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
@@ -242,7 +253,7 @@ protected:
 
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	float GetForwardInput() const { return InputDir.X; }
-	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
+	float GetHandbrakeAmount() const { return InputDir.Z; }
 	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
 	float CalcSidewaysBreaking(const FVector& Forward) const;
 
