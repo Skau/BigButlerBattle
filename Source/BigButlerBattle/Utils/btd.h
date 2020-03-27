@@ -117,8 +117,8 @@ namespace btd
 	    return Input->AddActionBinding(MoveTemp(ab));
     }
 
-    template <typename T, typename U>
-    inline static U InvLerp(const T &a, const T &b, const T &p)
+    template <typename T>
+    inline static auto InvLerp(const T &a, const T &b, const T &p)
     {
         /**
          * p = a + t * (b - a)
