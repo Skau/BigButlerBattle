@@ -5,6 +5,7 @@
 #include "PlayerCharacter.h"
 #include "PlayerCharacterMovementComponent.h"
 #include "Curves/CurveFloat.h"
+#include "Utils/btd.h"
 
 
 UPlayerCameraComponent::UPlayerCameraComponent()
@@ -103,7 +104,7 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 		auto range = FMath::Max(CurrentVel / MaxInputVel, 0.f);
 		if (1.f < range)
-			range = 1.f + FMath::Min(CurrentVel / MaxVel, 1.f);
+			range = 1.f + btd::InvLerp(MaxInputVel, MaxVel, CurrentVel)
 
 		const auto DesiredFOV = FMath::Clamp(FOVCurve->GetFloatValue(range), MinFOV, MaxFOV);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);

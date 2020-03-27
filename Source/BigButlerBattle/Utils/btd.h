@@ -116,4 +116,15 @@ namespace btd
 	    ab.ActionDelegate.GetDelegateForManualSet().BindLambda(func);
 	    return Input->AddActionBinding(MoveTemp(ab));
     }
+
+    template <typename T, typename U>
+    inline static U InvLerp(const T &a, const T &b, const T &p)
+    {
+        /**
+         * p = a + t * (b - a)
+         * p - a = t * (b - a)
+         * (p - a) / (b - a) = t
+         */
+        return (p - a) / (b - a);
+    }
 }
