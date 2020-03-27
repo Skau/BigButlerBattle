@@ -57,6 +57,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, meta = (DisplayName = "Constrain FOV Change To Velocity In XY Directions"))
 	bool bConstrainFOVChangeToVelocityInXYDirections = true;
 
+	UPROPERTY(EditDefaultsOnly)
+	bool bScaleChromaticAberrationByVelocityCurve = false;
+
+	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "bScaleChromaticAberrationByVelocityCurve"))
+	UCurveFloat* ChromaticAberrationVelocityCurve = nullptr;
+
 private:
 	APlayerCharacter* Player;
 };

@@ -86,6 +86,19 @@ void UPlayerCameraComponent::BeginPlay()
 		}
 		check(0 == errors.Num());
 	}
+
+	if (bScaleChromaticAberrationByVelocityCurve && !IsValid(ChromaticAberrationVelocityCurve))
+	{
+		ChromaticAberrationVelocityCurve = NewObject<UCurveFloat>(this, TEXT("Default Curve"));
+		FString curveVals = FString{"0,"} + FString::SanitizeFloat(PostProcessSettings.SceneFringeIntensity, 6)
+							+ FString{"\n1,"} + FString::SanitizeFloat(PostProcessSettings.SceneFringeIntensity, 6) + FString{"\n"};
+		const auto errors = ChromaticAberrationVelocityCurve->CreateCurveFromCSVString(curveVals);
+		for (const auto &err : errors)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Err: %s"), *err);
+		}
+		check(0 == errors.Num());
+	}
 }
 
 void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -109,6 +122,9 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		const auto DesiredFOV = FMath::Clamp(FOVCurve->GetFloatValue(range), MinFOV, MaxFOV);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);
 		SetFieldOfView((FMath::IsNearlyZero(Info.FOV - DesiredFOV)) ? DesiredFOV : FMath::Lerp(Info.FOV, DesiredFOV, Factor));
+
+		// Chromatic Aberattion
+		PostProcessSettings.SceneFringeIntensity = ChromaticAberrationVelocityCurve->GetFloatValue(FMath::Clamp(CurrentVel / MaxVel, 0.f, 1.f));
 	}
 	else
 	{
