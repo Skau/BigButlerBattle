@@ -52,10 +52,12 @@ public:
 protected:
     FRotator GetSkateboardRotationOffset(const USkeletalMeshComponent& SkateboardMesh) const;
 
-    FVector GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const USkeletalMeshComponent& SkateboardMesh, const bool& bLeft
+    FVector GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const USkeletalMeshComponent& SkateboardMesh, bool bLeft
 	                            = true) const;
-    FVector GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const FQuat& FeetRotationOffset, const bool& bLeft = true) const;
+    FVector GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const FQuat& FeetRotationOffset, bool bLeft = true) const;
 
-    FVector GetSocketPos(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh, const bool& bLeft = true) const;
+	FVector GetKneeLocation(FCSPose<FCompactPose>& PoseIn, bool bLeft = true) const;
+
+    FVector GetSocketPos(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh, bool bLeft = true) const;
 
 };
