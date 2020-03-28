@@ -43,7 +43,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		bChangedDirections = false;
 	else
 	{
-		bChangedDirections = btd::sign(newInput.X, 0.01f) != btd::sign(Input.X, 0.01f) || btd::sign(newInput.Y, 0.01f) != btd::sign(Input.Y, 0.01f);
+		bChangedDirections = btd::sign(newInput.Y, 0.01f) && btd::sign(newInput.Y, 0.01f) != btd::sign(Input.Y, 0.01f);
 	}
 
 	Input = newInput;
