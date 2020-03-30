@@ -117,6 +117,13 @@ namespace btd
 	    return Input->AddActionBinding(MoveTemp(ab));
     }
 
+    template<typename T>
+    inline static int sign(const T& v, float tolerance = SMALL_NUMBER)
+    {
+        auto zero = T{};
+        return FMath::IsNearlyEqual(v, zero, tolerance) ? 0 : (v < zero + tolerance ? -1 : 1);
+    }
+    
     template <typename T>
     inline static auto InvLerp(const T &a, const T &b, const T &p)
     {

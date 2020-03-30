@@ -56,7 +56,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	SpringArm->CameraLagMaxDistance = 70.f;
 	SpringArm->ProbeSize = 18.f;
 
-		Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
+	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
 	TaskObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
@@ -336,6 +336,11 @@ void APlayerCharacter::StartJump()
 
 	if (Movement && !Movement->IsFalling())
 		OnJumpEvent.Broadcast();
+}
+
+FVector APlayerCharacter::GetInputAxis() const
+{
+	return FVector{GetInputAxisValue("Forward"), GetInputAxisValue("Right"), 0.f};
 }
 
 void APlayerCharacter::MoveForward(float Value)

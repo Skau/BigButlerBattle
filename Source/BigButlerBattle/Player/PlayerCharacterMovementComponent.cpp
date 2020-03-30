@@ -470,14 +470,14 @@ FVector UPlayerCharacterMovementComponent::GetSlopeAcceleration(const FHitResult
 	return a;
 }
 
-inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector &Forward) const
-{
-	return 1.f - FMath::Abs(FVector::DotProduct(Forward, Velocity));
-}
-
 float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
 {
 	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+}
+
+inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector &Forward) const
+{
+	return 1.f - FMath::Abs(FVector::DotProduct(Forward, Velocity));
 }
 
 bool UPlayerCharacterMovementComponent::CanKickWhileHandbraking() const

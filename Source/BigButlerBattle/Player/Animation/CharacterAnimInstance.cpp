@@ -2,7 +2,9 @@
 
 
 #include "CharacterAnimInstance.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "Player/PlayerCharacter.h"
+#include "Utils/btd.h"
 
 UCharacterAnimInstance::UCharacterAnimInstance()
 	: Super()
@@ -15,7 +17,7 @@ void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-	auto Character = Cast<APlayerCharacter>(TryGetPawnOwner());
+	Character = Cast<APlayerCharacter>(TryGetPawnOwner());
 
 	if (!IsValid(Character))
 	{
@@ -24,6 +26,27 @@ void UCharacterAnimInstance::NativeBeginPlay()
 	}
 
 	Character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
+}
+
+void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
+{
+	if (!Character)
+		return;
+
+	bIsFalling = Character->GetMovementComponent()->IsFalling();
+
+	auto newInput = Character->GetInputAxis();
+	if (newInput.X < 0.f)
+		newInput.X = 0.f;
+
+	if (bChangedDirections)
+		bChangedDirections = false;
+	else
+	{
+		bChangedDirections = btd::sign(newInput.Y, 0.01f) && btd::sign(newInput.Y, 0.01f) != btd::sign(Input.Y, 0.01f);
+	}
+
+	Input = newInput;
 }
 
 void UCharacterAnimInstance::ForwardKick()

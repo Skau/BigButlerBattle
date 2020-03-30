@@ -185,6 +185,8 @@ public:
 
 	bool IsMovingOnGround() const override;
 
+	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
+
 	float GetAudioVolumeMult() const;
 
 	UFUNCTION(BlueprintPure)
@@ -248,8 +250,6 @@ protected:
 
 	// Applies this frames current rotation multiplied by deltaTime
 	void ApplyRotation(float DeltaTime);
-
-	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
 
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
 	float GetForwardInput() const { return InputDir.X; }
