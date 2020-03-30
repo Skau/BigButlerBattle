@@ -103,13 +103,13 @@ protected:
 	float StandstillThreshold = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Forward Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardForwardGroundDeceleration = 306.f;
+	float SkateboardForwardGroundDeceleration = 201.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
-	bool bApplySeparateDecelerationWhenAboveMaxInputSpeed = false;
+	bool bApplySeparateDecelerationWhenAboveMaxInputSpeed = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Ground Forward Deceleration Above Max Input Speed", EditCondition = "bApplySeparateDecelerationWhenAboveMaxInputSpeed"))
-	float SkateboardForwardGroundDecelerationAboveInputSpeed = 306.f;
+	float SkateboardForwardGroundDecelerationAboveInputSpeed = 1516.f;
 
 	/**
 	 * The acceleration force that is applied by kicking, scaled by input strength
@@ -124,29 +124,38 @@ protected:
 	float SkateboardFwrdVelAccMult = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardSidewaysGroundDeceleration = 4096.f;
+	float SkateboardSidewaysGroundDeceleration = 1300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardBreakingDeceleration = 1356.f;
+	float SkateboardBreakingDeceleration = 438.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Rotation Speed", ClampMin = "0", UIMin = "0"))
-	float SkateboardRotationSpeed = 155.f;
+	float SkateboardRotationSpeed = 126.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement",
 		meta = (DisplayName = "Standtill Rotation Factor", ClampMin = "0", UIMin = "0"))
 	float SkateboardStandstillRotationSpeed = 1.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
-	float SlopeGravityMultiplier = 2048.f;
+	float SlopeGravityMultiplier = 4329.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Rotation"))
-	float HandbrakeRotationFactor = 300.f;
+	float HandbrakeRotationSpeed = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Velocity Threshold"))
 	float HandbrakeVelocityThreshold = 300.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Allow Braking While Handbraking?"))
-	bool bAllowBrakingWhileHandbraking = true;
+	bool bAllowBrakingWhileHandbraking = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (EditCondition = "!bAllowBrakingWhileHandbraking"))
+	bool bAllowKickingWhileHandbraking = true;
+
+	/**
+	 * The minimun amount of impact handbrake rotation will have on velocity. Default is 0.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
+	float MinHandbrakeRotationVelocityImpact = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Max Movement Speed"))
 	float MaxSkateboardMovementSpeed = 4196.f;
@@ -187,17 +196,7 @@ public:
 
 	float GetMaxInputSpeed() { return MaxInputSpeed; }
 
-	FVector GetInput() const {return InputDir; }
-	float GetForwardInput() const { return InputDir.X; }
-	float GetHandbrakeAmount() const { return InputDir.X <= 0.f ? -InputDir.X : 0.f; }
-	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
-	float CalcSidewaysBreaking(const FVector& Forward) const;
-
-	/**
-	 * Returns current rotation amount.
-	 * Both normal rotation and handbraking rotation.
-	 */
-	float CalcRotation() const;
+	bool CanKickWhileHandbraking() const;
 
 	/**
 	 * Returns true if character is moving forwards and velocity is greater than maxinputacceleration.
@@ -253,6 +252,16 @@ protected:
 	void ApplyRotation(float DeltaTime);
 
 	FVector GetSlopeAcceleration(const FHitResult &FloorHitResult) const;
+	float GetForwardInput() const { return InputDir.X; }
+	float GetHandbrakeAmount() const { return InputDir.Z; }
+	FVector GetRightInput() const { return FVector{ 0, InputDir.Y, 0 }; }
+	float CalcSidewaysBreaking(const FVector& Forward) const;
+
+	/**
+	 * Returns current rotation amount.
+	 * Both normal rotation and handbraking rotation.
+	 */
+	float CalcRotation() const;
 
 
 
@@ -261,19 +270,19 @@ protected:
 	// ================================== Air Movement =================================================
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Rotation Speed"))
-	float SkateboardAirRotationSpeed = 77.f;
+	float SkateboardAirRotationSpeed = 55.1f;
 
 	/**
 	 * Time in seconds to apply the speed burst gained after doing airtime.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Length"))
-	float AirBurstLength = 0.105f;
+	float AirBurstLength = 0.095f;
 
 	/**
 	 * How big impact vertical velocity has on the speed burst.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Burst Effect Velocity Multiplier"))
-	float AirBurstVelocityMultiplier = 0.03f;
+	float AirBurstVelocityMultiplier = 0.173f;
 
 	/**
 	 * Optional curve to use when applying speed burst.
@@ -313,7 +322,7 @@ protected:
 	bool bUseConstantEnteringSpeed = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|Start", meta = (DisplayName = "Entering Velocity", EditCondition="bUseConstantEnteringSpeed"))
-	float GrindingEnteringSpeed = 1600.f;
+	float GrindingEnteringSpeed = 2435.f;
 
 	/**
 	 * Whether to only use velocity in x and y direction (horizontal velocity) as the entering speed
@@ -339,10 +348,10 @@ protected:
 	 * Speed acceleration applied when grinding on the rail (not applied when entering rail)
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail")
-	float GrindingAcceleration = 200.f;
+	float GrindingAcceleration = 126.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
-	float GrindingMaxSpeed = 1440.f;
+	float GrindingMaxSpeed = 2065.f;
 
 	void PhysGrinding(float deltaTime, int32 Iterations);
 

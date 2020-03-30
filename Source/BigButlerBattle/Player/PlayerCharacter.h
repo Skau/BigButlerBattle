@@ -150,6 +150,8 @@ protected:
 
 	void UpdateHandbrake(float Value);
 
+	void Brake(float Value);
+	
 
 
 

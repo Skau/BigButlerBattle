@@ -222,6 +222,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
 	Input->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
 	Input->BindAxis("Handbrake", this, &APlayerCharacter::UpdateHandbrake);
+	Input->BindAxis("Brake", this, &APlayerCharacter::Brake);
 
 	btd::BindActionLambda(Input, "ForwardKbrd", EInputEvent::IE_Pressed, [&](){
 		bLastInputFromKeyboard = true;
@@ -378,7 +379,12 @@ void APlayerCharacter::MoveRight(float Value)
 
 void APlayerCharacter::UpdateHandbrake(float Value)
 {
-	AddMovementInput(FVector::BackwardVector * Value);
+	AddMovementInput(FVector::UpVector * Value);
+}
+
+void APlayerCharacter::Brake(float Value)
+{
+	AddMovementInput(-FVector::ForwardVector * Value);
 }
 
 

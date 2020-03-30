@@ -123,4 +123,15 @@ namespace btd
         auto zero = T{};
         return FMath::IsNearlyEqual(v, zero, tolerance) ? 0 : (v < zero + tolerance ? -1 : 1);
     }
+    
+    template <typename T>
+    inline static auto InvLerp(const T &a, const T &b, const T &p)
+    {
+        /**
+         * p = a + t * (b - a)
+         * p - a = t * (b - a)
+         * (p - a) / (b - a) = t
+         */
+        return (p - a) / (b - a);
+    }
 }
