@@ -111,8 +111,8 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
 		Controllers[i]->OnGameFinished.BindUObject(this, &ABigButlerBattleGameModeBase::OnGameFinished);
 
-		Controllers[i]->OnMainItemPickedUp.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemPickedUp);
-		Controllers[i]->OnMainItemDropped.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemDropped);
+		// Main item event
+		Controllers[i]->OnMainItemStateChange.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemStateChanged);
 	}
 
 	// Pause widget setup
@@ -525,14 +525,13 @@ void ABigButlerBattleGameModeBase::GenerateExtraTask()
 	GeneratePlayerTasks(Tasks);
 }
 
-void ABigButlerBattleGameModeBase::OnMainItemPickedUp()
+void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, bool bPickedUp)
 {
-	bItemCurrentlyBeingHeld = true;
-}
-
-void ABigButlerBattleGameModeBase::OnMainItemDropped()
-{
-	bItemCurrentlyBeingHeld = false;
+	bItemCurrentlyBeingHeld = bPickedUp;
+	if (GameWidget)
+	{
+		GameWidget->UpdateInfo(ControllerID, bPickedUp);
+	}
 }
 
 ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position)

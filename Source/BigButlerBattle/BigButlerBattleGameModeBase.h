@@ -155,10 +155,7 @@ protected:
 
 private:
 	UFUNCTION()
-	void OnMainItemPickedUp();
-
-	UFUNCTION()
-	void OnMainItemDropped();
+	void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
 
 	AKing* King = nullptr;
 };

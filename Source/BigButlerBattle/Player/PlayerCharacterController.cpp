@@ -118,7 +118,7 @@ void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 		}
 
 		PlayerCharacter->bHasMainItem = true;
-		OnMainItemPickedUp.ExecuteIfBound();
+		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), true);
 	}
 }
 
@@ -127,7 +127,7 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 	if (Object->bIsMainItem)
 	{
 		PlayerCharacter->bHasMainItem = false;
-		OnMainItemDropped.ExecuteIfBound();
+		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), false);
 	}
 }
 

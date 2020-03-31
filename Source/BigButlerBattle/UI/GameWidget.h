@@ -23,8 +23,16 @@ public:
 
 	void UpdateTimer(const FString& String);
 
+	void UpdateInfo(int ControllerID, bool bPickedUp);
+
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UTextBlock* Text_Timer;
-	
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UTextBlock* Text_Info;
+
+private:
+	FTimerHandle HandleInfoMessage;
+	const float MessageDuration = 3.f;
 };

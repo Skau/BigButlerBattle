@@ -13,8 +13,9 @@ DECLARE_DELEGATE_OneParam(FPauseGameSignature, int);
 // Broadcasted when the player finishes all tasks at the king
 DECLARE_DELEGATE_OneParam(FGameFinishedSignature, int);
 
-DECLARE_DELEGATE(FMainItemPickedUpSignature);
-DECLARE_DELEGATE(FMainItemDroppedSignature);
+
+// Broadcasted when main item is dropped or picked up, passing along controller ID.
+DECLARE_DELEGATE_TwoParams(FMainItemStateChangedSignature, int, bool);
 
 class UBaseUserWidget;
 class UPlayerWidget;
@@ -38,8 +39,7 @@ public:
 	FPauseGameSignature OnPausedGame;
 	FGameFinishedSignature OnGameFinished;
 
-	FMainItemPickedUpSignature OnMainItemPickedUp;
-	FMainItemDroppedSignature OnMainItemDropped;
+	FMainItemStateChangedSignature OnMainItemStateChange;
 
 	void SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks);
 
