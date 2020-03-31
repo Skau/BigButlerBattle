@@ -104,24 +104,31 @@ void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewSta
 
 void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 {
+	// Destroy all other items if we have picked up main item.
 	if (Object->bIsMainItem)
 	{
+		auto& PlayerInventory = PlayerCharacter->GetInventory();
+		for(int i = 0; i < 4; ++i) // Only to 4, so we don't destroy the main object
+		{
+			if (PlayerInventory[i])
+			{
+				PlayerInventory[i]->Destroy();
+				PlayerInventory[i] = nullptr;
+			}
+		}
+
+		PlayerCharacter->bHasMainItem = true;
 		OnMainItemPickedUp.ExecuteIfBound();
 	}
-
-	//UpdatePlayerTasks();
 }
 
 void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 {
 	if (Object->bIsMainItem)
 	{
+		PlayerCharacter->bHasMainItem = false;
 		OnMainItemDropped.ExecuteIfBound();
 	}
-
-	//UpdatePlayerTasks();
-
-	//Object->OnTaskObjectDelivered.BindUObject(this, &APlayerCharacterController::OnTaskObjectDelivered);
 }
 
 void APlayerCharacterController::UpdatePlayerTasks()
@@ -207,35 +214,7 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
 			OnGameFinished.ExecuteIfBound(ID);
 		}
-
-		//for (int j = 0; j < PlayerTasks.Num(); ++j)
-		//{
-		//	if (PlayerTasks[j].Value == ETaskState::Present)
-		//	{
-		//		if (Item != nullptr)
-		//		{
-		//			const auto Task = Item->GetTaskData();
-		//			if (PlayerTasks[j].Key->IsEqual(Task))
-		//			{
-		//				Item->Destroy();
-		//				Item = nullptr;
-		//				SetPlayerTaskState(j, ETaskState::Finished);
-
-		//				if(PlayerCharacter->GetCurrentItemIndex() == i)
-		//					PlayerCharacter->IncrementCurrentItemIndex();
-		//			}
-		//		}
-		//	}
-		//}
 	}
-
-	//for (auto& Task : PlayerTasks)
-	//{
-	//	if (Task.Value != ETaskState::Finished)
-	//		return;
-	//}
-
-
 }
 
 void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)

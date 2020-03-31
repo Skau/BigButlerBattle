@@ -97,7 +97,13 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TraySlotNames.Add("Slot_2");
 	TraySlotNames.Add("Slot_3");
 
-	Inventory.Init(nullptr, 4);
+	MainSlotName = "Slot_Main";
+
+	// The 5th spot is for the main item. This can never be reached by incrementing etc,
+	// but makes things easier for us in code.
+	Inventory.Init(nullptr, 5);
+
+
 
 	bUseControllerRotationYaw = false;
 
@@ -236,7 +242,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 	UpdateCameraRotation(DeltaTime);
 	UpdateSkateboardRotation(DeltaTime);
 
-	UpdateClosestTaskObject();
+	// No point checking for closest objects when main item is held.
+	if(!bHasMainItem)
+		UpdateClosestTaskObject();
 
 	// Update sound
 	if (Sound && Movement)
@@ -285,6 +293,7 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 	Tray->SetSimulatePhysics(true);
 	Tray->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true));
 
+	// Only place where we iterate through all, just so main item too is affected.
 	for (auto& Obj : Inventory)
 	{
 		if (Obj)
@@ -648,34 +657,51 @@ FQuat APlayerCharacter::GetDesiredGrindingRotation(const FVector &DestinationNor
 
 void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 {
-	for(int i = 0; i < Inventory.Num(); ++i)
+	// Find out if we should use main slot or not
+	FName SlotToUse = "";
+	int Index = -1; // Index of the inventory to use, 4 for main item 0-3 for regular items.
+	if (Object->bIsMainItem)
 	{
-		if (Inventory[i] == nullptr)
+		SlotToUse = MainSlotName;
+		Index = 4;
+	}
+	else
+	{
+		for (int i = 0; i < 4; ++i)
 		{
-			// Disable picked up object
-			Object->OnPickedUp();
-
-			// Spawn new object
-			auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
-			Spawned->SetTaskData(Object->GetTaskData());
-			Spawned->Enable(true, false, false);
-			Spawned->bIsMainItem = Object->bIsMainItem;
-			UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
-
-			// Attach new object
-			Inventory[i] = Spawned;
-			Spawned->AttachToComponent(
-				Tray,
-				FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
-				TraySlotNames[i]);
-
-			// Scale it down
-			auto scale = Spawned->GetActorScale3D();
-			Spawned->SetActorScale3D(scale * 0.3f);
-
-			OnTaskObjectPickedUp.ExecuteIfBound(Spawned);
-			break;
+			if (Inventory[i] == nullptr)
+			{
+				SlotToUse = TraySlotNames[i];
+				Index = i;
+				break;
+			}
 		}
+	}
+
+	if (SlotToUse != "")
+	{
+		// Disable picked up object
+		Object->OnPickedUp();
+
+		// Spawn new object
+		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+		Spawned->SetTaskData(Object->GetTaskData());
+		Spawned->Enable(true, false, false);
+		Spawned->bIsMainItem = Object->bIsMainItem;
+		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
+
+		// Attach new object
+		Inventory[Index] = Spawned;
+		Spawned->AttachToComponent(
+			Tray,
+			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
+			SlotToUse);
+
+		// Scale it down
+		auto scale = Spawned->GetActorScale3D();
+		Spawned->SetActorScale3D(scale * 0.3f);
+
+		OnTaskObjectPickedUp.ExecuteIfBound(Spawned);
 	}
 }
 
@@ -847,7 +873,7 @@ void APlayerCharacter::IncrementCurrentItemIndex()
 	do
 	{
 		DeltaYaw += 90.f;
-		i = (i + 1) % Inventory.Num();
+		i = (i + 1) % 4; // Only to 4, because the 5th one is the main item
 		if (Inventory[i] != nullptr)
 		{
 			Tray->AddLocalRotation(FRotator(0, DeltaYaw, 0));
@@ -869,7 +895,7 @@ void APlayerCharacter::ResetItemIndex()
 
 void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor->IsA(ATaskObject::StaticClass()))
+	if (OtherActor->IsA(ATaskObject::StaticClass()) && !bHasMainItem)
 	{
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
 		if(TaskObject == ClosestPickup)

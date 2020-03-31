@@ -62,6 +62,11 @@ void ATaskObject::BeginPlay()
 	MeshComponent->OnComponentHit.AddDynamic(this, &ATaskObject::OnHit);
 	
 	DynamicMaterial = MeshComponent->CreateDynamicMaterialInstance(0, MeshComponent->GetMaterial(0));
+
+	if (bIsMainItem)
+	{
+		MeshComponent->SetCustomDepthStencilValue(1); // Permanent outline
+	}
 }
 
 

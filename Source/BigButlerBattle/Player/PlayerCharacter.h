@@ -280,6 +280,8 @@ public:
 	int GetCurrentItemIndex() const { return CurrentItemIndex; }
 	void IncrementCurrentItemIndex();
 
+	bool bHasMainItem = false;
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* TaskObjectPickupCollision;
@@ -289,6 +291,7 @@ protected:
 
 	TArray<ATaskObject*> Inventory;
 	TArray<FName> TraySlotNames;
+	FName MainSlotName;
 
 	TArray<ATaskObject*> TaskObjectsInCameraRange;
 	TArray<ATaskObject*> TaskObjectsInPickupRange;
