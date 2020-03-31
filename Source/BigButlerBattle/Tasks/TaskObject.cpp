@@ -37,6 +37,12 @@ void ATaskObject::SetSelected(const bool Value)
 	MeshComponent->SetCustomDepthStencilValue(static_cast<int32>(Value));
 }
 
+void ATaskObject::SetMainItem()
+{
+	bIsMainItem = true;
+	MeshComponent->SetCustomDepthStencilValue(1); // Permanent outline (can also be set in beginplay if main item is set in editor)
+}
+
 void ATaskObject::BeginPlay()
 {
 	Super::BeginPlay();

@@ -40,6 +40,9 @@ public:
 
 	APlayerCharacter* Instigator = nullptr;
 
+	// Used by game mode when main item is not set in editor, but random on runtime
+	void SetMainItem();
+
 	UPROPERTY(EditAnywhere)
 	bool bIsMainItem = false;
 

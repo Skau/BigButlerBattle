@@ -166,13 +166,34 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("No King present in map!"));
 	}
 
-	// Wait a bit for task objects to finish
+	// Wait a bit for items to initialize
+	btd::Delay(this, 0.1f, [=]()
+	{
+		// Iterate all first to check that the main item is not set in editor.
+		for (TActorIterator<ATaskObject> Itr(GetWorld()); Itr; ++Itr)
+		{
+			if (!Itr)
+				continue;
 
-	//btd::Delay(this, 0.1f, [=]()
-	//{
-	//	TaskGenerationStartTime = FPlatformTime::Seconds();
-	//	BeginTaskGeneration();
-	//});
+			if (Itr->bIsMainItem)
+			{
+				return;
+			}
+		}
+
+		// Set main item (get random one from all task objects)
+		TArray<AActor*> Actors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATaskObject::StaticClass(), Actors);
+		int Index =  FMath::RandRange(0, Actors.Num()-1);
+		auto Object = Cast<ATaskObject>(Actors[Index]);
+		if (!Object)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to set main item.."));
+			return;
+		}
+
+		Object->SetMainItem();
+	});
 }
 
 
