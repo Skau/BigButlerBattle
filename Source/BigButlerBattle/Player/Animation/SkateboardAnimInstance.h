@@ -22,7 +22,10 @@ protected:
 	float InputRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bInAir;
+	bool bIsFalling;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsGrinding;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Velocity;

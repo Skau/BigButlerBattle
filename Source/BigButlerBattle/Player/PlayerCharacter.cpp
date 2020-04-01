@@ -553,7 +553,7 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		if (railNormal.IsNearlyZero())
 			return;
 
-		auto desiredRotation = GetDesiredGrindingRotation(railNormal);
+		auto desiredRotation = GetDesiredRotation(railNormal);
 		float alpha = (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime;
 		if (AnimInstance)
 		{
