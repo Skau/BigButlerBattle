@@ -22,7 +22,10 @@ protected:
 	float InputRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bInAir;
+	bool bIsFalling;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsGrinding;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Velocity;
@@ -42,9 +45,6 @@ protected:
 	void NativeBeginPlay() override;
 
 	void NativeUpdateAnimation(float DeltaTime) override;
-
-	UFUNCTION()
-	void JumpAnim();
 
 	UFUNCTION(BlueprintPure)
 	float GetWheelPlaybackRate() const;

@@ -14,15 +14,7 @@ void USkateboardAnimInstance::NativeBeginPlay()
     {
 	    const auto MoveComp = Owner->GetMovementComponent();
         MovementComponent = Cast<UPlayerCharacterMovementComponent>(MoveComp);
-
-        Owner->OnJumpEvent.AddUObject(this, &USkateboardAnimInstance::JumpAnim);
     }
-}
-
-void USkateboardAnimInstance::JumpAnim()
-{
-    if (IsValid(JumpMontage))
-        Montage_Play(JumpMontage);
 }
 
 void USkateboardAnimInstance::NativeUpdateAnimation(float DeltaTime)
@@ -33,7 +25,8 @@ void USkateboardAnimInstance::NativeUpdateAnimation(float DeltaTime)
         return;
 
     InputRotation = MovementComponent->GetRotationInput();
-    bInAir = MovementComponent->IsFalling();
+    bIsFalling = MovementComponent->IsFalling();
+    bIsGrinding = MovementComponent->IsGrinding();
     Velocity = MovementComponent->Velocity.ContainsNaN() ? 0.f : MovementComponent->Velocity.Size();
     bIsStandstill = MovementComponent->IsStandstill();
     // Same tick as Event Blueprint Update Animation in anim blueprint
@@ -51,5 +44,5 @@ float USkateboardAnimInstance::GetFlipAmount() const
 
 float USkateboardAnimInstance::GetRotationAmount() const
 {
-    return !bInAir * InputRotation;
+    return !bIsFalling * InputRotation;
 }

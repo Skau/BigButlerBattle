@@ -20,8 +20,6 @@ class BIGBUTLERBATTLE_API UCharacterAnimInstance : public UAnimInstance
 public:
 	UCharacterAnimInstance();
 
-	void JumpAnim();
-
 	void ForwardKick();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -68,6 +66,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsFalling;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsGrinding;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bChangedDirections;

@@ -5,6 +5,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "Player/PlayerCharacter.h"
 #include "Utils/btd.h"
+#include "Player/PlayerCharacterMovementComponent.h"
 
 UCharacterAnimInstance::UCharacterAnimInstance()
 	: Super()
@@ -24,8 +25,6 @@ void UCharacterAnimInstance::NativeBeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Character isn't valid!"));
 		return;
 	}
-
-	Character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
 }
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
@@ -33,7 +32,12 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	if (!Character)
 		return;
 
-	bIsFalling = Character->GetMovementComponent()->IsFalling();
+	auto moveComp = Character->GetPlayerCharacterMovementComponent();
+	if (!moveComp)
+		return;
+
+	bIsFalling = moveComp->IsFalling();
+	bIsGrinding = moveComp->IsGrinding();
 
 	auto newInput = Character->GetInputAxis();
 	if (newInput.X < 0.f)
@@ -53,10 +57,4 @@ void UCharacterAnimInstance::ForwardKick()
 {
 	if (IsValid(ForwardMontage) && !IsAnyMontagePlaying())
 		Montage_Play(ForwardMontage);
-}
-
-void UCharacterAnimInstance::JumpAnim()
-{
-	if (IsValid(JumpMontage))
-        Montage_Play(JumpMontage);
 }
