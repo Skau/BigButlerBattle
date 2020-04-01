@@ -184,15 +184,18 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		// Set main item (get random one from all task objects)
 		TArray<AActor*> Actors;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATaskObject::StaticClass(), Actors);
-		int Index =  FMath::RandRange(0, Actors.Num()-1);
-		auto Object = Cast<ATaskObject>(Actors[Index]);
-		if (!Object)
+		if (Actors.Num())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to set main item.."));
-			return;
-		}
+			int Index = FMath::RandRange(0, Actors.Num() - 1);
+			auto Object = Cast<ATaskObject>(Actors[Index]);
+			if (!Object)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to set main item.."));
+				return;
+			}
 
-		Object->SetMainItem();
+			Object->SetMainItem();
+		}
 	});
 }
 
