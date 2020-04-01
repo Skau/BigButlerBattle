@@ -70,6 +70,9 @@ protected:
 	bool bIsFalling;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsGrinding;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bChangedDirections;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
