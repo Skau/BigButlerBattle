@@ -205,7 +205,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Super::SetupPlayerInputComponent(Input);
 
 	// Action Mappings
-	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::StartJump);
+	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	btd::BindActionLambda(Input, "Jump", EInputEvent::IE_Released, [&](){
 		bHoldingJump = false;
 		StopJumping();
@@ -323,8 +323,10 @@ void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* O
 
 
 /// ==================================== Movement =================================================
-void APlayerCharacter::StartJump()
+void APlayerCharacter::Jump()
 {
+	Super::Jump();
+
 	bHoldingJump = true;
 	if (CanGrind())
 	{
@@ -333,9 +335,6 @@ void APlayerCharacter::StartJump()
 			StartGrinding(rail);
 		}
 	}
-
-	if (Movement && !Movement->IsFalling())
-		OnJumpEvent.Broadcast();
 }
 
 FVector APlayerCharacter::GetInputAxis() const

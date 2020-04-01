@@ -25,8 +25,6 @@ void UCharacterAnimInstance::NativeBeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Character isn't valid!"));
 		return;
 	}
-
-	Character->OnJumpEvent.AddUObject(this, &UCharacterAnimInstance::JumpAnim);
 }
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
@@ -59,10 +57,4 @@ void UCharacterAnimInstance::ForwardKick()
 {
 	if (IsValid(ForwardMontage) && !IsAnyMontagePlaying())
 		Montage_Play(ForwardMontage);
-}
-
-void UCharacterAnimInstance::JumpAnim()
-{
-	if (IsValid(JumpMontage))
-        Montage_Play(JumpMontage);
 }

@@ -137,7 +137,7 @@ protected:
 public:
 	JumpEventSignature OnJumpEvent;
 
-	void StartJump();
+	void Jump() override;
 
 	UPlayerCharacterMovementComponent* GetPlayerCharacterMovementComponent() const { return Movement; }
 

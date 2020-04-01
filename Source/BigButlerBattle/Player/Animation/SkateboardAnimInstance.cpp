@@ -14,15 +14,7 @@ void USkateboardAnimInstance::NativeBeginPlay()
     {
 	    const auto MoveComp = Owner->GetMovementComponent();
         MovementComponent = Cast<UPlayerCharacterMovementComponent>(MoveComp);
-
-        Owner->OnJumpEvent.AddUObject(this, &USkateboardAnimInstance::JumpAnim);
     }
-}
-
-void USkateboardAnimInstance::JumpAnim()
-{
-    if (IsValid(JumpMontage))
-        Montage_Play(JumpMontage);
 }
 
 void USkateboardAnimInstance::NativeUpdateAnimation(float DeltaTime)

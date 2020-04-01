@@ -46,9 +46,6 @@ protected:
 
 	void NativeUpdateAnimation(float DeltaTime) override;
 
-	UFUNCTION()
-	void JumpAnim();
-
 	UFUNCTION(BlueprintPure)
 	float GetWheelPlaybackRate() const;
 
