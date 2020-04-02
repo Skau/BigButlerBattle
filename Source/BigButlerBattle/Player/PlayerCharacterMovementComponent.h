@@ -121,13 +121,20 @@ protected:
 	 * How much current velocity will have an impact on acceleration
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Velocity Acceleration Multiplier", ClampMin = "0", UIMin = "0"))
-	float SkateboardFwrdVelAccMult = 0.5f;
+	float SkateboardFwrdVelAccMult = 0.6f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardSidewaysGroundDeceleration = 1300.f;
+	float SkateboardSidewaysGroundDeceleration = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
+	bool bUseSeparateSidewasDecelerationWhenHandbraking = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement",
+	meta = (DisplayName = "Handbrake Sideways Ground Deceleration", EditCondition = "bUseSeparateSidewasDecelerationWhenHandbraking", ClampMin = "0", UIMin = "0"))
+	float SkateboardHandbrakeSidewaysGroundDeceleration = 1400.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Braking Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardBreakingDeceleration = 438.f;
+	float SkateboardBreakingDeceleration = 4000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Rotation Speed", ClampMin = "0", UIMin = "0"))
 	float SkateboardRotationSpeed = 126.f;
@@ -240,6 +247,8 @@ protected:
 
 	void PhysSkateboard(float deltaTime, int32 Iterations);
 
+	float GetSidewaysDeceleration() const;
+
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
 	void UpdateInput() { InputDir = GetPendingInputVector(); }
@@ -270,7 +279,7 @@ protected:
 	// ================================== Air Movement =================================================
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Rotation Speed"))
-	float SkateboardAirRotationSpeed = 55.1f;
+	float SkateboardAirRotationSpeed = 90.f;
 
 	/**
 	 * Time in seconds to apply the speed burst gained after doing airtime.

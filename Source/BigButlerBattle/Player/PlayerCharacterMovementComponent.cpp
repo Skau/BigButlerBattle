@@ -46,12 +46,12 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
 	DefaultWaterMovementMode = EMovementMode::MOVE_Custom;
 	MaxCustomMovementSpeed = 4196.f;
-	JumpZVelocity = 3052.5f;
+	JumpZVelocity = 2400.f;
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
 	MaxAcceleration = 1160.f;
-	GravityScale = 10.5f;
+	GravityScale = 11.f;
 	BrakingFrictionFactor = 2.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(DefaultCustomMovementMode));
@@ -297,6 +297,11 @@ void UPlayerCharacterMovementComponent::PhysSkateboard(float DeltaTime, int32 It
 	}
 }
 
+float UPlayerCharacterMovementComponent::GetSidewaysDeceleration() const
+{
+	return FMath::Lerp(SkateboardSidewaysGroundDeceleration, SkateboardHandbrakeSidewaysGroundDeceleration, GetHandbrakeAmount());
+}
+
 void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
 {
 	if (Velocity.IsZero() || !HasValidData() || HasAnimRootMotion() || DeltaTime < MIN_TICK_TIME)
@@ -422,7 +427,7 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 
 	const auto forwardDeceleration = (bApplySeparateDecelerationWhenAboveMaxInputSpeed && IsAboveInputSpeed())
 		? SkateboardForwardGroundDecelerationAboveInputSpeed : SkateboardForwardGroundDeceleration;
-	ApplySkateboardVelocityBraking(DeltaTime, forwardDeceleration, SkateboardSidewaysGroundDeceleration);
+	ApplySkateboardVelocityBraking(DeltaTime, forwardDeceleration, GetSidewaysDeceleration());
 
 	ApplyRotation(DeltaTime);
 
