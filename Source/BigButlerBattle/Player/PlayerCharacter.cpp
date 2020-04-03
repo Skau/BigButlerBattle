@@ -372,7 +372,7 @@ void APlayerCharacter::MoveForward(float Value)
 
 void APlayerCharacter::AddForwardInput()
 {
-	const auto Value = GetInputAxisValue("Forward");
+	const auto Value = FMath::Max(GetInputAxisValue("Forward"), 0.f);
 	AddMovementInput(FVector::ForwardVector * (bLastInputFromKeyboard ? 1.f : Value));
 	bLastInputFromKeyboard = false;
 }
@@ -392,6 +392,7 @@ void APlayerCharacter::UpdateHandbrake(float Value)
 
 void APlayerCharacter::Brake(float Value)
 {
+	Value = FMath::Max(Value, 0.f);
 	AddMovementInput(-FVector::ForwardVector * Value);
 }
 
