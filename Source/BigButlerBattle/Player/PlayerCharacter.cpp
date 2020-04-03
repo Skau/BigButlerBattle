@@ -226,10 +226,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAxis("LookRight", this, &APlayerCharacter::LookRight);
 	Input->BindAxis("Handbrake", this, &APlayerCharacter::UpdateHandbrake);
 	Input->BindAxis("Brake", this, &APlayerCharacter::Brake);
-
-	btd::BindActionLambda(Input, "ForwardKbrd", EInputEvent::IE_Pressed, [&](){
-		bLastInputFromKeyboard = true;
-	});
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -362,15 +358,19 @@ void APlayerCharacter::MoveForward(float Value)
 		const float deltaTime = GetWorld()->GetDeltaSeconds();
 		acceleration = Movement->GetInputAccelerationTimeNormalized(acceleration, bBraking, deltaTime);
 		if (Movement->CanForwardAccelerate(acceleration, deltaTime, bMovingBackwards))
+		{
+			highestInput = 0.f;
 			AnimInstance->ForwardKick();
+		}
 	}
+
+	if (Value > highestInput)
+		highestInput = Value;
 }
 
 void APlayerCharacter::AddForwardInput()
 {
-	const auto Value = FMath::Max(GetInputAxisValue("Forward"), 0.f);
-	AddMovementInput(FVector::ForwardVector * (bLastInputFromKeyboard ? 1.f : Value));
-	bLastInputFromKeyboard = false;
+	AddMovementInput(FVector::ForwardVector * highestInput);
 }
 
 void APlayerCharacter::MoveRight(float Value)

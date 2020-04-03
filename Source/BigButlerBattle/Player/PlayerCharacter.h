@@ -130,7 +130,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UNiagaraComponent *SkateboardParticles = nullptr;
 
-	bool bLastInputFromKeyboard = false;
+	float highestInput = 0.f;
 
 public:
 	JumpEventSignature OnJumpEvent;
