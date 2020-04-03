@@ -89,7 +89,7 @@ protected:
 	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from other sources get's applied.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Input Speed"))
-	float MaxInputSpeed = 3400.f;
+	float MaxInputSpeed = 2400.f;
 
 	bool bStandstill = false;
 
@@ -124,7 +124,7 @@ protected:
 	float SkateboardFwrdVelAccMult = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Sideways Ground Deceleration", ClampMin = "0", UIMin = "0"))
-	float SkateboardSidewaysGroundDeceleration = 3000.f;
+	float SkateboardSidewaysGroundDeceleration = 3400.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
 	bool bUseSeparateSidewasDecelerationWhenHandbraking = true;
@@ -172,7 +172,7 @@ protected:
 	float SidewaysVelocityAccelerationGain = 2.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Max Movement Speed"))
-	float MaxSkateboardMovementSpeed = 4196.f;
+	float MaxSkateboardMovementSpeed = 3600.f;
 
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerCharacter = nullptr;
@@ -288,7 +288,7 @@ protected:
 	// ================================== Air Movement =================================================
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement|Air", meta = (DisplayName = "Rotation Speed"))
-	float SkateboardAirRotationSpeed = 90.f;
+	float SkateboardAirRotationSpeed = 120.f;
 
 	/**
 	 * Time in seconds to apply the speed burst gained after doing airtime.

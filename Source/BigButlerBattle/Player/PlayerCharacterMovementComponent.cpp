@@ -45,13 +45,13 @@ UPlayerCharacterMovementComponent::UPlayerCharacterMovementComponent()
 {
 	DefaultLandMovementMode = EMovementMode::MOVE_Custom;
 	DefaultWaterMovementMode = EMovementMode::MOVE_Custom;
-	MaxCustomMovementSpeed = 4196.f;
-	JumpZVelocity = 2400.f;
+	MaxCustomMovementSpeed = 4000.f;
+	JumpZVelocity = 2000.f;
 	AirControl = 0.f;
 	AirControlBoostMultiplier = 0.f;
 	AirControlBoostVelocityThreshold = 0.f;
 	MaxAcceleration = 1160.f;
-	GravityScale = 11.f;
+	GravityScale = 10.5f;
 	BrakingFrictionFactor = 2.f;
 
 	SetMovementMode(EMovementMode::MOVE_Custom, static_cast<int>(DefaultCustomMovementMode));
