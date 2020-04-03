@@ -302,6 +302,16 @@ float UPlayerCharacterMovementComponent::GetSidewaysDeceleration() const
 	return FMath::Lerp(SkateboardSidewaysGroundDeceleration, SkateboardHandbrakeSidewaysGroundDeceleration, GetHandbrakeAmount());
 }
 
+FVector UPlayerCharacterMovementComponent::GetSidewaysToForwardAcceleration() const
+{
+	if (FMath::IsNearlyZero(SidewaysVelocityAccelerationGain))
+		return FVector::ZeroVector;
+	const auto f = FVector::DotProduct(Velocity.GetSafeNormal2D(), GetOwner()->GetActorForwardVector());
+	auto amount = (1 - f * f) * SidewaysVelocityAccelerationGain;
+	auto sign = f >= 0.f ? 1.f : -1.f;
+	return GetOwner()->GetActorForwardVector() * sign * amount * Velocity.Size();
+}
+
 void UPlayerCharacterMovementComponent::ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration)
 {
 	if (Velocity.IsZero() || !HasValidData() || HasAnimRootMotion() || DeltaTime < MIN_TICK_TIME)
@@ -383,6 +393,8 @@ void UPlayerCharacterMovementComponent::CalcSkateboardVelocity(const FHitResult 
 
 	// Calculate and set acceleration
 	Acceleration = GetClampedInputAcceleration(bBraking, DeltaTime);
+
+	Acceleration += GetSidewaysToForwardAcceleration();
 
 	// Get the fully modified analog input value.
 	MaxSpeed = FMath::Max(MaxSpeed * AnalogInputModifier, GetMinAnalogSpeed());

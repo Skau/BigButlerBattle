@@ -164,6 +164,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (ClampMin = "0", UIMin = "0", ClampMax = "1", UIMax = "1"))
 	float MinHandbrakeRotationVelocityImpact = 0.3f;
 
+	/**
+	 * How much of sideways velocity that should contribute to
+	 * forward velocity (sliding sideways will give a forward boost)
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement")
+	float SidewaysVelocityAccelerationGain = 2.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Max Movement Speed"))
 	float MaxSkateboardMovementSpeed = 4196.f;
 
@@ -248,6 +255,8 @@ protected:
 	void PhysSkateboard(float deltaTime, int32 Iterations);
 
 	float GetSidewaysDeceleration() const;
+
+	FVector GetSidewaysToForwardAcceleration() const;
 
 	void ApplySkateboardVelocityBraking(float DeltaTime, float BreakingForwardDeceleration, float BreakingSidewaysDeceleration);
 
