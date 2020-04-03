@@ -130,8 +130,6 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UNiagaraComponent *SkateboardParticles = nullptr;
 
-	bool bHoldingJump = false;
-
 	bool bLastInputFromKeyboard = false;
 
 public:

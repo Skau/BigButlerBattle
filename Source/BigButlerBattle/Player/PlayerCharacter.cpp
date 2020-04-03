@@ -126,8 +126,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	// Set overlap threshold to ignore everything but the rail's
 	GrindingOverlapThreshold->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
-	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -100.f});
-	GrindingOverlapThreshold->SetSphereRadius(300.f);
+	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -60.f});
+	GrindingOverlapThreshold->SetSphereRadius(100.f);
 
 
 	// Particles
@@ -212,10 +212,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 
 	// Action Mappings
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
-	btd::BindActionLambda(Input, "Jump", EInputEvent::IE_Released, [&](){
-		bHoldingJump = false;
-		StopJumping();
-	});
+	Input->BindAction("Jump", EInputEvent::IE_Released, this, &ACharacter::StopJumping);
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
@@ -336,7 +333,6 @@ void APlayerCharacter::Jump()
 {
 	Super::Jump();
 
-	bHoldingJump = true;
 	if (CanGrind())
 	{
 		if (auto rail = GetClosestRail())
@@ -1060,7 +1056,7 @@ void APlayerCharacter::SetRailCollision(bool mode)
 
 bool APlayerCharacter::CanGrind() const
 {
-	return Movement->IsFalling() && bHoldingJump && CurrentGrindingRail == nullptr /* && !Movement->CurrentSpline.HasValue() */;
+	return Movement->IsFalling() && CurrentGrindingRail == nullptr /* && !Movement->CurrentSpline.HasValue() */;
 }
 
 void APlayerCharacter::StartGrinding(ARailing* rail)
