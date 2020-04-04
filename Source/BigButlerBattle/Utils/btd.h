@@ -134,4 +134,10 @@ namespace btd
          */
         return (p - a) / (b - a);
     }
+
+    // Converts a single digit integer to a char (or the last digit if multiple digits)
+    inline static TCHAR ConvertIntDigitToChar(int32 Int)
+    {
+        return static_cast<TCHAR>(Int % 10) + '0';
+    }
 }

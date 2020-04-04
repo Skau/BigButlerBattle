@@ -259,6 +259,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 			StartGrinding(rail);
 		}
 	}
+
+	// Particles
+	const auto wheels = GetWheelLocations();
+	for (int i{0}; i < 4; ++i)
+	{
+		FString var{"User.WheelPos"};
+		var.AppendChar(btd::ConvertIntDigitToChar(i));
+
+		SkateboardParticles->SetVariableVec3(*var, wheels[i]);
+	}
 }
 
 
@@ -1092,3 +1102,40 @@ void APlayerCharacter::OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedCompo
 			CurrentGrindingRail = nullptr;
 	}
 }
+
+
+
+TArray<FVector> APlayerCharacter::GetWheelLocations() const
+{
+	constexpr int32 wheelCount = 4;
+	TArray<FVector> locations;
+	locations.Reserve(wheelCount);
+	locations.AddZeroed(wheelCount);
+	
+	if (!IsValid(SkateboardMesh))
+		return locations;
+
+	auto compTrans = SkateboardMesh->GetComponentSpaceTransforms();
+
+	const FName bones[]{"WheelsBack", "WheelsFront"};
+	FTransform boneTrans = FTransform::Identity;
+	for (int i{0}; i < wheelCount; ++i)
+	{
+		auto boneIndex = SkateboardMesh->GetBoneIndex(bones[i / 2]);
+		if (boneIndex == INDEX_NONE)
+		{
+			++i; // Add one to skip both wheels on bone
+			continue;
+		}
+
+		// Only update each other bone (for efficiency)
+		if (!(i % 2))
+			boneTrans = SkateboardMesh->GetBoneTransform(boneIndex);
+
+		const FVector dir{0.f, (i % 2 ? 1.f : -1.f) * ParticleWheelOffset, 0.f};
+		locations[i] = boneTrans.TransformPosition(dir);
+	}
+
+	return locations;
+}
+
