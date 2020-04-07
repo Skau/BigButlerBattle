@@ -269,6 +269,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 		SkateboardParticles->SetVariableVec3(*var, wheels[i]);
 	}
+	const float skidMarkStrength = FMath::Abs(Movement->GetRightVelocityFactor()) * static_cast<float>(!(Movement->IsFalling() || Movement->IsGrinding()));
+	SkateboardParticles->SetVariableFloat(FName{"User.SkidMarkStrength"}, skidMarkStrength);
 }
 
 

@@ -169,6 +169,9 @@ protected:
 	bool bBraking = false;
 	bool bIsStandstill = false;
 
+	float forwardVelocityFactor{0.f};
+	float rightVelocityFactor{0.f};
+
 public:
 	// Parameter is mode that started
 	FCustomMovementChangedSignature OnCustomMovementStart;
@@ -191,6 +194,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	float GetRotationInput() const { return InputDir.Y; }
+
+	float GetRightVelocityFactor() const { return rightVelocityFactor; }
+	float GetForwardVelocityFactor() const { return forwardVelocityFactor; }
 
 	float GetMaxForwardAcceleration() const;
 
