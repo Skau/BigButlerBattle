@@ -935,7 +935,9 @@ void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent
 	{
 		if (Object == ClosestPickup)
 		{
-			Object->SetSelected(false);
+			if(!Object->bIsMainItem)
+				Object->SetSelected(false);
+
 			ClosestPickup = nullptr;
 		}
 		TaskObjectsInCameraRange.RemoveSingle(Object);
