@@ -41,10 +41,12 @@ struct FIntRange
 	int Max;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMainItemGeneratedSignature, ATaskObject *, MainItem);
+
 /**
  *
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
@@ -55,6 +57,12 @@ public:
 	ASpawnpoint* GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position);
 
 	void StartToLeaveMap() override;
+
+	UFUNCTION(BlueprintCallable)
+	ATaskObject* GetMainItem() { return MainItem; }
+
+	UPROPERTY(BlueprintAssignable)
+	FMainItemGeneratedSignature OnMainItemGenerated;
 
 protected:
 	void BeginPlay() override;
@@ -158,4 +166,6 @@ private:
 	void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
 
 	AKing* King = nullptr;
+
+	ATaskObject* MainItem = nullptr;
 };

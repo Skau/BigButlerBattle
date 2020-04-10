@@ -177,6 +177,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 			if (Itr->bIsMainItem)
 			{
+				MainItem = *Itr;
 				return;
 			}
 		}
@@ -195,7 +196,10 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 			}
 
 			Object->SetMainItem();
+			MainItem = Object;
 		}
+
+		OnMainItemGenerated.Broadcast(MainItem);
 	});
 }
 
