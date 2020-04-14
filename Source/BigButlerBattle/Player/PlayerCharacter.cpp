@@ -139,6 +139,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 void APlayerCharacter::BeginPlay()
 {
+	// Super::BeginPlay runs blueprint beginplay.
+	// Put code that needs to be run before BP beginplay here:
+	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	check(IsValid(GameMode)); // TODO: Remove check in build
+
 	Super::BeginPlay();
 
 	if (!SkateboardMesh || !IsValid(SkateboardMesh))
@@ -169,9 +174,6 @@ void APlayerCharacter::BeginPlay()
 		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
 			SetRailCollision(true);
 	});
-
-	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	check(GameMode != nullptr); // TODO: Remove check in build
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
 
