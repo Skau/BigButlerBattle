@@ -24,6 +24,8 @@ class UAudioComponent;
 class ARailing;
 class USphereComponent;
 class UNiagaraComponent;
+class USceneCaptureComponent2D;
+
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -185,6 +187,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UPlayerCameraComponent* Camera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	USceneCaptureComponent2D* SecondaryRenderingCamera = nullptr;
+
 	UPROPERTY(VisibleAnywhere)
 	UPlayerSpringArmComponent *SpringArm;
 
@@ -196,6 +201,9 @@ protected:
 	FVector2D CameraRotation = {};
 
 	float DefaultSpringArmLength;
+
+	UPROPERTY()
+	UTextureRenderTarget2D* RenderTexture;
 
 public:
 	void SetCustomSpringArmLength();

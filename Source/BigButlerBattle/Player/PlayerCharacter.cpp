@@ -185,6 +185,8 @@ void APlayerCharacter::BeginPlay()
 
 	DefaultSpringArmLength = SpringArm->TargetArmLength;
 
+	// SecondaryRenderingCamera->
+
 	PlayersInRangeCollision->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap);
 	PlayersInRangeCollision->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnPlayersInRangeCollisionEndOverlap);
 
