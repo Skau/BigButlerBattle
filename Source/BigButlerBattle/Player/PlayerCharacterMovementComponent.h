@@ -89,7 +89,7 @@ protected:
 	 * Max velocity to add input acceleration to. If velocity is higher, only acceleration from other sources get's applied.
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Custom Movement", meta = (DisplayName = "Max Input Speed"))
-	float MaxInputSpeed = 2400.f;
+	float MaxInputSpeed = 2000.f;
 
 	bool bStandstill = false;
 

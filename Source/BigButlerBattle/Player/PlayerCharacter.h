@@ -178,7 +178,7 @@ protected:
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-	float CustomSpringArmLength = 300.f;
+	float CustomSpringArmLength = 400.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCameraComponent* Camera;

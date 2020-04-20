@@ -33,19 +33,19 @@ protected:
 	 * Minimum FOV. FOV will never go below this.
 	 */
 	UPROPERTY(EditDefaultsOnly)
-	float MinFOV = 115.f;
+	float MinFOV = 90.f;
 
 	/**
 	 * Maximum FOV under max input speed (the speed you can manually kick youself up to)
 	 */
 	UPROPERTY(EditDefaultsOnly)
-	float MaxPlayerInputFOV = 131.25f;
+	float MaxPlayerInputFOV = 110.f;
 
 	/**
 	 * Maximim FOV. FOV will never surpass this.
 	 */
 	UPROPERTY(EditDefaultsOnly)
-	float MaxFOV = 141.25f;
+	float MaxFOV = 160.f;
 
 	UPROPERTY(EditDefaultsOnly)
 	UCurveFloat* FOVCurve = nullptr;
