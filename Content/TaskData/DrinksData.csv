@@ -1,2 +1,4 @@
 Name,Type,Mesh,Material
 Whiskey,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Whiskey/Whiskey_Mesh.Whiskey_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Drinks/Whiskey/Whiskey_Material.Whiskey_Material'
+Wine,1,StaticMesh'/Game/Props/TaskObjects/Drinks/Wine/Wine.Wine',MaterialInstanceConstant'/Game/Props/TaskObjects/PickupSet2_Mat.PickupSet2_Mat'
+IceCream,1,StaticMesh'/Game/Props/TaskObjects/Drinks/IceCream/IceCream.IceCream',MaterialInstanceConstant'/Game/Props/TaskObjects/PickupSet2_Mat.PickupSet2_Mat'

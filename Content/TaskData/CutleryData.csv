@@ -1,2 +1,5 @@
 Name,Type,Mesh,Material
-Plate,3,StaticMesh'/Game/Props/TaskObjects/Cutlery/Plate/Plate_Mesh.Plate_Mesh',MaterialInstanceConstant'/Game/Props/TaskObjects/Cutlery/Plate/Plate_Material.Plate_Material'
+Plate1,3,StaticMesh'/Game/Props/TaskObjects/Cutlery/Plate01/Plate01.Plate01',MaterialInstanceConstant'/Game/Props/TaskObjects/PickupSet2_Mat.PickupSet2_Mat'
+Plate2,3,StaticMesh'/Game/Props/TaskObjects/Cutlery/Plate02/Plate02.Plate02',MaterialInstanceConstant'/Game/Props/TaskObjects/PickupSet2_Mat.PickupSet2_Mat'
+Bowl,3,StaticMesh'/Game/Props/TaskObjects/Cutlery/Bowl01/Bowl01.Bowl01',MaterialInstanceConstant'/Game/Props/TaskObjects/PickupSet2_Mat.PickupSet2_Mat'
+Cup,3,StaticMesh'/Game/Props/TaskObjects/Cutlery/Cup01/Cup01.Cup01',MaterialInstanceConstant'/Game/Props/TaskObjects/PickupSet2_Mat.PickupSet2_Mat'
