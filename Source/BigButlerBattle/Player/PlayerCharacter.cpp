@@ -33,7 +33,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	JumpMaxHoldTime = 0.21f;
+	JumpMaxHoldTime = 0.3f;
 
 	SkateboardMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Skateboard Mesh");
 	SkateboardMesh->SetupAttachment(RootComponent);
@@ -127,7 +127,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GrindingOverlapThreshold->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
 	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -60.f});
-	GrindingOverlapThreshold->SetSphereRadius(100.f);
+	GrindingOverlapThreshold->SetSphereRadius(200.f);
 
 
 	// Particles

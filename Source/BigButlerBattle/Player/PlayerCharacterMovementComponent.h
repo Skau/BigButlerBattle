@@ -144,7 +144,7 @@ protected:
 	float SkateboardStandstillRotationSpeed = 1.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Slope Gravity Multiplier"))
-	float SlopeGravityMultiplier = 4329.f;
+	float SlopeGravityMultiplier = 1800.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Skateboard Movement", meta = (DisplayName = "Handbrake Rotation"))
 	float HandbrakeRotationSpeed = 330.f;
