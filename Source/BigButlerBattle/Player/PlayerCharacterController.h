@@ -41,6 +41,7 @@ public:
 	FMainItemStateChangedSignature OnMainItemStateChange;
 
 	void RespawnCharacter(ASpawnpoint* Spawnpoint);
+	void RespawnCharacter(const FTransform& Spawntrans);
 
 	bool bUseCustomSpringArmLength = false;
 

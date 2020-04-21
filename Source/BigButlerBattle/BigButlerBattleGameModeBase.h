@@ -29,6 +29,10 @@ public:
 	ABigButlerBattleGameModeBase();
 
 	ASpawnpoint* GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position);
+	FVector GetRandomSpawnPos(const FVector& Position) const;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RespawnRadius = 1000.f;
 
 	void StartToLeaveMap() override;
 

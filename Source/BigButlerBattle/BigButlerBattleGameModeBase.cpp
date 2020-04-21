@@ -18,7 +18,7 @@
 #include "Utils/Spawnpoint.h"
 #include "UI/GameWidget.h"
 #include "King/King.h"
-
+#include "NavigationSystem.h"
 
 ABigButlerBattleGameModeBase::ABigButlerBattleGameModeBase()
 {
@@ -360,4 +360,30 @@ ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(const ERoomSpawn 
 	}
 
 	return ClosestSpawnpoint;
+}
+
+FVector ABigButlerBattleGameModeBase::GetRandomSpawnPos(const FVector& Position) const
+{
+	auto world = GetWorld();
+	if (!IsValid(world))
+		return FVector::ZeroVector;
+
+	auto navSys = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
+	if (!IsValid(navSys))
+		return FVector::ZeroVector;
+
+	FNavLocation navPoint;
+	if (!IsValid(navSys->MainNavData))
+	{
+		UE_LOG(LogTemp, Error, TEXT("MainNavSysData is missing!"));
+		return FVector::ZeroVector;
+	}
+
+	if (!navSys->GetRandomPointInNavigableRadius(Position, RespawnRadius, navPoint))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Could'nt find a point in navigable space!"));
+		return FVector::ZeroVector;
+	}
+
+	return navPoint.Location;
 }

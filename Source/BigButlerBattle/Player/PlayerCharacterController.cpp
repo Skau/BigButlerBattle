@@ -113,6 +113,8 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 		if (!GetPawn() || !this || !IsValid(PlayerCharacter))
 			return;
 
+		const auto playerScale = PlayerCharacter->GetActorScale3D();
+
 		if (PlayerCharacter)
 		{
 			bAutoManageActiveCameraTarget = false;
@@ -127,9 +129,9 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 			return;
 		}
 
-		const auto Spawnpoint = ButlerGameMode->GetRandomSpawnpoint(Room, Position);
-		RespawnCharacter(Spawnpoint);
-	});
+		const auto Spawnpos = ButlerGameMode->GetRandomSpawnPos(Position);
+		RespawnCharacter(FTransform{FQuat::Identity, Spawnpos, playerScale});
+	});	
 }
 
 void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory)
@@ -154,7 +156,7 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 
 void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
 {
-	if (!PlayerCharacterClass)
+	if (!IsValid(PlayerCharacterClass))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Player Controller: Player Character Class not set!"));
 		return;
@@ -164,19 +166,30 @@ void APlayerCharacterController::RespawnCharacter(ASpawnpoint* Spawnpoint)
 	{
 		const auto SpawnTransform = Spawnpoint->GetTransform();
 
-		PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
-
-		if(bUseCustomSpringArmLength)
-			PlayerCharacter->SetCustomSpringArmLength();
+		RespawnCharacter(SpawnTransform);
 
 		PlayerCharacter->CurrentRoom = Spawnpoint->RoomSpawn;
-
-		UGameplayStatics::FinishSpawningActor(PlayerCharacter, SpawnTransform);
-
-		Possess(PlayerCharacter);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Player Controller: Null spawnpoint provided!"));
 	}
+}
+
+void APlayerCharacterController::RespawnCharacter(const FTransform& Spawntrans)
+{
+	if (!IsValid(PlayerCharacterClass))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player Controller: Player Character Class not set!"));
+		return;
+	}
+
+	PlayerCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacter>(PlayerCharacterClass, Spawntrans, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+
+	if (bUseCustomSpringArmLength)
+		PlayerCharacter->SetCustomSpringArmLength();
+
+	UGameplayStatics::FinishSpawningActor(PlayerCharacter, Spawntrans);
+
+	Possess(PlayerCharacter);
 }
