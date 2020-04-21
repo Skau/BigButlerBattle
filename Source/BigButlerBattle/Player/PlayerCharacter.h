@@ -24,6 +24,7 @@ class UAudioComponent;
 class ARailing;
 class USphereComponent;
 class UNiagaraComponent;
+class UCurveFloat;
 
 // Delegates
 DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
@@ -406,12 +407,18 @@ public:
 
 /// =================================== Particles =================================================
 protected:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Particles")
 	UNiagaraComponent *SkateboardParticles = nullptr;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles")
 	float ParticleWheelOffset = 0.07f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles")
+	float SkidmarkVelocityThreshold = 1500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles")
+	UCurveFloat* SkidmarkStrengthCurve = nullptr;
 
 	TArray<FVector> GetWheelLocations() const;
 };

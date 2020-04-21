@@ -44,6 +44,7 @@ public:
 
 	int SplineDir : 2;
 	uint8 PlayerState : 2;
+	uint8 bClosedLoop : 1;
 	uint8 PointCount;
 
 	float SplinePos = -1.f;
@@ -56,7 +57,7 @@ public:
 	FSplineStateChangedSignature OnSplineChanged;
 
 public:
-	FSplineInfo(USplineComponent* Spline = nullptr);
+	FSplineInfo(USplineComponent* Spline = nullptr, bool bLooped = false);
 
 	bool HasValue() const { return SkateboardSplineReference != nullptr; }
 

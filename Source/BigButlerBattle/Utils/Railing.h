@@ -37,6 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing", meta = (DisplayName = "Tangent multiplier"))
 	float TangentMultiplier = 3.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing")
+	bool bLoopedRail = false;
+
 protected:
 
 
