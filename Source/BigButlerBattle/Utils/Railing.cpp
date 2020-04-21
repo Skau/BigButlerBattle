@@ -113,6 +113,8 @@ void ARailing::BuildSpline()
 				// 	SplineComp->SetUpVectorAtSplinePoint(i, FVector::UpVector, ESplineCoordinateSpace::World);
 			}
 		}
+
+		SplineComp->SetClosedLoop(bLoopedRail);
 	}
 }
 
@@ -124,8 +126,12 @@ void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChan
 
     // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name
     // in the future this will fail to compile and we can update it.
-    if (PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) || PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier))
-        BuildSpline();
+	if (
+		PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, Splinepoints) ||
+		PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, TangentMultiplier) ||
+		PropertyName == GET_MEMBER_NAME_CHECKED(ARailing, bLoopedRail)
+	)
+		BuildSpline();
 
     // Call the base class version
     Super::PostEditChangeProperty(PropertyChangedEvent);
