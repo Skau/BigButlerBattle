@@ -27,6 +27,7 @@
 #include "Components/SphereComponent.h"
 #include "NiagaraComponent.h"
 #include "Engine/EngineTypes.h"
+#include "Curves/CurveFloat.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -262,7 +263,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 		SkateboardParticles->SetVariableVec3(*var, wheels[i]);
 	}
-	const float skidMarkStrength = FMath::Abs(Movement->GetRightVelocityFactor()) * static_cast<float>(!(Movement->IsFalling() || Movement->IsGrinding()));
+	float velocityFactor = Movement->Velocity.Size2D() / SkidmarkVelocityThreshold;
+	velocityFactor = FMath::Clamp(SkidmarkStrengthCurve ? SkidmarkStrengthCurve->GetFloatValue(velocityFactor) : velocityFactor, 0.f, 1.f);
+	const float skidMarkStrength = velocityFactor * FMath::Abs(Movement->GetRotationInput()) * static_cast<float>(!(Movement->IsFalling()));
 	SkateboardParticles->SetVariableFloat(FName{"User.SkidMarkStrength"}, skidMarkStrength);
 }
 
