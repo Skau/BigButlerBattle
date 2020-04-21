@@ -52,8 +52,8 @@ void ATaskObject::Reset()
 		// When out of bounds or not reachable (not touched for TimeUntilResetThreshold seconds)
 		auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 		GM->SetMainItem();
-		Destroy();
 	}
+	Destroy();
 }
 
 void ATaskObject::BeginPlay()
