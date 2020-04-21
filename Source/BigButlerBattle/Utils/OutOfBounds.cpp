@@ -3,7 +3,7 @@
 
 #include "OutOfBounds.h"
 #include "Components/BoxComponent.h"
-
+#include "Tasks/TaskObject.h"
 #include "Player/PlayerCharacter.h"
 
 AOutOfBounds::AOutOfBounds()
@@ -29,6 +29,10 @@ void AOutOfBounds::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCompon
 	if (auto Player = Cast<APlayerCharacter>(OtherActor))
 	{
 		Player->EnableRagdoll();
+	}
+	else if(auto TaskObject = Cast<ATaskObject>(OtherActor))
+	{
+		TaskObject->Reset();
 	}
 	else
 	{

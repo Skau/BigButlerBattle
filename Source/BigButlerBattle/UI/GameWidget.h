@@ -23,7 +23,9 @@ public:
 
 	void UpdateTimer(const FString& String);
 
-	void UpdateInfo(int ControllerID, bool bPickedUp);
+	void OnPlayerInteractMainItem(int ControllerID, bool bPickedUp);
+
+	void OnMainItemSet();
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -33,6 +35,7 @@ protected:
 	UTextBlock* Text_Info;
 
 private:
+	void UpdateMessage(const FString& Message, const float Duration = 3.f);
+	
 	FTimerHandle HandleInfoMessage;
-	const float MessageDuration = 3.f;
 };

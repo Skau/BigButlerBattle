@@ -15,31 +15,7 @@ class UGameFinishedWidget;
 class ASpawnpoint;
 class UGameWidget;
 class AKing;
-
-UENUM()
-enum class ETaskState
-{
-	NotPresent,
-	Present,
-	Finished
-};
-
-USTRUCT(BlueprintType)
-struct FIntRange
-{
-	GENERATED_BODY()
-
-	FIntRange()
-	: Min(0)
-	, Max(0)
-	{}
-
-	UPROPERTY(EditAnywhere)
-	int Min;
-
-	UPROPERTY(EditAnywhere)
-	int Max;
-};
+class ATaskObject;
 
 /**
  *
@@ -56,6 +32,8 @@ public:
 
 	void StartToLeaveMap() override;
 
+	void SetMainItem();
+
 protected:
 	void BeginPlay() override;
 
@@ -71,18 +49,6 @@ protected:
 
 	UGameFinishedWidget* GameFinishedWidget;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
-	int TotalTasks = 6;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
-	FIntRange FoodRange;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
-	FIntRange WineRange;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Task Generator")
-	FIntRange CutleryRange;
-
 private:
 	TArray<APlayerCharacterController*> Controllers;
 
@@ -95,55 +61,24 @@ private:
 	UFUNCTION()
 	void OnPlayerQuit() const;
 
-	int RemainingTasksToCreate = 0;
-
 	void SetupSpawnpoints();
-
-	/*
-	 Starts the process of generating tasks
-	*/
-	UFUNCTION()
-	void BeginTaskGeneration();
-
-	/* 
-	 Helper function that returns all tasks found in world.
-	 Return value is a TMap where key is the type of task and the value is an array containing the tasks
-	*/
-	TMap<EObjectType, TArray<UTask*>> GetWorldTaskData() const;
-
-	/*
-	 Helper function that returns all tasks that needs to be created
-	*/
-	TArray<UTask*> GenerateTasks(const TArray<EObjectType>& Types, TMap<EObjectType, FIntRange>& Ranges, const FRandomStream& Stream, TMap<EObjectType, TArray<UTask*>>& WorldTaskData, bool bShouldGenerateMinTasks);
-
-	/*
-	 Helper function that returns a list of tasks based on the random stream
-	*/
-	TArray<UTask*> ProcessWorldTasks(TArray<UTask*>& TaskData, const FRandomStream& Stream, int Min, int Max);
-
-	/*
-	 Called when the task generation is done
-	*/
-	void EndTaskGeneration(TArray<UTask*> Tasks);
-
-	/*
-	 Sets up the individual player tasks and gives them to the respective controller
-	 Called from EndTaskGeneration()
-	*/
-	void GeneratePlayerTasks(TArray<UTask*> Tasks);
-
-
-	double TaskGenerationStartTime = 0;
-
-	void GenerateExtraTask();
 
 	TMap<ERoomSpawn, TArray<ASpawnpoint*>> Spawnpoints;
 
-	/****** Test ******/
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	float TotalSecondsToHold = 30.f;
+	float TotalSecondsToHold = 10.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	int TotalPointsToWin = 5;
+
+	// Actual seconds left to hold
+	float SecondsLeftToHold = TotalSecondsToHold;
+
+	void OnItemDelivered(const int ControllerID);
+
+	TMap<APlayerController*, int> Scores;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameWidget> GameWidgetClass;
@@ -156,6 +91,8 @@ protected:
 private:
 	UFUNCTION()
 	void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
+
+	ATaskObject* GetRandomTaskObject(const TArray<AActor*>& Actors);
 
 	AKing* King = nullptr;
 };

@@ -28,7 +28,7 @@ public:
 
 	void OnPickedUp();
 
-	void Enable(bool NewVisiblity, bool NewCollision, bool NewPhysics) const;
+	void Enable(bool NewVisiblity, bool NewCollision, bool NewPhysics);
 
 	void Launch(const FVector& LaunchVelocity);
 
@@ -45,6 +45,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	bool bIsMainItem = false;
+
+	void Reset();
+
+	bool GetIsRespawning() const { return bIsRespawning; }
 
 protected:
 	void BeginPlay() override;
@@ -83,27 +87,26 @@ private:
 	EObjectType TaskType = EObjectType::None;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
-	bool bRespawn = false;
+	bool bRespawn = true;
+
+	bool bIsRespawning = false;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
-	float RespawnTime = 15.f;
+	float RespawnTime = 5.f;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
-	float CountAsPlayerTaskThreshold = 10.f;
+	float TimeUntilResetThreshold = 20.f;
 
 	UPROPERTY(EditInstanceOnly, Category = "Task")
 	UTask* TaskData = nullptr;
-
-	UFUNCTION()
-	void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	void SetDefault();
 
-	float TimeSinceThrown = 0.0f;
-	bool bRecordingTimeSinceThrown = false;
+	float TimeSinceDropped = 0.0f;
+	bool bRecordingTimeSinceDropped = false;
 
 private:
 	void UpdateDataTables();

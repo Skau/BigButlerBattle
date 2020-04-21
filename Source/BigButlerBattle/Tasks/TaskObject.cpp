@@ -14,6 +14,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Player/PlayerCharacter.h"
 #include "Misc/FileHelper.h"
+#include "BigButlerBattleGameModeBase.h"
 #include "Utils/btd.h"
 
 ATaskObject::ATaskObject()
@@ -43,6 +44,18 @@ void ATaskObject::SetMainItem()
 	MeshComponent->SetCustomDepthStencilValue(1); // Permanent outline (can also be set in beginplay if main item is set in editor)
 }
 
+
+void ATaskObject::Reset()
+{
+	if (bIsMainItem)
+	{
+		// When out of bounds or not reachable (not touched for TimeUntilResetThreshold seconds)
+		auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+		GM->SetMainItem();
+		Destroy();
+	}
+}
+
 void ATaskObject::BeginPlay()
 {
 	Super::BeginPlay();
@@ -64,7 +77,6 @@ void ATaskObject::BeginPlay()
 		SetDefault();
 	}
 
-	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &ATaskObject::OnCollisionBeginOverlap);
 	MeshComponent->OnComponentHit.AddDynamic(this, &ATaskObject::OnHit);
 	
 	DynamicMaterial = MeshComponent->CreateDynamicMaterialInstance(0, MeshComponent->GetMaterial(0));
@@ -80,16 +92,17 @@ void ATaskObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bRecordingTimeSinceThrown)
+	if (bIsMainItem && bRecordingTimeSinceDropped)
 	{
-		TimeSinceThrown += DeltaTime;
+		TimeSinceDropped += DeltaTime;
 
-		if (Instigator && TimeSinceThrown > 0.5f)
+		if (Instigator && TimeSinceDropped > 0.5f)
 			Instigator = nullptr;
 
-		if (TimeSinceThrown > CountAsPlayerTaskThreshold)
+		if (TimeSinceDropped > TimeUntilResetThreshold)
 		{
-			bRecordingTimeSinceThrown = false;
+			bRecordingTimeSinceDropped = false;
+			Reset();
 		}
 	}
 }
@@ -284,18 +297,6 @@ bool ATaskObject::SetDataFromAssetData()
 	}
 }
 
-void ATaskObject::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor->IsA(AKing::StaticClass()))
-	{
-		if (bRecordingTimeSinceThrown && TimeSinceThrown < CountAsPlayerTaskThreshold)
-		{
-			OnTaskObjectDelivered.ExecuteIfBound(this);
-			bRecordingTimeSinceThrown = false;
-		}
-	}
-}
-
 void ATaskObject::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (bCanHit)
@@ -328,23 +329,26 @@ void ATaskObject::SetDefault()
 void ATaskObject::OnPickedUp()
 {
 	Enable(false, false, false);
-
 	if (bRespawn)
 	{
-		btd::Delay(this, RespawnTime, [&]()
+		bIsRespawning = true;
+		btd::Delay(this, RespawnTime, [=]()
 		{
-			if (IsValid(this))
+			if (!IsValid(this))
 				return;
 
+			bIsRespawning = false;
+			bIsMainItem = false;
 			Enable(true, true, true);
 		});
 	}
 }
 
-void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics) const
+void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics)
 {
 	if (MeshComponent != nullptr)
 	{
+		MeshComponent->SetCustomDepthStencilValue(bIsMainItem);
 		MeshComponent->SetVisibility(NewVisiblity);
 
 		MeshComponent->SetSimulatePhysics(NewPhysics);
@@ -364,7 +368,7 @@ void ATaskObject::Launch(const FVector& LaunchVelocity)
 {
 	Enable(true, true, true);
 	MeshComponent->AddImpulse(LaunchVelocity);
-	bRecordingTimeSinceThrown = true;
+	bRecordingTimeSinceDropped = true;
 }
 
 void ATaskObject::UpdateDataTables()

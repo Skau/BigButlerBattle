@@ -25,22 +25,29 @@ void UGameWidget::UpdateTimer(const FString& String)
 	}
 }
 
-void UGameWidget::UpdateInfo(int ControllerID, bool bPickedUp)
+void UGameWidget::OnPlayerInteractMainItem(int ControllerID, bool bPickedUp)
 {
-	if (Text_Info)
+	UpdateMessage("Player " + FString::FromInt(ControllerID + 1) + (bPickedUp ? " picked up" : " dropped") + " the main item!");
+}
+
+void UGameWidget::OnMainItemSet()
+{
+	UpdateMessage("The King demands a new item!");
+}
+
+void UGameWidget::UpdateMessage(const FString& Message, const float Duration)
+{
+	if (Message.IsEmpty() || !Text_Info)
+		return;
+
+	Text_Info->SetText(FText::FromString(Message));
+	Text_Info->SetVisibility(ESlateVisibility::Visible);
+
+	FTimerDelegate TimerCallback;
+	TimerCallback.BindLambda([&]
 	{
-		FString Name = "Player " + FString::FromInt(ControllerID + 1);
-		FString State = bPickedUp ? " picked up" : " dropped";
-		FString Message = Name + State + " the main item!";
-		Text_Info->SetText(FText::FromString(Message));
-		Text_Info->SetVisibility(ESlateVisibility::Visible);
+		Text_Info->SetVisibility(ESlateVisibility::Hidden);
+	});
 
-		FTimerDelegate TimerCallback;
-		TimerCallback.BindLambda([&]
-		{
-			Text_Info->SetVisibility(ESlateVisibility::Hidden);
-		});
-
-		GetWorld()->GetTimerManager().SetTimer(HandleInfoMessage, TimerCallback, MessageDuration, false);
-	}
+	GetWorld()->GetTimerManager().SetTimer(HandleInfoMessage, TimerCallback, Duration, false);
 }

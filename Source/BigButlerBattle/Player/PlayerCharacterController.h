@@ -10,9 +10,8 @@
 // Broadcasted when the player presses pause
 DECLARE_DELEGATE_OneParam(FPauseGameSignature, int);
 
-// Broadcasted when the player finishes all tasks at the king
-DECLARE_DELEGATE_OneParam(FGameFinishedSignature, int);
-
+// Broadcasted when the player delivers the main item
+DECLARE_DELEGATE_OneParam(FDeliveredItem, int);
 
 // Broadcasted when main item is dropped or picked up, passing along controller ID.
 DECLARE_DELEGATE_TwoParams(FMainItemStateChangedSignature, int, bool);
@@ -37,16 +36,9 @@ class BIGBUTLERBATTLE_API APlayerCharacterController : public APlayerController
 
 public:
 	FPauseGameSignature OnPausedGame;
-	FGameFinishedSignature OnGameFinished;
+	FDeliveredItem OnDeliveredItem;
 
 	FMainItemStateChangedSignature OnMainItemStateChange;
-
-	void SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks);
-
-	TArray<TPair<UTask*, ETaskState>>& GetPlayerTasks() { return PlayerTasks; }
-
-	void SetPlayerTaskName(int Index, const FString& Name) const;
-	void SetPlayerTaskState(int Index, ETaskState NewState);
 
 	void RespawnCharacter(ASpawnpoint* Spawnpoint);
 
@@ -89,11 +81,6 @@ private:
 
 	UFUNCTION()
 	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
-
-
-	void UpdatePlayerTasks();
-
-	void OnTaskObjectDelivered(ATaskObject* Object);
 
 	void OnCharacterFell(ERoomSpawn Room, FVector Position);
 };

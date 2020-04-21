@@ -39,8 +39,6 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 		}
 		SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
 
-		UpdatePlayerTasks();
-
 		if (PlayerWidget->Visibility == ESlateVisibility::Hidden)
 			PlayerWidget->SetVisibility(ESlateVisibility::Visible);
 
@@ -78,30 +76,6 @@ void APlayerCharacterController::PauseGamePressed()
 	OnPausedGame.ExecuteIfBound(ID);
 }
 
-void APlayerCharacterController::SetPlayerTasks(const TArray<TPair<UTask*, ETaskState>>& Tasks)
-{
-	PlayerTasks += Tasks;
-
-	PlayerWidget->InitializeTaskWidgets(Tasks);
-
-	for (int i = 0; i < PlayerTasks.Num(); ++i)
-	{
-		SetPlayerTaskName(i, PlayerTasks[i].Key->Name);
-		SetPlayerTaskState(i, PlayerTasks[i].Value);
-	}
-}
-
-void APlayerCharacterController::SetPlayerTaskName(int Index, const FString& Name) const
-{
-	PlayerWidget->UpdateTaskSlotName(Index, Name);
-}
-
-void APlayerCharacterController::SetPlayerTaskState(int Index, ETaskState NewState)
-{
-	PlayerTasks[Index].Value = NewState;
-	PlayerWidget->UpdateTaskState(Index, NewState);
-}
-
 void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 {
 	// Destroy all other items if we have picked up main item.
@@ -128,45 +102,6 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 	{
 		PlayerCharacter->bHasMainItem = false;
 		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), false);
-	}
-}
-
-void APlayerCharacterController::UpdatePlayerTasks()
-{
-	for (int i = 0; i < PlayerTasks.Num(); ++i)
-		if(PlayerTasks[i].Value == ETaskState::Present)
-			SetPlayerTaskState(i, ETaskState::NotPresent);
-
-	for (auto& InventoryObject : PlayerCharacter->GetInventory())
-	{
-		if (IsValid(InventoryObject))
-		{
-			for (int i = 0; i < PlayerTasks.Num(); ++i)
-			{
-				if (PlayerTasks[i].Value == ETaskState::NotPresent && InventoryObject->GetTaskData()->IsEqual(PlayerTasks[i].Key))
-				{
-					SetPlayerTaskState(i, ETaskState::Present);
-					break;
-				}
-			}
-		}
-	}
-}
-
-void APlayerCharacterController::OnTaskObjectDelivered(ATaskObject* Object)
-{
-	for (int i = 0; i < PlayerTasks.Num(); ++i)
-	{
-		const auto PlayerTask = PlayerTasks[i];
-		if (PlayerTask.Value == ETaskState::NotPresent)
-		{
-			if (PlayerTask.Key->IsEqual(Object->GetTaskData()))
-			{
-				SetPlayerTaskState(i, ETaskState::Finished);
-				Object->Destroy();
-				break;
-			}
-		}
 	}
 }
 
@@ -199,20 +134,20 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 
 void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory)
 {
-
-
 	for (int i = 0; i < Inventory.Num(); ++i)
 	{
-		auto Item = Inventory[i];
-
-		if (Item == nullptr)
+		if (Inventory[i] == nullptr)
 			continue;
 
-		if (Item->bIsMainItem)
+		if (Inventory[i]->bIsMainItem)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Item is main, game is won"));
+			Inventory[i]->Destroy();
+			Inventory[i] = nullptr;
+
+			PlayerCharacter->bHasMainItem = false;
 			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
-			OnGameFinished.ExecuteIfBound(ID);
+
+			OnDeliveredItem.ExecuteIfBound(ID);
 		}
 	}
 }
