@@ -11,8 +11,8 @@
 #include "Curves/CurveFloat.h"
 #include "Kismet/GameplayStatics.h"
 
-FSplineInfo::FSplineInfo(USplineComponent* Spline)
-	: SplineDir{1}, PlayerState{static_cast<uint8>(EGrindingMovementState::STATE_GodKnowsWhere)}, PointCount{0}
+FSplineInfo::FSplineInfo(USplineComponent* Spline, bool bLooped)
+	: SplineDir{1}, PlayerState{static_cast<uint8>(EGrindingMovementState::STATE_GodKnowsWhere)}, bClosedLoop{bLooped}, PointCount{0}
 {
 	if (IsValid(Spline))
 	{
@@ -765,7 +765,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 		if (static_cast<EGrindingMovementState>(CurrentSpline.PlayerState) == EGrindingMovementState::STATE_OnRail)
 		{
 			CurrentSpline.SplinePos = GetNewCurvePoint();
-			if (bAtEnd || CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f)
+			if (!CurrentSpline.bClosedLoop && (bAtEnd || CurrentSpline.SplinePos >= CurrentSpline.PointCount || CurrentSpline.SplinePos < 0.f))
 			{
 				SetMovementMode(EMovementMode::MOVE_Falling);
 				StartNewPhysics(remainingTime, Iterations);
@@ -907,6 +907,9 @@ bool UPlayerCharacterMovementComponent::InEndInterval(int32 LastIndex, bool bFor
 
 bool UPlayerCharacterMovementComponent::IsAtCurveEnd(float DeltaTime) const
 {
+	if (CurrentSpline.bClosedLoop)
+		return false;
+
 	const bool bForward = CurrentSpline.SplineDir > 0;
 	const auto lastIndex = bForward ? CurrentSpline.PointCount - 1 : 0;
 

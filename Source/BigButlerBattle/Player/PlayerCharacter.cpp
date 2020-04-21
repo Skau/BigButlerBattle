@@ -1080,7 +1080,7 @@ void APlayerCharacter::StartGrinding(ARailing* rail)
 {
 	// Start grinding
 	CurrentGrindingRail = rail;
-	Movement->SetSpline(rail->SplineComp);
+	Movement->SetSpline(rail->SplineComp, rail->bLoopedRail);
 	Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
 }
 
