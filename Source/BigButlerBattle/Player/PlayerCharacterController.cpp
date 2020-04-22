@@ -79,7 +79,7 @@ void APlayerCharacterController::PauseGamePressed()
 void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 {
 	// Destroy all other items if we have picked up main item.
-	if (Object->bIsMainItem)
+	if (Object->GetIsMainItem())
 	{
 		auto& PlayerInventory = PlayerCharacter->GetInventory();
 		for(int i = 0; i < 4; ++i) // Only to 4, so we don't destroy the main object
@@ -98,7 +98,7 @@ void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 
 void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 {
-	if (Object->bIsMainItem)
+	if (Object->GetIsMainItem())
 	{
 		PlayerCharacter->bHasMainItem = false;
 		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), false);
@@ -141,7 +141,7 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 		if (Inventory[i] == nullptr)
 			continue;
 
-		if (Inventory[i]->bIsMainItem)
+		if (Inventory[i]->GetIsMainItem())
 		{
 			Inventory[i]->Destroy();
 			Inventory[i] = nullptr;

@@ -40,11 +40,9 @@ public:
 
 	APlayerCharacter* Instigator = nullptr;
 
-	// Used by game mode when main item is not set in editor, but random on runtime
-	void SetMainItem();
+	void SetAsMainItem();
 
-	UPROPERTY(EditAnywhere)
-	bool bIsMainItem = false;
+	bool GetIsMainItem() { return bIsMainItem; }
 
 	void Reset();
 
@@ -65,6 +63,9 @@ protected:
 private:
 	bool SetDataFromTable();
 	bool SetDataFromAssetData();
+
+	UPROPERTY(EditAnywhere)
+	bool bIsMainItem = false;
 
 	UPROPERTY()
 	UDataTable* DrinksDataTable = nullptr;

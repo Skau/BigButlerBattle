@@ -178,7 +178,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 			if (!Itr)
 				continue;
 
-			if (Itr->bIsMainItem)
+			if (Itr->GetIsMainItem())
 			{
 				GameWidget->OnMainItemSet();
 				return;
@@ -337,7 +337,7 @@ void ABigButlerBattleGameModeBase::SetMainItem()
 			}
 
 			UE_LOG(LogTemp, Warning, TEXT("%s is new main item"), *Object->GetName());
-			Object->SetMainItem();
+			Object->SetAsMainItem();
 
 			GameWidget->OnMainItemSet();
 		}

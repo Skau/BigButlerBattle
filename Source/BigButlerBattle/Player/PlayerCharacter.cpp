@@ -668,10 +668,13 @@ FQuat APlayerCharacter::GetDesiredGrindingRotation(const FVector &DestinationNor
 
 void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 {
+	if (bHasMainItem)
+		return;
+
 	// Find out if we should use main slot or not
 	FName SlotToUse = "";
 	int Index = -1; // Index of the inventory to use, 4 for main item 0-3 for regular items.
-	if (Object->bIsMainItem)
+	if (Object->GetIsMainItem())
 	{
 		SlotToUse = MainSlotName;
 		Index = 4;
@@ -698,7 +701,8 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Object->GetTaskData());
 		Spawned->Enable(true, false, false);
-		Spawned->bIsMainItem = Object->bIsMainItem;
+		if (Object->GetIsMainItem())
+			Spawned->SetAsMainItem();
 		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 
 		// Attach new object
@@ -804,8 +808,11 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 
 		// Deferred spawn new
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+
 		Spawned->SetTaskData(Object->GetTaskData());
-		Spawned->bIsMainItem = Object->bIsMainItem;
+
+		if (Object->GetIsMainItem())
+			Spawned->SetAsMainItem();
 
 		// Spawn transform
 		auto transform = Object->GetTransform();
@@ -950,7 +957,7 @@ void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent
 	{
 		if (Object == ClosestPickup)
 		{
-			if(!Object->bIsMainItem)
+			if(!Object->GetIsMainItem())
 				Object->SetSelected(false);
 
 			ClosestPickup = nullptr;
