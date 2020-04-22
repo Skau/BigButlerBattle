@@ -67,6 +67,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool bIsMainItem = false;
 
+	UPROPERTY(EditDefaultsOnly)
+	uint8 MainItemStencilValue = 100;
+
 	UPROPERTY()
 	UDataTable* DrinksDataTable = nullptr;
 	
