@@ -114,6 +114,7 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 			return;
 
 		const auto playerScale = PlayerCharacter->GetActorScale3D();
+		const auto playerRot = PlayerCharacter->GetActorRotation().Quaternion();
 
 		if (PlayerCharacter)
 		{
@@ -129,8 +130,8 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 			return;
 		}
 
-		const auto Spawnpos = ButlerGameMode->GetRandomSpawnPos(Position);
-		RespawnCharacter(FTransform{FQuat::Identity, Spawnpos, playerScale});
+		const auto Spawnpos = ButlerGameMode->GetRandomSpawnPos(Position - playerRot * FVector::ForwardVector * 50.f);
+		RespawnCharacter(FTransform{playerRot, Spawnpos, playerScale});
 	});	
 }
 
