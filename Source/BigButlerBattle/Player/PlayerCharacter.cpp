@@ -940,6 +940,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
+		TaskObject->SetSelected(false);
 	}
 }
 

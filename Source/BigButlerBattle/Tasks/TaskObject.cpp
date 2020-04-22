@@ -349,7 +349,7 @@ void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const
 {
 	if (MeshComponent != nullptr)
 	{
-		MeshComponent->SetCustomDepthStencilValue(NewVisiblity ? (bIsMainItem ? MainItemStencilValue : 1) : 0);
+		MeshComponent->SetCustomDepthStencilValue(NewVisiblity && bIsMainItem ? MainItemStencilValue : 0);
 
 		MeshComponent->SetVisibility(NewVisiblity);
 
