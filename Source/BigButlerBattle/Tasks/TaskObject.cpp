@@ -35,13 +35,14 @@ ATaskObject::ATaskObject()
 
 void ATaskObject::SetSelected(const bool Value)
 {
-	MeshComponent->SetCustomDepthStencilValue(static_cast<int32>(Value));
+	if (MeshComponent->CustomDepthStencilValue < MainItemStencilValue)
+		MeshComponent->SetCustomDepthStencilValue(static_cast<int32>(Value));
 }
 
 void ATaskObject::SetAsMainItem()
 {
 	bIsMainItem = true;
-	MeshComponent->SetCustomDepthStencilValue(1); // Permanent outline (can also be set in beginplay if main item is set in editor)
+	MeshComponent->SetCustomDepthStencilValue(MainItemStencilValue); // Permanent outline (can also be set in beginplay if main item is set in editor)
 }
 
 
@@ -348,7 +349,8 @@ void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const
 {
 	if (MeshComponent != nullptr)
 	{
-		MeshComponent->SetCustomDepthStencilValue(bIsMainItem);
+		MeshComponent->SetCustomDepthStencilValue(NewVisiblity && bIsMainItem ? MainItemStencilValue : 0);
+
 		MeshComponent->SetVisibility(NewVisiblity);
 
 		MeshComponent->SetSimulatePhysics(NewPhysics);

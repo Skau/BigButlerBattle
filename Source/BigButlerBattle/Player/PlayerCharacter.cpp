@@ -701,9 +701,9 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Object->GetTaskData());
 		Spawned->Enable(true, false, false);
+		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 		if (Object->GetIsMainItem())
 			Spawned->SetAsMainItem();
-		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 
 		// Attach new object
 		Inventory[Index] = Spawned;
@@ -940,6 +940,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
+		TaskObject->SetSelected(false);
 	}
 }
 
