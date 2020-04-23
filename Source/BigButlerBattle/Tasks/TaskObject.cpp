@@ -97,6 +97,9 @@ void ATaskObject::Tick(float DeltaTime)
 	{
 		TimeSinceDropped += DeltaTime;
 
+		if (Instigator && TimeSinceDropped > 0.5f)
+			Instigator = nullptr;
+
 		if (TimeSinceDropped > TimeUntilResetThreshold)
 		{
 			bRecordingTimeSinceDropped = false;

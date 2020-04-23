@@ -38,6 +38,8 @@ public:
 
 	void SetNewMainItem();
 
+	TArray<APlayerCharacterController*> GetControllers() const { return Controllers; }
+
 protected:
 	void BeginPlay() override;
 
@@ -81,8 +83,6 @@ protected:
 	float SecondsLeftToHold = TotalSecondsToHold;
 
 	void OnItemDelivered(const int ControllerID);
-
-	TMap<APlayerController*, int> Scores;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameWidget> GameWidgetClass;

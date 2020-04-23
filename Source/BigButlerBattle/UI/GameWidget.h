@@ -18,24 +18,5 @@ class BIGBUTLERBATTLE_API UGameWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 
-public:
-	bool Initialize() override;
 
-	void UpdateTimer(const FString& String);
-
-	void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
-
-	void OnMainItemSet();
-
-protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UTextBlock* Text_Timer;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UTextBlock* Text_Info;
-
-private:
-	void UpdateMessage(const FString& Message, const float Duration = 3.f);
-	
-	FTimerHandle HandleInfoMessage;
 };

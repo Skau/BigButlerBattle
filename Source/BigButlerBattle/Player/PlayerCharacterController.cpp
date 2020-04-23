@@ -148,8 +148,10 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 			Inventory[i] = nullptr;
 
 			PlayerCharacter->bHasMainItem = false;
-			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
 
+			++Score;
+
+			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
 			OnDeliveredItem.ExecuteIfBound(ID);
 		}
 	}

@@ -19,6 +19,7 @@
 #include "UI/GameWidget.h"
 #include "King/King.h"
 #include "NavigationSystem.h"
+#include "UI/PlayerWidget.h"
 
 ABigButlerBattleGameModeBase::ABigButlerBattleGameModeBase()
 {
@@ -113,9 +114,6 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 		// Main item event
 		Controllers[i]->OnMainItemStateChange.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemStateChanged);
-
-		// Add to scores
-		Scores.Add(Controllers[i]);
 	}
 
 	// Pause widget setup
@@ -153,9 +151,15 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 	}
 	else
 	{
+		// Don't think this will be used much
 		GameWidget = CreateWidget<UGameWidget>(Controllers[0], GameWidgetClass);
-		GameWidget->UpdateTimer(FString::FromInt(static_cast<int>(TotalSecondsToHold)));
 		GameWidget->AddToViewport();
+
+		auto time = FString::FromInt(static_cast<int>(TotalSecondsToHold));
+		for (auto& Controller : Controllers)
+		{
+			Controller->GetPlayerWidget()->UpdateTimer(time);
+		}
 	}
 
 	// Spawnpoints
@@ -180,7 +184,10 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 			if (Itr->GetIsMainItem())
 			{
-				GameWidget->OnMainItemSet();
+				for (auto& Controller : Controllers)
+				{
+					Controller->GetPlayerWidget()->OnMainItemSet();
+				}
 				return;
 			}
 		}
@@ -203,13 +210,19 @@ void ABigButlerBattleGameModeBase::Tick(float DeltaTime)
 			if (King)
 			{
 				King->UpdateCanReceiveMainItem();
-				GameWidget->UpdateTimer("Deliver Item!");
+				for (auto& Controller : Controllers)
+				{
+					Controller->GetPlayerWidget()->UpdateTimer("Deliver Item!");
+				}
 				bTimeDone = true;
 				return;
 			}
 		}
-
-		GameWidget->UpdateTimer(FString::FromInt(static_cast<int>(SecondsLeftToHold)));
+		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+		for (auto& Controller : Controllers)
+		{
+			Controller->GetPlayerWidget()->UpdateTimer(time);
+		}
 	}
 }
 
@@ -246,19 +259,27 @@ void ABigButlerBattleGameModeBase::OnPlayerContinued(const int ControllerID) con
 
 void ABigButlerBattleGameModeBase::OnItemDelivered(const int ControllerID)
 {
-	auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID);
-	if (Scores.Find(Controller))
+	auto PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
+
+	// Player won
+	if (PlayerController->GetScore() >= TotalPointsToWin)
 	{
-		if (++Scores[Controller] >= TotalPointsToWin)
-		{
-			OnGameFinished(ControllerID);
-			return;
-		}
-		SetNewMainItem();
-		bTimeDone = false;
-		bItemCurrentlyBeingHeld = false;
-		SecondsLeftToHold = TotalSecondsToHold;
-		GameWidget->UpdateTimer(FString::FromInt(static_cast<int>(SecondsLeftToHold)));
+		OnGameFinished(ControllerID);
+		return;
+	}
+
+	SetNewMainItem();
+	bTimeDone = false;
+	bItemCurrentlyBeingHeld = false;
+	SecondsLeftToHold = TotalSecondsToHold;
+
+
+	auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+	for (auto& Controller : Controllers)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s score: %d"), *Controller->GetName(), Controller->GetScore());
+		Controller->GetPlayerWidget()->UpdateTimer(time);
+		Controller->GetPlayerWidget()->UpdateScore(ControllerID, PlayerController->GetScore());
 	}
 }
 
@@ -309,13 +330,21 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, bool
 	if (!bPickedUp)
 	{
 		SecondsLeftToHold = TotalSecondsToHold;
-		GameWidget->UpdateTimer(FString::FromInt(static_cast<int>(SecondsLeftToHold)));
+		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+		for (auto& Controller : Controllers)
+		{
+			Controller->GetPlayerWidget()->UpdateTimer(time);
+		}
 	}
 
 
 	if (GameWidget)
 	{
-		GameWidget->OnMainItemStateChanged(ControllerID, bPickedUp);
+		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+		for (auto& Controller : Controllers)
+		{
+			Controller->GetPlayerWidget()->OnMainItemStateChanged(ControllerID, bPickedUp);
+		}
 	}
 }
 
@@ -339,7 +368,10 @@ void ABigButlerBattleGameModeBase::SetNewMainItem()
 			UE_LOG(LogTemp, Warning, TEXT("%s is new main item"), *Object->GetName());
 			Object->SetAsMainItem();
 
-			GameWidget->OnMainItemSet();
+			for (auto& Controller : Controllers)
+			{
+				Controller->GetPlayerWidget()->OnMainItemSet();
+			}
 		}
 	});
 }

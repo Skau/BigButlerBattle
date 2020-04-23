@@ -47,6 +47,10 @@ public:
 
 	void UpdateCameraSettings();
 
+	int GetScore() const { return Score; }
+
+	UPlayerWidget* GetPlayerWidget() const { return PlayerWidget; }
+
 protected:
 	void BeginPlay() override;
 
@@ -70,7 +74,7 @@ protected:
 	float RespawnTime = 3.f;
 
 private:
-	TArray<TPair<UTask*, ETaskState>> PlayerTasks;
+	int Score = 0;
 
 	void PauseGamePressed();
 

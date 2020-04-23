@@ -40,6 +40,8 @@ public:
 
 	void SetAsMainItem();
 
+	APlayerCharacter* Instigator = nullptr;
+
 	bool GetIsMainItem() { return bIsMainItem; }
 
 	void Reset();
