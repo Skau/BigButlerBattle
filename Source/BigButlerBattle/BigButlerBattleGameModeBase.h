@@ -36,7 +36,7 @@ public:
 
 	void StartToLeaveMap() override;
 
-	void SetMainItem();
+	void SetNewMainItem();
 
 protected:
 	void BeginPlay() override;

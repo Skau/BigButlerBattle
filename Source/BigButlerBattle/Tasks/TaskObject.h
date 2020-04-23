@@ -38,8 +38,6 @@ public:
 
 	bool bCanHit = false;
 
-	APlayerCharacter* Instigator = nullptr;
-
 	void SetAsMainItem();
 
 	bool GetIsMainItem() { return bIsMainItem; }

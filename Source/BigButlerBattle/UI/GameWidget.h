@@ -23,7 +23,7 @@ public:
 
 	void UpdateTimer(const FString& String);
 
-	void OnPlayerInteractMainItem(int ControllerID, bool bPickedUp);
+	void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
 
 	void OnMainItemSet();
 

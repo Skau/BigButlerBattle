@@ -4,6 +4,7 @@
 #include "GameWidget.h"
 #include "Components/TextBlock.h"
 #include "TimerManager.h"
+#include "Utils/btd.h"
 
 bool UGameWidget::Initialize()
 {
@@ -25,7 +26,7 @@ void UGameWidget::UpdateTimer(const FString& String)
 	}
 }
 
-void UGameWidget::OnPlayerInteractMainItem(int ControllerID, bool bPickedUp)
+void UGameWidget::OnMainItemStateChanged(int ControllerID, bool bPickedUp)
 {
 	UpdateMessage("Player " + FString::FromInt(ControllerID + 1) + (bPickedUp ? " picked up" : " dropped") + " the main item!");
 }
@@ -43,11 +44,7 @@ void UGameWidget::UpdateMessage(const FString& Message, const float Duration)
 	Text_Info->SetText(FText::FromString(Message));
 	Text_Info->SetVisibility(ESlateVisibility::Visible);
 
-	FTimerDelegate TimerCallback;
-	TimerCallback.BindLambda([&]
-	{
+	btd::Delay(this, Duration, [=]() {
 		Text_Info->SetVisibility(ESlateVisibility::Hidden);
 	});
-
-	GetWorld()->GetTimerManager().SetTimer(HandleInfoMessage, TimerCallback, Duration, false);
 }

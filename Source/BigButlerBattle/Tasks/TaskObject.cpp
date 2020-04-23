@@ -52,7 +52,7 @@ void ATaskObject::Reset()
 	{
 		// When out of bounds or not reachable (not touched for TimeUntilResetThreshold seconds)
 		auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-		GM->SetMainItem();
+		GM->SetNewMainItem();
 	}
 	Destroy();
 }
@@ -93,12 +93,9 @@ void ATaskObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bIsMainItem && bRecordingTimeSinceDropped)
+	if (bRecordingTimeSinceDropped)
 	{
 		TimeSinceDropped += DeltaTime;
-
-		if (Instigator && TimeSinceDropped > 0.5f)
-			Instigator = nullptr;
 
 		if (TimeSinceDropped > TimeUntilResetThreshold)
 		{
@@ -370,7 +367,8 @@ void ATaskObject::Launch(const FVector& LaunchVelocity)
 {
 	Enable(true, true, true);
 	MeshComponent->AddImpulse(LaunchVelocity);
-	bRecordingTimeSinceDropped = true;
+	if(bIsMainItem)
+		bRecordingTimeSinceDropped = true;
 }
 
 void ATaskObject::UpdateDataTables()

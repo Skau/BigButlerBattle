@@ -185,7 +185,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 			}
 		}
 
-		SetMainItem();
+		SetNewMainItem();
 	});
 }
 
@@ -254,8 +254,7 @@ void ABigButlerBattleGameModeBase::OnItemDelivered(const int ControllerID)
 			OnGameFinished(ControllerID);
 			return;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("%d"), Scores[Controller]);
-		SetMainItem();
+		SetNewMainItem();
 		bTimeDone = false;
 		bItemCurrentlyBeingHeld = false;
 		SecondsLeftToHold = TotalSecondsToHold;
@@ -306,6 +305,7 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, bool
 {
 	bItemCurrentlyBeingHeld = bPickedUp;
 
+	// Reset time if item is dropped
 	if (!bPickedUp)
 	{
 		SecondsLeftToHold = TotalSecondsToHold;
@@ -315,11 +315,11 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, bool
 
 	if (GameWidget)
 	{
-		GameWidget->OnPlayerInteractMainItem(ControllerID, bPickedUp);
+		GameWidget->OnMainItemStateChanged(ControllerID, bPickedUp);
 	}
 }
 
-void ABigButlerBattleGameModeBase::SetMainItem()
+void ABigButlerBattleGameModeBase::SetNewMainItem()
 {
 	// Give it a second to let all task objects be in correct state
 	btd::Delay(this, 0.5f, [=]()
