@@ -88,4 +88,8 @@ private:
 	void CheckIfTasksAreDone(TArray<ATaskObject*>& Inventory);
 
 	void OnCharacterFell(ERoomSpawn Room, FVector Position);
+
+	void ShowKeybinds();
+
+	void HideKeybinds();
 };

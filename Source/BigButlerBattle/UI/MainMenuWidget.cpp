@@ -4,6 +4,7 @@
 #include "MainMenuWidget.h"
 #include "MainMenuPlayWidget.h"
 #include "MainMenuPlayerWidget.h"
+#include "HelpWidget.h"
 #include "MainMenuOptionsWidget.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,14 +24,32 @@ bool UMainMenuWidget::Initialize()
 {
 	const bool bInit = Super::Initialize();
 
-	Button_Play->OnClicked.AddDynamic(this, &UMainMenuWidget::OnPlayPressed);
-	Buttons.Add(Button_Play);
+	if (Button_Play)
+	{
+		Button_Play->OnClicked.AddDynamic(this, &UMainMenuWidget::OnPlayPressed);
+		Buttons.Add(Button_Play);
+	}
 
-	Button_Options->OnClicked.AddDynamic(this, &UMainMenuWidget::OnOptionsPressed);
-	Buttons.Add(Button_Options);
+	if (Button_Help)
+	{
+		Button_Help->OnClicked.AddDynamic(this, &UMainMenuWidget::OnHelpPressed);
+		Buttons.Add(Button_Help);
+	}
 
-	Button_Quit->OnClicked.AddDynamic(this, &UMainMenuWidget::OnQuitPressed);
-	Buttons.Add(Button_Quit);
+	if (Button_Options)
+	{
+		Button_Options->OnClicked.AddDynamic(this, &UMainMenuWidget::OnOptionsPressed);
+		Buttons.Add(Button_Options);
+	}
+
+	if (Button_Quit)
+	{
+		Button_Quit->OnClicked.AddDynamic(this, &UMainMenuWidget::OnQuitPressed);
+		Buttons.Add(Button_Quit);
+	}
+
+
+
 
 	DefaultWidgetToFocus = Button_Play;
 
@@ -67,6 +86,19 @@ void UMainMenuWidget::OnPlayPressed()
 	DefaultWidgetToFocus = Button_Play;
 }
 
+void UMainMenuWidget::OnHelpPressed()
+{
+	SetVisibility(ESlateVisibility::Hidden);
+	if (HelpWidget->MainMenuWidget != this)
+		HelpWidget->MainMenuWidget = this;
+
+	HelpWidget->SetVisibility(ESlateVisibility::Visible);
+
+	HelpWidget->FocusWidget(OwningPlayerController);
+
+	DefaultWidgetToFocus = Button_Help;
+}
+
 void UMainMenuWidget::OnOptionsPressed()
 {
 	SetVisibility(ESlateVisibility::Hidden);
@@ -77,10 +109,7 @@ void UMainMenuWidget::OnOptionsPressed()
 
 	OptionsWidget->FocusWidget(OwningPlayerController);
 
-	// Open options
-	
 	DefaultWidgetToFocus = Button_Options;
-
 }
 
 void UMainMenuWidget::OnQuitPressed()

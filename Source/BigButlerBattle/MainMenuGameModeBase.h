@@ -8,6 +8,7 @@
 
 class UMainMenuWidget;
 class UMainMenuPlayWidget;
+class UHelpWidget;
 class UMainMenuOptionsWidget;
 
 /**
@@ -29,6 +30,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UMainMenuPlayWidget> MainMenuPlayWidgetClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UHelpWidget> HelpWidgetClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UMainMenuOptionsWidget> MainMenuOptionsWidgetClass = nullptr;
@@ -56,6 +60,7 @@ private:
 
 	UMainMenuWidget* MainMenuWidgetInstance = nullptr;
 	UMainMenuPlayWidget* MainMenuPlayWidgetInstance = nullptr;
+	UHelpWidget* HelpWidgetInstance = nullptr;
 	UMainMenuOptionsWidget* MainMenuOptionsWidgetInstance = nullptr;
 
 	FTimerHandle HandleStartGame;

@@ -8,6 +8,7 @@
 
 class UHorizontalBox;
 class UTextBlock;
+class UImage;
 class APlayerCharacterController;
 class UPlayerScoreWidget;
 
@@ -34,6 +35,10 @@ public:
     // Used everytime someone's score changes (called by gamemode)
     void UpdateScore(int ControllerID, int NewScore);
 
+    void ShowKeybinds();
+
+    void HideKeybinds();
+
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UTextBlock* Text_Info;
@@ -42,7 +47,12 @@ protected:
     UTextBlock* Text_Timer;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* Image_Keybinds;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UHorizontalBox* ScoreBox;
+
+
 
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<UPlayerScoreWidget> PlayerScoreWidgetClass;

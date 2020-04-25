@@ -10,6 +10,7 @@
 class UWidgetSwitcher;
 class UButton;
 class UMainMenuPlayWidget;
+class UHelpWidget;
 class UMainMenuOptionsWidget;
 
 /**
@@ -27,12 +28,17 @@ public:
 	UButton* Button_Play;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UButton* Button_Help;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_Options;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_Quit;
 
 	UMainMenuPlayWidget* PlayWidget;
+
+	UHelpWidget* HelpWidget;
 
 	UMainMenuOptionsWidget* OptionsWidget;
 
@@ -44,6 +50,9 @@ protected:
 private:
 	UFUNCTION()
 	void OnPlayPressed();
+
+	UFUNCTION()
+	void OnHelpPressed();
 
 	UFUNCTION()
 	void OnOptionsPressed();

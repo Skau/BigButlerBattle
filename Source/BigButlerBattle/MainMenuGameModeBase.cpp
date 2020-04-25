@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayerWidget.h"
+#include "UI/HelpWidget.h"
 #include "TimerManager.h"
 #include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
@@ -81,6 +82,14 @@ void AMainMenuGameModeBase::BeginPlay()
 
 	UE_LOG(LogTemp, Warning, TEXT("Updating play widget on menu widget instance"));
 	MainMenuWidgetInstance->PlayWidget = MainMenuPlayWidgetInstance;
+
+	UE_LOG(LogTemp, Warning, TEXT("Creating help widget instance"));
+	HelpWidgetInstance = CreateWidget<UHelpWidget>(Controllers[0], HelpWidgetClass);
+	HelpWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+	HelpWidgetInstance->AddToViewport();
+
+	UE_LOG(LogTemp, Warning, TEXT("Updating help widget on menu widget instance"));
+	MainMenuWidgetInstance->HelpWidget = HelpWidgetInstance;
 
 	UE_LOG(LogTemp, Warning, TEXT("Creating main menu options widget instance"));
 	MainMenuOptionsWidgetInstance = CreateWidget<UMainMenuOptionsWidget>(Controllers[0], MainMenuOptionsWidgetClass);

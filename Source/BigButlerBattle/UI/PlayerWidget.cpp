@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
@@ -127,4 +128,20 @@ void UPlayerWidget::UpdateMessage(const FString& Message, const float Duration)
 	btd::Delay(this, Duration, [=]() {
 		Text_Info->SetVisibility(ESlateVisibility::Hidden);
 	});
+}
+
+void UPlayerWidget::ShowKeybinds()
+{
+	if (Image_Keybinds)
+	{
+		Image_Keybinds->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UPlayerWidget::HideKeybinds()
+{
+	if (Image_Keybinds)
+	{
+		Image_Keybinds->SetVisibility(ESlateVisibility::Hidden);
+	}
 }

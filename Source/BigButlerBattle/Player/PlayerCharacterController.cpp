@@ -55,6 +55,9 @@ void APlayerCharacterController::SetupInputComponent()
 	ab.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &APlayerCharacterController::PauseGamePressed);
 	ab.bExecuteWhenPaused = true;
 	InputComponent->AddActionBinding(ab);
+
+	InputComponent->BindAction("ShowKeybinds", EInputEvent::IE_Pressed, this, &APlayerCharacterController::ShowKeybinds);
+	InputComponent->BindAction("ShowKeybinds", EInputEvent::IE_Released, this, &APlayerCharacterController::HideKeybinds);
 }
 
 void APlayerCharacterController::UpdateCameraSettings()
@@ -195,4 +198,20 @@ void APlayerCharacterController::RespawnCharacter(const FTransform& Spawntrans)
 	UGameplayStatics::FinishSpawningActor(PlayerCharacter, Spawntrans);
 
 	Possess(PlayerCharacter);
+}
+
+void APlayerCharacterController::ShowKeybinds()
+{
+	if (PlayerWidget)
+	{
+		PlayerWidget->ShowKeybinds();
+	}
+}
+
+void APlayerCharacterController::HideKeybinds()
+{
+	if (PlayerWidget)
+	{
+		PlayerWidget->HideKeybinds();
+	}
 }
