@@ -16,6 +16,7 @@
 #include "Misc/FileHelper.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Utils/btd.h"
+#include "NiagaraComponent.h"
 
 ATaskObject::ATaskObject()
 {
@@ -31,6 +32,9 @@ ATaskObject::ATaskObject()
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetSimulatePhysics(true);
 	MeshComponent->SetRenderCustomDepth(true);
+
+	Particles = CreateDefaultSubobject<UNiagaraComponent>("Particles");
+	Particles->SetupAttachment(MeshComponent);
 }
 
 void ATaskObject::SetSelected(const bool Value)

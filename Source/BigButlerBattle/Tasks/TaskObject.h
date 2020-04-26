@@ -12,6 +12,7 @@ class UBoxComponent;
 class UDataTable;
 class UTask;
 class APlayerCharacter;
+class UNiagaraComponent;
 
 DECLARE_DELEGATE_OneParam(FTaskObjectDeliveredSignature, ATaskObject*);
 
@@ -55,6 +56,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent* Particles = nullptr;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
