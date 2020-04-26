@@ -159,7 +159,6 @@ void APlayerCharacter::BeginPlay()
 	DefaultCameraRotation.Y = SpringArm->GetRelativeRotation().Pitch;
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
-	check(Movement != nullptr); // TODO: Remove check in build
 
 	Movement->OnCustomMovementStart.AddLambda([&](uint8 MovementMode){
 		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
@@ -172,7 +171,6 @@ void APlayerCharacter::BeginPlay()
 	});
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	check(GameMode != nullptr); // TODO: Remove check in build
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
 

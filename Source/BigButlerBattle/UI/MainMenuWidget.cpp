@@ -9,11 +9,19 @@
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "CameraDirector.h"
+#include "Utils/btd.h"
 
 UMainMenuWidget::UMainMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-{}
-
+{
+	ButlerTransforms = {
+		{ FRotator{0.f, 60.f,  0.f}, FVector{-368.f,-5108.f, 304.f} },
+		{ FRotator{0.f, 85.f,  0.f}, FVector{-148.f,-5108.f, 304.f} },
+		{ FRotator{0.f, 95.f,  0.f}, FVector{ 91.f, -5108.f, 304.f} },
+		{ FRotator{0.f, 120.f, 0.f}, FVector{ 306.f,-5108.f, 304.f} }
+	};
+}
 
 void UMainMenuWidget::NativeConstruct()
 {
@@ -48,8 +56,7 @@ bool UMainMenuWidget::Initialize()
 		Buttons.Add(Button_Quit);
 	}
 
-
-
+	CameraDirector = Cast<ACameraDirector>(UGameplayStatics::GetActorOfClass(GetWorld(), ACameraDirector::StaticClass()));
 
 	DefaultWidgetToFocus = Button_Play;
 
@@ -69,21 +76,45 @@ void UMainMenuWidget::OnPlayPressed()
 	if(PlayWidget->MainMenuWidget != this)
 		PlayWidget->MainMenuWidget = this;
 
-	PlayWidget->SetVisibility(ESlateVisibility::Visible);
+	if (CameraDirector)
+	{
+		CameraDirector->BlendToCharacterSelectionCamera();
+	}
 
-	if(auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-		PlayWidget->PlayerWidget_0->FocusWidget(Player, PlayWidget->PlayerWidget_0->Button_Join);
+	btd::Delay(this, CameraDirector->CharacterSelectCameraBlendTime, [=]()
+	{
+		PlayWidget->SetVisibility(ESlateVisibility::Visible);
 
-	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 1))
-		PlayWidget->PlayerWidget_1->FocusWidget(Player, PlayWidget->PlayerWidget_1->Button_Join);
+		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		{
+			PlayWidget->PlayerWidget_0->FocusWidget(Player, PlayWidget->PlayerWidget_0->Button_Join);
+			PlayWidget->PlayerWidget_0->SpawnCharacter(ButlerTransforms[0]);
+		}
 
-	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 2))
-		PlayWidget->PlayerWidget_2->FocusWidget(Player, PlayWidget->PlayerWidget_2->Button_Join);
 
-	if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 3))
-		PlayWidget->PlayerWidget_3->FocusWidget(Player, PlayWidget->PlayerWidget_3->Button_Join);
+		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 1))
+		{
+			PlayWidget->PlayerWidget_1->FocusWidget(Player, PlayWidget->PlayerWidget_1->Button_Join);
+			PlayWidget->PlayerWidget_1->SpawnCharacter(ButlerTransforms[1]);
+		}
 
-	DefaultWidgetToFocus = Button_Play;
+
+		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 2))
+		{
+			PlayWidget->PlayerWidget_2->FocusWidget(Player, PlayWidget->PlayerWidget_2->Button_Join);
+			PlayWidget->PlayerWidget_2->SpawnCharacter(ButlerTransforms[2]);
+		}
+
+
+		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 3))
+		{
+			PlayWidget->PlayerWidget_3->FocusWidget(Player, PlayWidget->PlayerWidget_3->Button_Join);
+			PlayWidget->PlayerWidget_3->SpawnCharacter(ButlerTransforms[3]);
+		}
+
+
+		DefaultWidgetToFocus = Button_Play;
+	});
 }
 
 void UMainMenuWidget::OnHelpPressed()

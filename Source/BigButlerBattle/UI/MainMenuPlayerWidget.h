@@ -16,6 +16,7 @@ class UCheckBox;
 class UMainMenuPlayWidget;
 class UCameraSettingsWidget;
 class UButlerGameInstance;
+class APlayerCharacter;
 
 /**
  * 
@@ -53,8 +54,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCameraSettingsWidget* CameraSettings;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacter> CharacterClass;
+
 	UMainMenuPlayWidget* MainPlayWidget;
 
+	void SpawnCharacter(FTransform Transform);
+
+	APlayerCharacter* CharacterInstance = nullptr;
 protected:
 	bool Initialize() override;
 
@@ -90,4 +97,11 @@ private:
 	EWidgetSwitcherIndex CurrentIndex = EWidgetSwitcherIndex::Join;
 
 	int ID = -1;
+
+	FVector ButlerSpawnPosition;
+
+	void ShowCharacter();
+
+	void HideCharacter();
+
 };

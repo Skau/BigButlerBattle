@@ -22,6 +22,8 @@ void UBaseUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 	for (auto& Button : Buttons)
 	{
+		if (!Button) continue;
+
 		if (Button->HasAnyUserFocus())
 		{
 			Button->SetStyle(ButtonStyleHovered);
@@ -40,7 +42,7 @@ APlayerController* UBaseUserWidget::GetOwningPlayerController() const
 
 void UBaseUserWidget::FocusWidget(APlayerController* Controller, UWidget* WidgetToFocus)
 {
-	if (Controller)
+	if (IsValid(Controller))
 	{
 		UWidget* ActualWidgetToFocus = (WidgetToFocus == nullptr && DefaultWidgetToFocus) ? DefaultWidgetToFocus : WidgetToFocus;
 		WidgetFocusedLast = ActualWidgetToFocus;

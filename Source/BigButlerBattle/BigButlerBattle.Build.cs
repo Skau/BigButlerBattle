@@ -8,7 +8,7 @@ public class BigButlerBattle : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "AnimGraphRuntime", "Niagara", "NavigationSystem"});
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "AnimGraphRuntime", "Niagara", "NavigationSystem", "LevelSequence", "MovieScene"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

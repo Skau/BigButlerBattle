@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
 #include "ButlerGameInstance.h"
+#include "Player/PlayerCharacter.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -48,9 +49,11 @@ void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex N
 	{
 	case EWidgetSwitcherIndex::Join:
 		FocusWidget(OwningPlayerController, Button_Join);
+		HideCharacter();
 		break;
 	case EWidgetSwitcherIndex::Main:
 		FocusWidget(OwningPlayerController, Button_Ready);
+		ShowCharacter();
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
 		if(!CameraSettings->Button_Back->OnClicked.IsBound())
@@ -117,4 +120,26 @@ void UMainMenuPlayerWidget::UpdateReadyStatus(const bool bIsReady) const
 void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 {
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::CameraOptions);
+}
+
+void UMainMenuPlayerWidget::SpawnCharacter(FTransform Transform)
+{
+	CharacterInstance = GetWorld()->SpawnActor<APlayerCharacter>(CharacterClass, Transform);
+	HideCharacter();
+}
+
+void UMainMenuPlayerWidget::ShowCharacter()
+{
+	if (CharacterInstance)
+	{
+		CharacterInstance->SetActorHiddenInGame(false);
+	}
+}
+
+void UMainMenuPlayerWidget::HideCharacter()
+{
+	if (CharacterInstance)
+	{
+		CharacterInstance->SetActorHiddenInGame(true);
+	}
 }

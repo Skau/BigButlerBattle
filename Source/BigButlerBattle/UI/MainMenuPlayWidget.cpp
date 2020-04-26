@@ -6,6 +6,7 @@
 #include "MainMenuPlayerWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "CameraDirector.h"
 
 UMainMenuPlayWidget::UMainMenuPlayWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -40,4 +41,8 @@ void UMainMenuPlayWidget::BackToMainMenu()
 	SetVisibility(ESlateVisibility::Hidden);
 	MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
 	MainMenuWidget->FocusWidget(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (MainMenuWidget->CameraDirector)
+	{
+		MainMenuWidget->CameraDirector->PlaySequence();
+	}
 }

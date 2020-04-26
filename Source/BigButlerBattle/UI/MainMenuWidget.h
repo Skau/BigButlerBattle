@@ -12,6 +12,8 @@ class UButton;
 class UMainMenuPlayWidget;
 class UHelpWidget;
 class UMainMenuOptionsWidget;
+class AMainMenuGameModeBase;
+class ACameraDirector;
 
 /**
  * 
@@ -41,6 +43,10 @@ public:
 	UHelpWidget* HelpWidget;
 
 	UMainMenuOptionsWidget* OptionsWidget;
+
+	ACameraDirector* CameraDirector;
+
+	TArray<FTransform> ButlerTransforms;
 
 protected:
 	void NativeConstruct() override;
