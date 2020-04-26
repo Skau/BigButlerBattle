@@ -124,8 +124,11 @@ void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 
 void UMainMenuPlayerWidget::SpawnCharacter(FTransform Transform)
 {
-	CharacterInstance = GetWorld()->SpawnActor<APlayerCharacter>(CharacterClass, Transform);
-	HideCharacter();
+	if (!CharacterInstance)
+	{
+		CharacterInstance = GetWorld()->SpawnActor<APlayerCharacter>(CharacterClass, Transform);
+		HideCharacter();
+	}
 }
 
 void UMainMenuPlayerWidget::ShowCharacter()
