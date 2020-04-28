@@ -17,6 +17,7 @@ class UMainMenuPlayWidget;
 class UCameraSettingsWidget;
 class UButlerGameInstance;
 class APlayerCharacter;
+class UNiagaraSystem;
 
 /**
  * 
@@ -69,6 +70,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void OnBackButtonPressed() override;
+
+	UPROPERTY(EditDefaultsOnly)
+	UNiagaraSystem* SpawnParticleEffect;
 
 private:
 	enum class EWidgetSwitcherIndex

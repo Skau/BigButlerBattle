@@ -11,6 +11,8 @@
 #include "MainMenuGameModeBase.h"
 #include "ButlerGameInstance.h"
 #include "Player/PlayerCharacter.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Utils/btd.h"
 
 UMainMenuPlayerWidget::UMainMenuPlayerWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -49,11 +51,25 @@ void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex N
 	{
 	case EWidgetSwitcherIndex::Join:
 		FocusWidget(OwningPlayerController, Button_Join);
-		HideCharacter();
+		if (SpawnParticleEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnParticleEffect, ButlerSpawnPosition);
+			btd::Delay(this, 0.5f, [&]()
+			{
+				HideCharacter();
+			});
+		}
 		break;
 	case EWidgetSwitcherIndex::Main:
 		FocusWidget(OwningPlayerController, Button_Ready);
-		ShowCharacter();
+		if (SpawnParticleEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnParticleEffect, ButlerSpawnPosition);
+			btd::Delay(this, 0.5f, [&]()
+			{
+				ShowCharacter();
+			});
+		}
 		break;
 	case EWidgetSwitcherIndex::CameraOptions:
 		if(!CameraSettings->Button_Back->OnClicked.IsBound())
@@ -124,8 +140,9 @@ void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 
 void UMainMenuPlayerWidget::SpawnCharacter(FTransform Transform)
 {
-	if (!CharacterInstance)
+	if (!IsValid(CharacterInstance))
 	{
+		ButlerSpawnPosition = Transform.GetLocation();
 		CharacterInstance = GetWorld()->SpawnActor<APlayerCharacter>(CharacterClass, Transform);
 		HideCharacter();
 	}
@@ -133,7 +150,7 @@ void UMainMenuPlayerWidget::SpawnCharacter(FTransform Transform)
 
 void UMainMenuPlayerWidget::ShowCharacter()
 {
-	if (CharacterInstance)
+	if (IsValid(CharacterInstance))
 	{
 		CharacterInstance->SetActorHiddenInGame(false);
 	}
@@ -141,7 +158,7 @@ void UMainMenuPlayerWidget::ShowCharacter()
 
 void UMainMenuPlayerWidget::HideCharacter()
 {
-	if (CharacterInstance)
+	if (IsValid(CharacterInstance))
 	{
 		CharacterInstance->SetActorHiddenInGame(true);
 	}
