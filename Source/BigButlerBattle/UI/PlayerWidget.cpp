@@ -45,9 +45,24 @@ void UPlayerWidget::UpdateTimer(const FString& String)
 	}
 }
 
-void UPlayerWidget::OnMainItemStateChanged(int ControllerID, bool bPickedUp)
+void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewState)
 {
-	UpdateMessage("Player " + FString::FromInt(ControllerID + 1) + (bPickedUp ? " picked up" : " dropped") + " the main item!");
+	FString player = (ControllerID == ID) ? "You " : "Player " + FString::FromInt(ControllerID + 1);
+	FString state = "";
+
+	switch (NewState)
+	{
+	case EMainItemState::PickedUp:
+		state = " picked up ";
+		break;
+	case EMainItemState::Dropped:
+		state = " dropped ";
+		break;
+	case EMainItemState::Delivered:
+		state = " delivered ";
+	}
+
+	UpdateMessage(player + state + " the main item!");
 }
 
 void UPlayerWidget::OnMainItemSet()
@@ -90,11 +105,11 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 		auto PlayerScoreWidget = CreateWidget<UPlayerScoreWidget>(this, PlayerScoreWidgetClass);
 		PlayerScoreWidget->Initialize();
 
-		auto ID = UGameplayStatics::GetPlayerControllerID(Controllers[i]);
+		auto ControllerID = UGameplayStatics::GetPlayerControllerID(Controllers[i]);
 
-		PlayerScoreWidget->SetPlayerName("Player " + FString::FromInt(ID + 1) + ": ");
+		PlayerScoreWidget->SetPlayerName("Player " + FString::FromInt(ControllerID + 1) + ": ");
 
-		PlayerScores.Add(ID, PlayerScoreWidget);
+		PlayerScores.Add(ControllerID, PlayerScoreWidget);
 
 		OverlaySlot = Overlay->AddChildToOverlay(PlayerScoreWidget);
 		OverlaySlot->HorizontalAlignment = EHorizontalAlignment::HAlign_Fill;

@@ -322,12 +322,23 @@ void ABigButlerBattleGameModeBase::SetupSpawnpoints()
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, bool bPickedUp)
+void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMainItemState NewState)
 {
-	bItemCurrentlyBeingHeld = bPickedUp;
+	bItemCurrentlyBeingHeld = NewState == EMainItemState::PickedUp;
+
+	// Play sounds on state change here
+	switch (NewState)
+	{
+	case EMainItemState::PickedUp:
+		break;
+	case EMainItemState::Dropped:
+		break;
+	case EMainItemState::Delivered:
+		break;
+	}
 
 	// Reset time if item is dropped
-	if (!bPickedUp)
+	if (!bItemCurrentlyBeingHeld)
 	{
 		SecondsLeftToHold = TotalSecondsToHold;
 		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
@@ -343,7 +354,7 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, bool
 		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
 		for (auto& Controller : Controllers)
 		{
-			Controller->GetPlayerWidget()->OnMainItemStateChanged(ControllerID, bPickedUp);
+			Controller->GetPlayerWidget()->OnMainItemStateChanged(ControllerID, NewState);
 		}
 	}
 }

@@ -7,6 +7,15 @@
 #include "Utils/Spawnpoint.h"
 #include "PlayerCharacterController.generated.h"
 
+
+UENUM()
+enum class EMainItemState : uint8
+{
+	PickedUp,
+	Dropped,
+	Delivered
+};
+
 // Broadcasted when the player presses pause
 DECLARE_DELEGATE_OneParam(FPauseGameSignature, int);
 
@@ -14,7 +23,8 @@ DECLARE_DELEGATE_OneParam(FPauseGameSignature, int);
 DECLARE_DELEGATE_OneParam(FDeliveredItem, int);
 
 // Broadcasted when main item is dropped or picked up, passing along controller ID.
-DECLARE_DELEGATE_TwoParams(FMainItemStateChangedSignature, int, bool);
+DECLARE_DELEGATE_TwoParams(FMainItemStateChangedSignature, int, EMainItemState);
+
 
 class UBaseUserWidget;
 class UPlayerWidget;

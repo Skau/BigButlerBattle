@@ -11,7 +11,7 @@ class UTextBlock;
 class UImage;
 class APlayerCharacterController;
 class UPlayerScoreWidget;
-
+enum class EMainItemState : uint8;
 /**
  * 
  */
@@ -25,7 +25,7 @@ public:
 
     void UpdateTimer(const FString& String);
 
-    void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
+    void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
 
     void OnMainItemSet();
 
@@ -39,6 +39,8 @@ public:
 
     void HideKeybinds();
 
+    int ID = -1;
+
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UTextBlock* Text_Info;
@@ -51,8 +53,6 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UHorizontalBox* ScoreBox;
-
-
 
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<UPlayerScoreWidget> PlayerScoreWidgetClass;

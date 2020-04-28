@@ -16,6 +16,7 @@ class ASpawnpoint;
 class UGameWidget;
 class AKing;
 class ATaskObject;
+enum class EMainItemState : uint8;
 
 /**
  *
@@ -93,10 +94,7 @@ protected:
 	bool bTimeDone = false;
 
 private:
-	UFUNCTION()
-	void OnMainItemStateChanged(int ControllerID, bool bPickedUp);
-
-	ATaskObject* GetRandomTaskObject(const TArray<AActor*>& Actors);
+	void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
 
 	AKing* King = nullptr;
 };

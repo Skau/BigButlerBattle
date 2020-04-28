@@ -35,6 +35,8 @@ void APlayerCharacterController::OnPossess(APawn* InPawn)
 		if (!PlayerWidget && PlayerWidgetType)
 		{
 			PlayerWidget = CreateWidget<UPlayerWidget>(this, PlayerWidgetType);
+			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
+			PlayerWidget->ID = ID;
 			PlayerWidget->AddToPlayerScreen();
 		}
 		SetViewTargetWithBlend(PlayerCharacter, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic, 0.5f, true);
@@ -95,7 +97,7 @@ void APlayerCharacterController::OnPlayerPickedUpObject(ATaskObject* Object)
 		}
 
 		PlayerCharacter->bHasMainItem = true;
-		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), true);
+		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), EMainItemState::PickedUp);
 	}
 }
 
@@ -104,7 +106,7 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 	if (Object->GetIsMainItem())
 	{
 		PlayerCharacter->bHasMainItem = false;
-		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), false);
+		OnMainItemStateChange.ExecuteIfBound(UGameplayStatics::GetPlayerControllerID(this), EMainItemState::Dropped);
 	}
 }
 
