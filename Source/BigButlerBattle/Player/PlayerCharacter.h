@@ -284,6 +284,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UCapsuleComponent* TaskObjectCameraCollision;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ATaskObject> TaskObjectBlueprintOverride;
+
 	TArray<ATaskObject*> Inventory;
 	TArray<FName> TraySlotNames;
 	FName MainSlotName;

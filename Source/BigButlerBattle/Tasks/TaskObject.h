@@ -12,6 +12,7 @@ class UBoxComponent;
 class UDataTable;
 class UTask;
 class APlayerCharacter;
+class UNiagaraComponent;
 
 DECLARE_DELEGATE_OneParam(FTaskObjectDeliveredSignature, ATaskObject*);
 
@@ -48,6 +49,10 @@ public:
 
 	bool GetIsRespawning() const { return bIsRespawning; }
 
+	void SetParticlesEnable(bool bEnabled);
+
+	bool bOnTray = false;
+
 protected:
 	void BeginPlay() override;
 
@@ -55,6 +60,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent* Particles = nullptr;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
@@ -106,6 +114,12 @@ private:
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void OnWake(UPrimitiveComponent* WakingComponent, FName BoneName);
+
+	UFUNCTION()
+	void OnSleep(UPrimitiveComponent* SleepingComponent, FName BoneName);
 
 	void SetDefault();
 
