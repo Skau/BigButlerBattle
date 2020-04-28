@@ -28,6 +28,7 @@
 #include "NiagaraComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Curves/CurveFloat.h"
+#include "Kismet/GameplayStatics.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -170,6 +171,14 @@ void APlayerCharacter::BeginPlay()
 			SetRailCollision(true);
 	});
 
+	Movement->OnMovementEnd.AddLambda([&](EMovementMode MovementMode) {
+		if (MovementMode == EMovementMode::MOVE_Falling)
+		{
+			if (LandSound)
+				UGameplayStatics::PlaySoundAtLocation(this, LandSound, GetActorLocation(), 1.f);
+		}
+	});
+
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::OnCapsuleHit);
@@ -210,7 +219,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Super::SetupPlayerInputComponent(Input);
 
 	// Action Mappings
-	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
 	Input->BindAction("Jump", EInputEvent::IE_Released, this, &ACharacter::StopJumping);
 	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
@@ -342,13 +351,8 @@ void APlayerCharacter::Jump()
 {
 	Super::Jump();
 
-	if (CanGrind())
-	{
-		if (auto rail = GetClosestRail())
-		{
-			StartGrinding(rail);
-		}
-	}
+	if (JumpSound)
+		UGameplayStatics::PlaySoundAtLocation(this, JumpSound, GetActorLocation(), 1.f);
 }
 
 FVector APlayerCharacter::GetInputAxis() const
