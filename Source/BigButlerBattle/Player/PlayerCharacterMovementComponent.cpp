@@ -62,10 +62,45 @@ bool UPlayerCharacterMovementComponent::IsMovingOnGround() const
 	return ((MovementMode == MOVE_Custom && DefaultCustomMovementMode == ECustomMovementType::MOVE_Skateboard) || (MovementMode == MOVE_Walking) || (MovementMode == MOVE_NavWalking)) && UpdatedComponent;
 }
 
-float UPlayerCharacterMovementComponent::GetAudioVolumeMult() const
+float UPlayerCharacterMovementComponent::GetRollingAudioVolumeMult() const
 {
-	return IsStandstill() ? 0.f :
-			Velocity.Size() / GetMaxSpeed();
+	if (IsStandstill() || IsFalling() || IsGrinding())
+		return 0.f;
+	else
+		return Velocity.Size() / GetMaxSpeed();
+}
+
+float UPlayerCharacterMovementComponent::GetGrindingAudioVolumeMult() const
+{
+	if (!IsGrinding())
+		return 0.f;
+	else
+		return Velocity.Size() / GetMaxSpeed();
+}
+
+float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
+{
+	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
+}
+
+float UPlayerCharacterMovementComponent::GetMaxSpeed() const
+{
+	const auto Max = Super::GetMaxSpeed();
+
+	if (MovementMode == MOVE_Custom)
+	{
+		switch(CustomMovementMode)
+		{
+			case ECustomMovementType::MOVE_Skateboard:
+				return MaxSkateboardMovementSpeed;
+			case ECustomMovementType::MOVE_Grinding :
+				return GrindingMaxSpeed;
+			default:
+				break;
+		}
+	}
+
+	return Max;
 }
 
 void UPlayerCharacterMovementComponent::BeginPlay()
@@ -485,11 +520,6 @@ FVector UPlayerCharacterMovementComponent::GetSlopeAcceleration(const FHitResult
 	const FVector a = d * Nx;
 
 	return a;
-}
-
-float UPlayerCharacterMovementComponent::GetMaxForwardAcceleration() const
-{
-	return FMath::Max(FMath::Abs(SkateboardKickingAcceleration) - FVector::DotProduct(Velocity, GetOwner()->GetActorForwardVector()) * SkateboardFwrdVelAccMult, 0.f);
 }
 
 inline float UPlayerCharacterMovementComponent::CalcSidewaysBreaking(const FVector &Forward) const

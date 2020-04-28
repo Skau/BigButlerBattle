@@ -241,7 +241,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// Update sound
 	if (Sound && Movement)
 	{
-		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetAudioVolumeMult());
+		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetRollingAudioVolumeMult());
 	}
 
 	if (CanGrind())

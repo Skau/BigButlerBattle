@@ -205,7 +205,8 @@ public:
 
 	bool IsHandbraking() const { return GetHandbrakeAmount() != 0; }
 
-	float GetAudioVolumeMult() const;
+	float GetRollingAudioVolumeMult() const;
+	float GetGrindingAudioVolumeMult() const;
 
 	UFUNCTION(BlueprintPure)
 	float GetRotationInput() const { return InputDir.Y; }
@@ -216,6 +217,8 @@ public:
 	float GetMaxForwardAcceleration() const;
 
 	float GetMaxInputSpeed() { return MaxInputSpeed; }
+
+	virtual float GetMaxSpeed() const override;
 
 	bool CanKickWhileHandbraking() const;
 
