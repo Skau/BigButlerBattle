@@ -300,6 +300,9 @@ void ABigButlerBattleGameModeBase::OnGameFinished(const int ControllerID) const
 		GameFinishedWidget->FocusWidget(Controller);
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
+
+	if (WinSound && this)
+		UGameplayStatics::PlaySound2D(this, WinSound, 1.f);
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerQuit() const
@@ -330,10 +333,16 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 	switch (NewState)
 	{
 	case EMainItemState::PickedUp:
+		if (PickupMainItemSound)
+			UGameplayStatics::PlaySound2D(this, PickupMainItemSound, 1.f);
 		break;
 	case EMainItemState::Dropped:
+		if (DropMainItemSound)
+			UGameplayStatics::PlaySound2D(this, DropMainItemSound, 1.f);
 		break;
 	case EMainItemState::Delivered:
+		if (DeliverMainItemSound)
+			UGameplayStatics::PlaySound2D(this, DeliverMainItemSound, 1.f);
 		break;
 	}
 
@@ -384,6 +393,9 @@ void ABigButlerBattleGameModeBase::SetNewMainItem()
 				Controller->GetPlayerWidget()->OnMainItemSet();
 			}
 		}
+
+		if (NewMainItemSound)
+			UGameplayStatics::PlaySound2D(this, NewMainItemSound, 1.f);
 	});
 }
 

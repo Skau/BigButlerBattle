@@ -56,6 +56,25 @@ protected:
 
 	UGameFinishedWidget* GameFinishedWidget;
 
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (DisplayName = "PickupMainItem"))
+	USoundBase *PickupMainItemSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (DisplayName = "DeliverMainItem"))
+	USoundBase *DeliverMainItemSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (DisplayName = "DropMainItem"))
+	USoundBase *DropMainItemSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (DisplayName = "NewMainItem"))
+	USoundBase *NewMainItemSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (DisplayName = "Win"))
+	USoundBase *WinSound = nullptr;
+
+
+
 private:
 	TArray<APlayerCharacterController*> Controllers;
 
