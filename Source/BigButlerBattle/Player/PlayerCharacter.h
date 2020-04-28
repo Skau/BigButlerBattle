@@ -377,13 +377,16 @@ protected:
 
 /// ========================================= Sounds =================================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
-	UAudioComponent* Sound;
+	UAudioComponent* ContinuousSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase *JumpSound = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase *LandSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase *PickupSound = nullptr;
 
 
 

@@ -120,8 +120,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 
 	// Sound
-	Sound = CreateDefaultSubobject<UAudioComponent>("Audio Component");
-	Sound->SetupAttachment(RootComponent);
+	ContinuousSound = CreateDefaultSubobject<UAudioComponent>("Audio Component");
+	ContinuousSound->SetupAttachment(RootComponent);
 
 	GrindingOverlapThreshold = CreateDefaultSubobject<USphereComponent>("Grinding Overlap Threshold");
 	GrindingOverlapThreshold->SetupAttachment(RootComponent);
@@ -248,9 +248,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 		UpdateClosestTaskObject();
 
 	// Update sound
-	if (Sound && Movement)
+	if (ContinuousSound && Movement)
 	{
-		Sound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetRollingAudioVolumeMult());
+		ContinuousSound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetRollingAudioVolumeMult());
 	}
 
 	if (CanGrind())
@@ -720,6 +720,9 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		// Scale it down
 		auto scale = Spawned->GetActorScale3D();
 		Spawned->SetActorScale3D(scale * 0.3f);
+
+		if (PickupSound)
+			UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), 1.f);
 
 		OnTaskObjectPickedUp.ExecuteIfBound(Spawned);
 	}
