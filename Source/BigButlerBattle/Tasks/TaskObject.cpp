@@ -17,6 +17,7 @@
 #include "BigButlerBattleGameModeBase.h"
 #include "Utils/btd.h"
 #include "NiagaraComponent.h"
+#include "NiagaraSystemInstance.h"
 
 ATaskObject::ATaskObject()
 {
@@ -61,6 +62,21 @@ void ATaskObject::Reset()
 	Destroy();
 }
 
+void ATaskObject::SetParticlesEnable(bool bEnabled)
+{
+	if (Particles && Particles->GetSystemInstance())
+	{
+		if (bEnabled && !bOnTray)
+		{
+			Particles->GetSystemInstance()->Activate();
+		}
+		else
+		{
+			Particles->GetSystemInstance()->Deactivate();
+		}
+	}
+}
+
 void ATaskObject::BeginPlay()
 {
 	Super::BeginPlay();
@@ -82,14 +98,27 @@ void ATaskObject::BeginPlay()
 		SetDefault();
 	}
 
+	MeshComponent->BodyInstance.bGenerateWakeEvents = true;
 	MeshComponent->OnComponentHit.AddDynamic(this, &ATaskObject::OnHit);
-	
+	MeshComponent->OnComponentWake.AddDynamic(this, &ATaskObject::OnWake);
+	MeshComponent->OnComponentSleep.AddDynamic(this, &ATaskObject::OnSleep);
+
+	if (Particles->GetSystemInstance())
+		Particles->GetSystemInstance()->Deactivate();
+
 	DynamicMaterial = MeshComponent->CreateDynamicMaterialInstance(0, MeshComponent->GetMaterial(0));
 
 	if (bIsMainItem)
 	{
 		MeshComponent->SetCustomDepthStencilValue(1); // Permanent outline
 	}
+
+	btd::Delay(this, 4.f, [&](){
+		if (!IsValid(this))
+			return;
+		
+		SetParticlesEnable(false);
+	});
 }
 
 
@@ -313,6 +342,16 @@ void ATaskObject::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 	}
 
 	bCanHit = false;
+}
+
+void ATaskObject::OnWake(UPrimitiveComponent *WakingComponent, FName BoneName)
+{
+	SetParticlesEnable(true);
+}
+
+void ATaskObject::OnSleep(UPrimitiveComponent *SleepingComponent, FName BoneName)
+{
+	SetParticlesEnable(false);
 }
 
 void ATaskObject::SetDefault()

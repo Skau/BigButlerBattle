@@ -49,6 +49,10 @@ public:
 
 	bool GetIsRespawning() const { return bIsRespawning; }
 
+	void SetParticlesEnable(bool bEnabled);
+
+	bool bOnTray = false;
+
 protected:
 	void BeginPlay() override;
 
@@ -110,6 +114,12 @@ private:
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void OnWake(UPrimitiveComponent* WakingComponent, FName BoneName);
+
+	UFUNCTION()
+	void OnSleep(UPrimitiveComponent* SleepingComponent, FName BoneName);
 
 	void SetDefault();
 

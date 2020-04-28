@@ -698,12 +698,15 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		Object->OnPickedUp();
 
 		// Spawn new object
-		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(TaskObjectBlueprintOverride ? TaskObjectBlueprintOverride : ATaskObject::StaticClass(), FTransform::Identity);
 		Spawned->SetTaskData(Object->GetTaskData());
 		Spawned->Enable(true, false, false);
 		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 		if (Object->GetIsMainItem())
 			Spawned->SetAsMainItem();
+
+		Spawned->bOnTray = true;
+		Spawned->SetParticlesEnable(false);
 
 		// Attach new object
 		Inventory[Index] = Spawned;
@@ -807,7 +810,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		Object->Enable(false, false, false);
 
 		// Deferred spawn new
-		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(ATaskObject::StaticClass(), FTransform::Identity);
+		auto Spawned = GetWorld()->SpawnActorDeferred<ATaskObject>(TaskObjectBlueprintOverride ? TaskObjectBlueprintOverride : ATaskObject::StaticClass(), FTransform::Identity);
 
 		Spawned->SetTaskData(Object->GetTaskData());
 
@@ -833,6 +836,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		// Finish
 		Spawned = Cast<ATaskObject>(UGameplayStatics::FinishSpawningActor(Spawned, transform));
 		Spawned->Launch(LaunchVelocity);
+		Spawned->SetParticlesEnable(true);
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 
