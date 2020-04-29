@@ -59,6 +59,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UButton* Button_Back;
 
+	FString ToPercent(float Value) const;
+
 protected:
 	bool Initialize() override;
 

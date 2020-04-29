@@ -11,6 +11,14 @@ USoundSettingsWidget::USoundSettingsWidget(const FObjectInitializer& ObjectIniti
 	: Super(ObjectInitializer)
 {}
 
+FString USoundSettingsWidget::ToPercent(float Value) const
+{
+	int32 Val = static_cast<int32>(Value * 10.5f) * 10;
+	if (Val == 70)
+		Val = 69;
+	return FString::FromInt(Val) + "%";
+}
+
 bool USoundSettingsWidget::Initialize()
 {
 	bool bInit = Super::Initialize();
@@ -39,14 +47,11 @@ bool USoundSettingsWidget::Initialize()
 
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->GetMainSoundVolume() * 100.f) + "%";
-		TextBlock_MasterVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_MasterVolume->SetText(FText::FromString(ToPercent(Instance->GetMainSoundVolume())));
 
-		NewVolume = FString::FromInt(Instance->GetBackgroundSoundVolume() * 100.f) + "%";
-		TextBlock_BackgroundVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_BackgroundVolume->SetText(FText::FromString(ToPercent(Instance->GetBackgroundSoundVolume())));
 
-		NewVolume = FString::FromInt(Instance->GetSoundEffectsSoundVolume() * 100.f) + "%";
-		TextBlock_SFXVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_SFXVolume->SetText(FText::FromString(ToPercent(Instance->GetSoundEffectsSoundVolume())));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::Initialize: Could not find game instance!"))
@@ -63,8 +68,7 @@ void USoundSettingsWidget::OnMasterDownPressed()
 {
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->UpdateMainSoundVolume(false) * 100.f) + "%";
-		TextBlock_MasterVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_MasterVolume->SetText(FText::FromString(ToPercent(Instance->UpdateMainSoundVolume(false))));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnMasterDownPressed: Could not find game instance!"))
@@ -74,8 +78,7 @@ void USoundSettingsWidget::OnMasterUpPressed()
 {
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->UpdateMainSoundVolume(true) * 100.f) + "%";
-		TextBlock_MasterVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_MasterVolume->SetText(FText::FromString(ToPercent(Instance->UpdateMainSoundVolume(true))));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnMasterUpPressed: Could not find game instance!"))
@@ -85,8 +88,7 @@ void USoundSettingsWidget::OnBackgroundDownPressed()
 {
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->UpdateBackgroundSoundVolume(false) * 100.f) + "%";
-		TextBlock_BackgroundVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_BackgroundVolume->SetText(FText::FromString(ToPercent(Instance->UpdateBackgroundSoundVolume(false))));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnBackgroundDownPressed: Could not find game instance!"))
@@ -96,8 +98,7 @@ void USoundSettingsWidget::OnBackgroundUpPressed()
 {
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->UpdateBackgroundSoundVolume(true) * 100.f) + "%";
-		TextBlock_BackgroundVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_BackgroundVolume->SetText(FText::FromString(ToPercent(Instance->UpdateBackgroundSoundVolume(true))));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnBackgroundUpPressed: Could not find game instance!"))
@@ -107,8 +108,7 @@ void USoundSettingsWidget::OnSFXDownPressed()
 {
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->UpdateSoundEffectsSoundVolume(false) * 100.f) + "%";
-		TextBlock_SFXVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_SFXVolume->SetText(FText::FromString(ToPercent(Instance->UpdateSoundEffectsSoundVolume(false))));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnSFXDownPressed: Could not find game instance!"))
@@ -118,8 +118,7 @@ void USoundSettingsWidget::OnSFXUpPressed()
 {
 	if (auto Instance = GetGameInstance())
 	{
-		auto NewVolume = FString::FromInt(Instance->UpdateSoundEffectsSoundVolume(true) * 100.f) + "%";
-		TextBlock_SFXVolume->SetText(FText::FromString(NewVolume));
+		TextBlock_SFXVolume->SetText(FText::FromString(ToPercent(Instance->UpdateSoundEffectsSoundVolume(true))));
 	}
 	else
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnSFXUpPressed: Could not find game instance!"))
