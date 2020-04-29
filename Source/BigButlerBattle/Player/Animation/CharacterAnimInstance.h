@@ -22,6 +22,8 @@ public:
 
 	void ForwardKick();
 
+	void ThrowAnim();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 bLeftLegIK : 1;
 
@@ -59,10 +61,10 @@ protected:
 	void NativeUpdateAnimation(float DeltaTime) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
-	UAnimMontage* JumpMontage;
+	UAnimMontage* ForwardMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
-	UAnimMontage* ForwardMontage;
+	UAnimMontage *ThrowMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsFalling;

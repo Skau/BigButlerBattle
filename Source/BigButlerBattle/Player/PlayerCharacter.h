@@ -316,7 +316,10 @@ public:
 protected:
 	void OnObjectPickedUp(ATaskObject* Object);
 
-	void DropCurrentObject();
+	void ThrowStart();
+
+	UFUNCTION(BlueprintCallable)
+	void Throw();
 
 	void DetachObject(ATaskObject* Object, FVector SpawnLocation, FVector LaunchVelocity = FVector::ZeroVector);
 

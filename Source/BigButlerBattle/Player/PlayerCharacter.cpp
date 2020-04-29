@@ -221,7 +221,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	// Action Mappings
 	Input->BindAction("Jump", EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
 	Input->BindAction("Jump", EInputEvent::IE_Released, this, &ACharacter::StopJumping);
-	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::DropCurrentObject);
+	Input->BindAction("DropObject", EInputEvent::IE_Pressed, this, &APlayerCharacter::ThrowStart);
 	//Input->BindAction("DropObject", EInputEvent::IE_Repeat, this, &APlayerCharacter::OnHoldingThrow);
 	//Input->BindAction("DropObject", EInputEvent::IE_Released, this, &APlayerCharacter::OnHoldThrowReleased);
 	Input->BindAction("IncrementInventory", EInputEvent::IE_Pressed, this, &APlayerCharacter::IncrementCurrentItemIndex);
@@ -731,7 +731,25 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 	}
 }
 
-void APlayerCharacter::DropCurrentObject()
+void APlayerCharacter::ThrowStart()
+{
+	bool bFound = false;
+	for (const auto& obj : Inventory)
+		if (obj)
+		{
+			bFound = true;
+			break;
+		}
+	if (!bFound)
+		return;
+
+	if (AnimInstance)
+		AnimInstance->ThrowAnim();
+	else
+		Throw();
+}
+
+void APlayerCharacter::Throw()
 {
 	auto Obj = Inventory[CurrentItemIndex];
 	if (!Obj)
@@ -742,72 +760,69 @@ void APlayerCharacter::DropCurrentObject()
 			return;
 	}
 
-	if (Obj)
+	FVector Dir = Camera->GetForwardVector();
+
+	FHitResult HitResult;
+
+	const float Radius = 300.f;
+	const FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
+	const FVector End = Start + (Dir * AimbotMaxDistance);
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
+	TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	// Calculate projectile velocity (constant + projected velocity on direction to throw)
+	float ProjectileVelocity = ThrowStrength;
+	if (FMath::IsNearlyZero(Movement->Velocity.SizeSquared()))
 	{
-		FVector Dir = Camera->GetForwardVector();
+		ProjectileVelocity += UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
+	}
 
-		FHitResult HitResult;
+	// Check if aimbot found any player
+	if (GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, FCollisionObjectQueryParams(TraceObjectTypes), FCollisionShape::MakeSphere(Radius), Params))
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Aimbot: Found %s"), *HitResult.GetActor()->GetName());
 
-		const float Radius = 300.f;
-		const FVector Start = GetActorLocation() + (Dir * (Radius + 10.f));
-		const FVector End = Start + (Dir * AimbotMaxDistance);
+		// Location of other
+		const auto TargetLocation = HitResult.GetActor()->GetActorLocation();
 
-		TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
-		TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
-
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-
-		// Calculate projectile velocity (constant + projected velocity on direction to throw)
-		float ProjectileVelocity = ThrowStrength;
-		if (FMath::IsNearlyZero(Movement->Velocity.SizeSquared()))
+		// Only activate aimbot if target is within 180 degrees of us (should always be true tbh)
+		const auto Angle = btd::GetAngleBetweenNormals(Dir, (TargetLocation - Start).GetSafeNormal());
+		if (Angle < 180.f)
 		{
-			ProjectileVelocity += UKismetMathLibrary::ProjectVectorOnToVector(Movement->Velocity, Dir).Size();
-		}
+			auto TargetVelocity = HitResult.GetActor()->GetVelocity();
 
-		// Check if aimbot found any player
-		if (GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, FCollisionObjectQueryParams(TraceObjectTypes), FCollisionShape::MakeSphere(Radius), Params))
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Aimbot: Found %s"), *HitResult.GetActor()->GetName());
-
-			// Location of other
-			const auto TargetLocation = HitResult.GetActor()->GetActorLocation();
-
-			// Only activate aimbot if target is within 180 degrees of us (should always be true tbh)
-			const auto Angle = btd::GetAngleBetweenNormals(Dir, (TargetLocation - Start).GetSafeNormal());
-			if (Angle < 180.f)
+			// So slow moving, that we will just go with the initial location
+			if (TargetVelocity.SizeSquared() < 10.f)
 			{
-				auto TargetVelocity = HitResult.GetActor()->GetVelocity();
+				Dir = (TargetLocation - GetActorLocation()).GetSafeNormal();
+			}
+			else
+			{
+				// Time to hit target based on our initial projectile velocity
+				const auto Time = (GetActorLocation() - TargetLocation).Size() / ProjectileVelocity;
 
-				// So slow moving, that we will just go with the initial location
-				if (TargetVelocity.SizeSquared() < 10.f)
-				{
-					Dir = (TargetLocation - GetActorLocation()).GetSafeNormal();
-				}
-				else
-				{
-					// Time to hit target based on our initial projectile velocity
-					const auto Time = (GetActorLocation() - TargetLocation).Size() / ProjectileVelocity;
+				// The predicted location of the target based on their current location, velocity and time
+				const auto PredictedLocation = TargetLocation + TargetVelocity * Time;
 
-					// The predicted location of the target based on their current location, velocity and time
-					const auto PredictedLocation = TargetLocation + TargetVelocity * Time;
+				// Visualize predicted location
+				//DrawDebugSphere(GetWorld(), predictedPos, 10.f, 4, FColor::Red, false, 2.f, 0, 10.f);
 
-					// Visualize predicted location
-					//DrawDebugSphere(GetWorld(), predictedPos, 10.f, 4, FColor::Red, false, 2.f, 0, 10.f);
-
-					// Get new direction
-					Dir = (PredictedLocation - GetActorLocation()).GetSafeNormal();
-				}
+				// Get new direction
+				Dir = (PredictedLocation - GetActorLocation()).GetSafeNormal();
 			}
 		}
-
-		const auto FinalVelocity = Dir * ProjectileVelocity;
-
-		const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
-
-		DetachObject(Obj, SpawnPos, FinalVelocity);
-		IncrementCurrentItemIndex();
 	}
+
+	const auto FinalVelocity = Dir * ProjectileVelocity;
+
+	const auto SpawnPos = GetActorLocation() + (Dir * 200.f);
+
+	DetachObject(Obj, SpawnPos, FinalVelocity);
+	IncrementCurrentItemIndex();
 }
 
 void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, FVector LaunchVelocity)
@@ -889,7 +904,7 @@ void APlayerCharacter::OnHoldingThrow()
 
 void APlayerCharacter::OnHoldThrowReleased()
 {
-	DropCurrentObject();
+	Throw();
 
 	if(bCurrentlyHoldingThrow)
 		bCurrentlyHoldingThrow = false;

@@ -14,6 +14,18 @@ UCharacterAnimInstance::UCharacterAnimInstance()
 	bRightLegIK = true;
 }
 
+void UCharacterAnimInstance::ForwardKick()
+{
+	if (IsValid(ForwardMontage) && !Montage_IsPlaying(ForwardMontage))
+		Montage_Play(ForwardMontage);
+}
+
+void UCharacterAnimInstance::ThrowAnim()
+{
+	if (IsValid(ThrowMontage) && !Montage_IsPlaying(ThrowMontage))
+		Montage_Play(ThrowMontage);
+}
+
 void UCharacterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
@@ -51,10 +63,4 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	}
 
 	Input = newInput;
-}
-
-void UCharacterAnimInstance::ForwardKick()
-{
-	if (IsValid(ForwardMontage) && !IsAnyMontagePlaying())
-		Montage_Play(ForwardMontage);
 }
