@@ -848,6 +848,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 				{
 					auto Object = DroppedObjects[0];
 					DroppedObjects.Remove(Object);
+				}
 			}
 		});
 		Spawned->Launch(LaunchVelocity);
