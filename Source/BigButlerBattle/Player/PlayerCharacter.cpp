@@ -327,6 +327,9 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 
 	bEnabledRagdoll = true;
 
+	if (CrashSound)
+		UGameplayStatics::PlaySoundAtLocation(this, CrashSound, GetActorLocation(), 1.f);
+
 	OnCharacterFell.ExecuteIfBound(CurrentRoom, GetActorLocation());
 }
 
