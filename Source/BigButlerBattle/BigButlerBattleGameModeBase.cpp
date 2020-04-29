@@ -110,7 +110,6 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 
 		// Delegates
 		Controllers[i]->OnPausedGame.BindUObject(this, &ABigButlerBattleGameModeBase::OnPlayerPaused);
-		Controllers[i]->OnDeliveredItem.BindUObject(this, &ABigButlerBattleGameModeBase::OnItemDelivered);
 
 		// Main item event
 		Controllers[i]->OnMainItemStateChange.BindUObject(this, &ABigButlerBattleGameModeBase::OnMainItemStateChanged);
@@ -209,7 +208,7 @@ void ABigButlerBattleGameModeBase::Tick(float DeltaTime)
 		{
 			if (King)
 			{
-				King->UpdateCanReceiveMainItem();
+				King->bCanReceiveMainItem = true;
 				for (auto& Controller : Controllers)
 				{
 					Controller->GetPlayerWidget()->UpdateTimer("Deliver Item!");
@@ -254,32 +253,6 @@ void ABigButlerBattleGameModeBase::OnPlayerContinued(const int ControllerID) con
 		Controller->SetInputMode(FInputModeGameOnly());
 		PauseWidget->Reset();
 		UGameplayStatics::SetGamePaused(GetWorld(), false);
-	}
-}
-
-void ABigButlerBattleGameModeBase::OnItemDelivered(const int ControllerID)
-{
-	auto PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
-
-	// Player won
-	if (PlayerController->GetScore() >= TotalPointsToWin)
-	{
-		OnGameFinished(ControllerID);
-		return;
-	}
-
-	SetNewMainItem();
-	bTimeDone = false;
-	bItemCurrentlyBeingHeld = false;
-	SecondsLeftToHold = TotalSecondsToHold;
-
-
-	auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
-	for (auto& Controller : Controllers)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s score: %d"), *Controller->GetName(), Controller->GetScore());
-		Controller->GetPlayerWidget()->UpdateTimer(time);
-		Controller->GetPlayerWidget()->UpdateScore(ControllerID, PlayerController->GetScore());
 	}
 }
 
@@ -333,22 +306,24 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 	switch (NewState)
 	{
 	case EMainItemState::PickedUp:
+	{
 		if (PickupMainItemSound)
 			UGameplayStatics::PlaySound2D(this, PickupMainItemSound, 1.f);
-		break;
+	}
+	break;
 	case EMainItemState::Dropped:
+	{
+		if (bTimeDone)
+		{
+			if(King)
+				King->bCanReceiveMainItem = false;
+
+			bTimeDone = false;
+		}
+
 		if (DropMainItemSound)
 			UGameplayStatics::PlaySound2D(this, DropMainItemSound, 1.f);
-		break;
-	case EMainItemState::Delivered:
-		if (DeliverMainItemSound)
-			UGameplayStatics::PlaySound2D(this, DeliverMainItemSound, 1.f);
-		break;
-	}
 
-	// Reset time if item is dropped
-	if (!bItemCurrentlyBeingHeld)
-	{
 		SecondsLeftToHold = TotalSecondsToHold;
 		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
 		for (auto& Controller : Controllers)
@@ -356,22 +331,50 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 			Controller->GetPlayerWidget()->UpdateTimer(time);
 		}
 	}
-
-
-	if (GameWidget)
+	break;
+	case EMainItemState::Delivered:
 	{
+		if (DeliverMainItemSound)
+			UGameplayStatics::PlaySound2D(this, DeliverMainItemSound, 1.f);
+
+		auto PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
+
+		// Player won
+		if (PlayerController->GetScore() >= TotalPointsToWin)
+		{
+			OnGameFinished(ControllerID);
+			return;
+		}
+
+		SetNewMainItem(2.f);
+		bTimeDone = false;
+		if(King)
+			King->bCanReceiveMainItem = false;
+		bItemCurrentlyBeingHeld = false;
+		SecondsLeftToHold = TotalSecondsToHold;
+
+
 		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
 		for (auto& Controller : Controllers)
 		{
-			Controller->GetPlayerWidget()->OnMainItemStateChanged(ControllerID, NewState);
+			UE_LOG(LogTemp, Warning, TEXT("%s score: %d"), *Controller->GetName(), Controller->GetScore());
+			Controller->GetPlayerWidget()->UpdateTimer(time);
+			Controller->GetPlayerWidget()->UpdateScore(ControllerID, PlayerController->GetScore());
 		}
+	}
+	break;
+	}
+
+	for (auto& Controller : Controllers)
+	{
+		Controller->GetPlayerWidget()->OnMainItemStateChanged(ControllerID, NewState);
 	}
 }
 
-void ABigButlerBattleGameModeBase::SetNewMainItem()
+void ABigButlerBattleGameModeBase::SetNewMainItem(float delay)
 {
 	// Give it a second to let all task objects be in correct state
-	btd::Delay(this, 0.5f, [=]()
+	btd::Delay(this, delay, [=]()
 	{
 		// Set main item (get random one from all task objects)
 		TArray<AActor*> Actors;

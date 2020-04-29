@@ -37,7 +37,7 @@ public:
 
 	void StartToLeaveMap() override;
 
-	void SetNewMainItem();
+	void SetNewMainItem(float delay = 0.5f);
 
 	TArray<APlayerCharacterController*> GetControllers() const { return Controllers; }
 
@@ -101,8 +101,6 @@ protected:
 
 	// Actual seconds left to hold
 	float SecondsLeftToHold = TotalSecondsToHold;
-
-	void OnItemDelivered(const int ControllerID);
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameWidget> GameWidgetClass;

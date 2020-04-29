@@ -937,7 +937,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 	}
 	else if(auto King = Cast<AKing>(OtherActor))
 	{
-		if (King->GetCanReceiveMainItem())
+		if (King->bCanReceiveMainItem)
 		{
 			OnDeliverTasks.ExecuteIfBound(Inventory);
 		}

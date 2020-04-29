@@ -16,9 +16,7 @@ class BIGBUTLERBATTLE_API AKing : public AActor
 public:	
 	AKing();
 
-	bool GetCanReceiveMainItem() const { return bCanReceiveMainItem; }
-	void UpdateCanReceiveMainItem() { bCanReceiveMainItem = true; }
-
+	bool bCanReceiveMainItem = false;
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent;
@@ -27,5 +25,5 @@ protected:
 	UBoxComponent* BoxCollision;
 
 private:
-	bool bCanReceiveMainItem = false;
+
 };

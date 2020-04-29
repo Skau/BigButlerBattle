@@ -112,7 +112,6 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 
 void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector Position)
 {
-	PlayerWidget->SetVisibility(ESlateVisibility::Hidden);
 	btd::Delay(this, RespawnTime, [=]()
 	{
 		if (!GetPawn() || !this || !IsValid(PlayerCharacter))
@@ -157,7 +156,7 @@ void APlayerCharacterController::CheckIfTasksAreDone(TArray<ATaskObject*>& Inven
 			++Score;
 
 			const auto ID = UGameplayStatics::GetPlayerControllerID(this);
-			OnDeliveredItem.ExecuteIfBound(ID);
+			OnMainItemStateChange.ExecuteIfBound(ID, EMainItemState::Delivered);
 		}
 	}
 }
