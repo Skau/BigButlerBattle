@@ -24,6 +24,10 @@ public:
 
 	void ThrowAnim();
 
+	void TackleAnim();
+
+	bool IsDoingAction() const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 bLeftLegIK : 1;
 
@@ -65,6 +69,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
 	UAnimMontage *ThrowMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim montages")
+	UAnimMontage *TackleMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsFalling;

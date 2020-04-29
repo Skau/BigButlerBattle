@@ -22,8 +22,19 @@ void UCharacterAnimInstance::ForwardKick()
 
 void UCharacterAnimInstance::ThrowAnim()
 {
-	if (IsValid(ThrowMontage) && !Montage_IsPlaying(ThrowMontage))
+	if (IsValid(ThrowMontage) && !IsDoingAction())
 		Montage_Play(ThrowMontage);
+}
+
+void UCharacterAnimInstance::TackleAnim()
+{
+	if (IsValid(TackleMontage) && !IsDoingAction())
+		Montage_Play(TackleMontage);
+}
+
+bool UCharacterAnimInstance::IsDoingAction() const
+{
+	return Montage_IsPlaying(ThrowMontage) || Montage_IsPlaying(TackleMontage);
 }
 
 void UCharacterAnimInstance::NativeBeginPlay()

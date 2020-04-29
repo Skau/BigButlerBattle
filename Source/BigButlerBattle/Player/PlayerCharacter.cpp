@@ -743,7 +743,12 @@ void APlayerCharacter::ThrowStart()
 		return;
 
 	if (AnimInstance)
+	{
+		if (AnimInstance->IsDoingAction())
+			return;
+
 		AnimInstance->ThrowAnim();
+	}
 	else
 		Throw();
 }
@@ -1005,6 +1010,15 @@ void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent
 
 void APlayerCharacter::TryTackle()
 {
+	if (AnimInstance)
+	{
+		// Cancel tackle if already doing something (like throwing)
+		if (AnimInstance->IsDoingAction())
+			return;
+		
+		AnimInstance->TackleAnim();
+	}
+
 	if (!PlayersInRange.Num())
 		return;
 
