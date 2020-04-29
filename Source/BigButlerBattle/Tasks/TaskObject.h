@@ -99,7 +99,7 @@ private:
 	EObjectType TaskType = EObjectType::None;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
-	bool bRespawn = true;
+	bool bRespawn = false;
 
 	bool bIsRespawning = false;
 

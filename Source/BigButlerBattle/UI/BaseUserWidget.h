@@ -49,6 +49,12 @@ protected:
 
 	void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
 
+	UPROPERTY()
+	FSlateSound ButtonPressedSound;
+
+	UPROPERTY()
+	FSlateSound ButtonHoveredSound;
+
 private:
 	UWidget* WidgetFocusedLast = nullptr;
 };
