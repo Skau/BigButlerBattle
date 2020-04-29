@@ -5,6 +5,7 @@
 #include "ButlerGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "Player/PlayerCharacter.h"
 #include "Player/PlayerCharacterController.h"
 #include "UI/PauseWidget.h"
 #include "Blueprint/UserWidget.h"
@@ -24,26 +25,6 @@
 ABigButlerBattleGameModeBase::ABigButlerBattleGameModeBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
-}
-
-void ABigButlerBattleGameModeBase::StartToLeaveMap()
-{
-	Super::StartToLeaveMap();
-
-	// Clear timers
-	for (TActorIterator<ATaskObject> Itr(GetWorld()); Itr; ++Itr)
-	{
-		if (!Itr)
-			continue;
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
-	}
-
-	for (TActorIterator<APlayerController> Itr(GetWorld()); Itr; ++Itr)
-	{
-		if (!Itr)
-			continue;
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
-	}
 }
 
 void ABigButlerBattleGameModeBase::BeginPlay()

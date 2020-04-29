@@ -4,14 +4,31 @@
 #include "BaseUserWidget.h"
 #include "Components/Button.h"
 #include "Application/SlateApplication.h"
+#include "Kismet/GameplayStatics.h"
+#include "ConstructorHelpers.h"
+#include "Sound/SoundCue.h"
+
 
 UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-{}
+{
+	ConstructorHelpers::FObjectFinder<USoundCue> ButtonPressedDefiniton(TEXT("SoundCue'/Game/Audio/UI/ButtonPressed_Cue.ButtonPressed_Cue'"));
+	ButtonPressedSound.SetResourceObject(ButtonPressedDefiniton.Object);
+
+	ConstructorHelpers::FObjectFinder<USoundCue> ButtonHoveredDefinition(TEXT("SoundCue'/Game/Audio/UI/ButtonSwitch_Cue.ButtonSwitch_Cue'"));
+	ButtonHoveredSound.SetResourceObject(ButtonHoveredDefinition.Object);
+}
 
 bool UBaseUserWidget::Initialize()
 {
 	const bool bInit = Super::Initialize();
+
+	ButtonStyleDefault.SetPressedSound(ButtonPressedSound);
+	ButtonStyleHovered.SetPressedSound(ButtonPressedSound);
+
+	// Not working correctly, might be because of the way we handle navigation
+	ButtonStyleDefault.SetHoveredSound(ButtonHoveredSound);
+	ButtonStyleHovered.SetHoveredSound(ButtonHoveredSound);
 
 	return bInit;
 }

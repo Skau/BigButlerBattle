@@ -323,6 +323,8 @@ protected:
 
 	void DetachObject(ATaskObject* Object, FVector SpawnLocation, FVector LaunchVelocity = FVector::ZeroVector);
 
+	TArray<ATaskObject*> DroppedObjects;
+
 	void OnHoldingThrow();
 	void OnHoldThrowReleased();
 

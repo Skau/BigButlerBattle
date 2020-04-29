@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "UObject/Object.h"
+#include "Kismet/GameplayStatics.h"
+#include "MyGameModeBase.h"
 
 /**
  * 
@@ -51,9 +53,21 @@ namespace btd
     FORCEINLINE static FTimerHandle Delay(UObject* Context, const float Seconds, TFunction<void(void)> Lambda)
     {
         FTimerDelegate TimerCallback;
+        static FTimerHandle Handle;
+        auto lambda = [&, Lambda]()
+        {
+            Lambda();
+        };
+        
         TimerCallback.BindLambda(Lambda);
-        FTimerHandle Handle;
-        Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
+
+        auto GM = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(Context->GetWorld()));
+        if (GM)
+        {
+            GM->GetWorldTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
+            GM->AddTimerHandle(Handle);
+        }
+
         return Handle;
     }
 

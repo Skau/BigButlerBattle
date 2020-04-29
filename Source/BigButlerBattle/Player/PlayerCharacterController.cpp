@@ -112,9 +112,9 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 
 void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector Position)
 {
-	btd::Delay(this, RespawnTime, [=]()
+	btd::Delay(this, RespawnTime, [&, Position]()
 	{
-		if (!GetPawn() || !this || !IsValid(PlayerCharacter))
+		if (!GetPawn() || !this || PlayerCharacter == nullptr || PlayerCharacter->GetName() == "None") // Yup..
 			return;
 
 		const auto playerScale = PlayerCharacter->GetActorScale3D();

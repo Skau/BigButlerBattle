@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "MyGameModeBase.h"
 #include "Utils/DataTables.h"
 #include "Utils/Spawnpoint.h"
 #include "BigButlerBattleGameModeBase.generated.h"
@@ -22,7 +22,7 @@ enum class EMainItemState : uint8;
  *
  */
 UCLASS()
-class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AGameModeBase
+class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AMyGameModeBase
 {
 	GENERATED_BODY()
 
@@ -34,8 +34,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RespawnRadius = 1000.f;
-
-	void StartToLeaveMap() override;
 
 	void SetNewMainItem(float delay = 0.5f);
 

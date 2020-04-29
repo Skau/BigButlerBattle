@@ -14,8 +14,6 @@ class UTask;
 class APlayerCharacter;
 class UNiagaraComponent;
 
-DECLARE_DELEGATE_OneParam(FTaskObjectDeliveredSignature, ATaskObject*);
-
 UCLASS()
 class BIGBUTLERBATTLE_API ATaskObject : public AActor
 {
@@ -33,15 +31,11 @@ public:
 
 	void Launch(const FVector& LaunchVelocity);
 
-	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
-
 	void SetSelected(bool Value);
 
 	bool bCanHit = false;
 
 	void SetAsMainItem();
-
-	APlayerCharacter* Instigator = nullptr;
 
 	bool GetIsMainItem() { return bIsMainItem; }
 
@@ -99,7 +93,7 @@ private:
 	EObjectType TaskType = EObjectType::None;
 
 	UPROPERTY(EditAnywhere, Category = "Task")
-	bool bRespawn = true;
+	bool bRespawn = false;
 
 	bool bIsRespawning = false;
 
