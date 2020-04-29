@@ -8,6 +8,7 @@
 
 class UHorizontalBox;
 class UTextBlock;
+class UVerticalBox;
 class UImage;
 class APlayerCharacterController;
 class UPlayerScoreWidget;
@@ -43,9 +44,6 @@ public:
 
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-    UTextBlock* Text_Info;
-
-    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UTextBlock* Text_Timer;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -54,12 +52,17 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UHorizontalBox* ScoreBox;
 
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UVerticalBox* MessageBox;
+
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<UPlayerScoreWidget> PlayerScoreWidgetClass;
 
 private:
-    void UpdateMessage(const FString& Message, const float Duration = 3.f);
+    void AddMessage(const FString& Message, const float Duration = 3.f);
 
     TMap<int, UPlayerScoreWidget*> PlayerScores;
+
+    TArray<UTextBlock*> TextBlocks;
 
 };

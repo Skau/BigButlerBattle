@@ -8,6 +8,8 @@
 #include "Components/TextBlock.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/Overlay.h"
@@ -22,11 +24,6 @@
 bool UPlayerWidget::Initialize()
 {
 	bool bInit = Super::Initialize();
-
-	if (Text_Info)
-	{
-		Text_Info->SetVisibility(ESlateVisibility::Hidden);
-	}
 
 	auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (GM)
@@ -62,12 +59,12 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 		state = " delivered ";
 	}
 
-	UpdateMessage(player + state + " the main item!");
+	AddMessage(player + state + " the main item!");
 }
 
 void UPlayerWidget::OnMainItemSet()
 {
-	UpdateMessage("The King demands a new item!");
+	AddMessage("The King demands a new item!");
 }
 
 void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& Controllers)
@@ -132,16 +129,32 @@ void UPlayerWidget::UpdateScore(int ControllerID, int NewScore)
 	}
 }
 
-void UPlayerWidget::UpdateMessage(const FString& Message, const float Duration)
+void UPlayerWidget::AddMessage(const FString& Message, const float Duration)
 {
-	if (Message.IsEmpty() || !Text_Info)
+	if (Message.IsEmpty())
 		return;
 
-	Text_Info->SetText(FText::FromString(Message));
-	Text_Info->SetVisibility(ESlateVisibility::Visible);
+	auto NewTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+	NewTextBlock->SetText(FText::FromString(Message));
+	NewTextBlock->Font.Size = 48;
+	NewTextBlock->SetJustification(ETextJustify::Center);
 
-	btd::Delay(this, Duration, [=]() {
-		Text_Info->SetVisibility(ESlateVisibility::Hidden);
+	for (auto& TextBlock : TextBlocks)
+	{
+		TextBlock->SetOpacity(0.6f);
+	}
+
+	TextBlocks.Add(NewTextBlock);
+
+	auto Slot = MessageBox->AddChildToVerticalBox(NewTextBlock);
+
+	btd::Delay(this, Duration, [=]() 
+	{
+		if(TextBlocks.Num())
+		{
+			MessageBox->RemoveChild(TextBlocks[0]);
+			TextBlocks.RemoveAt(0);
+		}
 	});
 }
 
