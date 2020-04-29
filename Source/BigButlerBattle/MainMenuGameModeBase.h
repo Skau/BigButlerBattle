@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "MyGameModeBase.h"
 #include "MainMenuGameModeBase.generated.h"
 
 class UMainMenuWidget;
@@ -15,7 +15,7 @@ class UMainMenuOptionsWidget;
  * 
  */
 UCLASS()
-class BIGBUTLERBATTLE_API AMainMenuGameModeBase : public AGameModeBase
+class BIGBUTLERBATTLE_API AMainMenuGameModeBase : public AMyGameModeBase
 {
 	GENERATED_BODY()
 

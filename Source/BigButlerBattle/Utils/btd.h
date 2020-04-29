@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "UObject/Object.h"
+#include "Kismet/GameplayStatics.h"
+#include "MyGameModeBase.h"
 
 /**
  * 
@@ -42,7 +44,6 @@ namespace btd
         return (-0.69813170079773212 * rad * rad - 0.87266462599716477) * rad + 1.5707963267948966;
     }
 
-    static TArray<FTimerHandle> TimerHandles;
     /*
     * Waits before calling a lambda.
     * @param Context object.
@@ -56,13 +57,17 @@ namespace btd
         auto lambda = [&, Lambda]()
         {
             Lambda();
-            TimerHandles.Remove(Handle);
         };
         
         TimerCallback.BindLambda(Lambda);
 
-        Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
-        TimerHandles.Add(Handle);
+        auto GM = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(Context->GetWorld()));
+        if (GM)
+        {
+            GM->GetWorldTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
+            GM->AddTimerHandle(Handle);
+        }
+
         return Handle;
     }
 

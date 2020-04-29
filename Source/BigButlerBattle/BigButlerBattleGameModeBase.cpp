@@ -27,38 +27,6 @@ ABigButlerBattleGameModeBase::ABigButlerBattleGameModeBase()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void ABigButlerBattleGameModeBase::StartToLeaveMap()
-{
-	Super::StartToLeaveMap();
-
-	// Clear timers
-	for (TActorIterator<ATaskObject> Itr(GetWorld()); Itr; ++Itr)
-	{
-		if (!Itr)
-			continue;
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
-	}
-
-	for (TActorIterator<APlayerController> Itr(GetWorld()); Itr; ++Itr)
-	{
-		if (!Itr)
-			continue;
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
-	}
-
-	for (TActorIterator<APlayerCharacter> Itr(GetWorld()); Itr; ++Itr)
-	{
-		if (!Itr)
-			continue;
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(*Itr);
-	}
-	
-	for (int i = 0; i < btd::TimerHandles.Num(); ++i)
-	{
-		GetWorldTimerManager().ClearTimer(btd::TimerHandles[i]);
-	}
-}
-
 void ABigButlerBattleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
