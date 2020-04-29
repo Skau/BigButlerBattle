@@ -14,8 +14,6 @@ class UTask;
 class APlayerCharacter;
 class UNiagaraComponent;
 
-DECLARE_DELEGATE_OneParam(FTaskObjectDeliveredSignature, ATaskObject*);
-
 UCLASS()
 class BIGBUTLERBATTLE_API ATaskObject : public AActor
 {
@@ -33,15 +31,11 @@ public:
 
 	void Launch(const FVector& LaunchVelocity);
 
-	FTaskObjectDeliveredSignature OnTaskObjectDelivered;
-
 	void SetSelected(bool Value);
 
 	bool bCanHit = false;
 
 	void SetAsMainItem();
-
-	APlayerCharacter* Instigator = nullptr;
 
 	bool GetIsMainItem() { return bIsMainItem; }
 

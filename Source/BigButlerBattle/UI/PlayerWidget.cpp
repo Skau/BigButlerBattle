@@ -145,15 +145,21 @@ void UPlayerWidget::AddMessage(const FString& Message, const float Duration)
 	}
 
 	TextBlocks.Add(NewTextBlock);
+	MessageBox->AddChildToVerticalBox(NewTextBlock);
 
-	auto Slot = MessageBox->AddChildToVerticalBox(NewTextBlock);
-
-	btd::Delay(this, Duration, [=]() 
+	btd::Delay(this, Duration, [this]()
 	{
+		if (GetName().Contains("None")) // Yup..
+			return;
+
 		if(TextBlocks.Num())
 		{
-			MessageBox->RemoveChild(TextBlocks[0]);
-			TextBlocks.RemoveAt(0);
+			auto TextBlock = TextBlocks[0];
+			if (TextBlock != nullptr)
+			{
+				MessageBox->RemoveChild(TextBlock);
+				TextBlocks.RemoveSingle(TextBlock);
+			}
 		}
 	});
 }

@@ -130,9 +130,6 @@ void ATaskObject::Tick(float DeltaTime)
 	{
 		TimeSinceDropped += DeltaTime;
 
-		if (Instigator && TimeSinceDropped > 0.5f)
-			Instigator = nullptr;
-
 		if (TimeSinceDropped > TimeUntilResetThreshold)
 		{
 			bRecordingTimeSinceDropped = false;
@@ -376,11 +373,8 @@ void ATaskObject::OnPickedUp()
 	if (bRespawn)
 	{
 		bIsRespawning = true;
-		btd::Delay(this, RespawnTime, [=]()
+		btd::Delay(this, RespawnTime, [this]()
 		{
-			if (!IsValid(this))
-				return;
-
 			bIsRespawning = false;
 			bIsMainItem = false;
 			Enable(true, true, true);
@@ -402,10 +396,6 @@ void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const
 
 		MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 		MeshComponent->SetGenerateOverlapEvents(NewCollision);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("ERROR[%s]: MeshComponent was nullptr!"), *GetName());
 	}
 }
 

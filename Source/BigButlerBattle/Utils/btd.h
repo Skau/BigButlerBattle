@@ -42,6 +42,7 @@ namespace btd
         return (-0.69813170079773212 * rad * rad - 0.87266462599716477) * rad + 1.5707963267948966;
     }
 
+    static TArray<FTimerHandle> TimerHandles;
     /*
     * Waits before calling a lambda.
     * @param Context object.
@@ -51,9 +52,17 @@ namespace btd
     FORCEINLINE static FTimerHandle Delay(UObject* Context, const float Seconds, TFunction<void(void)> Lambda)
     {
         FTimerDelegate TimerCallback;
+        static FTimerHandle Handle;
+        auto lambda = [&, Lambda]()
+        {
+            Lambda();
+            TimerHandles.Remove(Handle);
+        };
+        
         TimerCallback.BindLambda(Lambda);
-        FTimerHandle Handle;
+
         Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
+        TimerHandles.Add(Handle);
         return Handle;
     }
 

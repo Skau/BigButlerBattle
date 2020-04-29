@@ -717,12 +717,11 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		Inventory[Index] = Spawned;
 		Spawned->AttachToComponent(
 			Tray,
-			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true),
+			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true),
 			SlotToUse);
 
 		// Scale it down
-		auto scale = Spawned->GetActorScale3D();
-		Spawned->SetActorScale3D(scale * 0.3f);
+		Spawned->SetActorScale3D(Spawned->GetActorScale3D() * 0.3f);
 
 		if (PickupSound)
 			UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), 1.f);
@@ -838,13 +837,20 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 			Spawned->bCanHit = true;
 		}
 
-		// Instigator
-		Spawned->Instigator = this;
-
 		// Finish
 		Spawned = Cast<ATaskObject>(UGameplayStatics::FinishSpawningActor(Spawned, transform));
+		DroppedObjects.Add(Spawned);
+		btd::Delay(this, 0.5f, [this]()
+		{
+			if (DroppedObjects.Num())
+			{
+				if (DroppedObjects.IsValidIndex(0))
+				{
+					auto Object = DroppedObjects[0];
+					DroppedObjects.Remove(Object);
+			}
+		});
 		Spawned->Launch(LaunchVelocity);
-		Spawned->SetParticlesEnable(true);
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 
@@ -930,8 +936,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
 		if(TaskObject == ClosestPickup)
 		{
-			if(!TaskObject->Instigator)
-				OnObjectPickedUp(TaskObject);
+			OnObjectPickedUp(TaskObject);
 		}
 		else
 		{
@@ -960,7 +965,10 @@ void APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveCompone
 {
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
-		TaskObjectsInCameraRange.Add(Object);
+		if (!bHasMainItem && DroppedObjects.Find(Object) == INDEX_NONE)
+		{
+			TaskObjectsInCameraRange.Add(Object);
+		}
 	}
 }
 
@@ -1043,9 +1051,6 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
-		if (TaskObjectsInCameraRange[i]->Instigator)
-			continue;
-
 		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{
