@@ -251,6 +251,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (ContinuousSound && Movement)
 	{
 		ContinuousSound->SetFloatParameter(FName{"skateboardGain"}, Movement->GetRollingAudioVolumeMult());
+		ContinuousSound->SetFloatParameter(FName{"grindingGain"}, Movement->GetGrindingAudioVolumeMult());
 	}
 
 	if (CanGrind())
