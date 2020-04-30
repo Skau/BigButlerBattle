@@ -53,9 +53,6 @@ bool USoundSettingsWidget::Initialize()
 
 		TextBlock_SFXVolume->SetText(FText::FromString(ToPercent(Instance->GetSoundEffectsSoundVolume())));
 	}
-	else
-		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::Initialize: Could not find game instance!"))
-
 	return bInit;
 }
 
