@@ -112,13 +112,6 @@ void ATaskObject::BeginPlay()
 	{
 		MeshComponent->SetCustomDepthStencilValue(1); // Permanent outline
 	}
-
-	btd::Delay(this, 4.f, [&](){
-		if (!IsValid(this))
-			return;
-		
-		SetParticlesEnable(false);
-	});
 }
 
 
@@ -138,6 +131,18 @@ void ATaskObject::Tick(float DeltaTime)
 	}
 	else
 		TimeSinceDropped = 0.f;
+
+
+	ObjectIdleTimer += DeltaTime;
+
+	if (ObjectIdleTimer > static_cast<float>(ParticleDisableTime))
+	{
+		SetParticlesEnable(false);
+	}
+	if (!bEnabled && !bRespawn && ObjectIdleTimer > static_cast<float>(CleanupTime))
+	{
+		Destroy();
+	}
 }
 
 #if WITH_EDITOR
@@ -372,6 +377,7 @@ void ATaskObject::SetDefault()
 void ATaskObject::OnPickedUp()
 {
 	Enable(false, false, false);
+	SetParticlesEnable(false);
 	if (bRespawn)
 	{
 		bIsRespawning = true;
@@ -384,6 +390,7 @@ void ATaskObject::OnPickedUp()
 	}
 
 	bRecordingTimeSinceDropped = false;
+	ObjectIdleTimer = 0.f;
 }
 
 void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics)
@@ -401,6 +408,8 @@ void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const
 		MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 		MeshComponent->SetGenerateOverlapEvents(NewCollision);
 	}
+
+	bEnabled = NewVisiblity || NewCollision || NewPhysics;
 }
 
 void ATaskObject::Launch(const FVector& LaunchVelocity)
@@ -409,6 +418,7 @@ void ATaskObject::Launch(const FVector& LaunchVelocity)
 	MeshComponent->AddImpulse(LaunchVelocity);
 	if(bIsMainItem)
 		bRecordingTimeSinceDropped = true;
+	ObjectIdleTimer = 0.f;
 }
 
 void ATaskObject::UpdateDataTables()

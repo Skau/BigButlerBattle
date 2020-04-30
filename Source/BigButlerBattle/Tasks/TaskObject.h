@@ -119,6 +119,10 @@ private:
 
 	float TimeSinceDropped = 0.0f;
 	bool bRecordingTimeSinceDropped = false;
+	float ObjectIdleTimer = 0.f;
+	uint8 CleanupTime = 10;
+	uint8 ParticleDisableTime = 4;
+	bool bEnabled = true;
 
 private:
 	void UpdateDataTables();
