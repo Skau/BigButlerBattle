@@ -18,6 +18,8 @@ class UCameraSettingsWidget;
 class UButlerGameInstance;
 class APlayerCharacter;
 class UNiagaraSystem;
+class UTexture;
+class UImage;
 
 /**
  * 
@@ -53,10 +55,16 @@ public:
 	UButton* Button_CameraOptions;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UImage* PlayerIcon;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCameraSettingsWidget* CameraSettings;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APlayerCharacter> CharacterClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<UTexture2D*> PlayerIcons;
 
 	UMainMenuPlayWidget* MainPlayWidget;
 

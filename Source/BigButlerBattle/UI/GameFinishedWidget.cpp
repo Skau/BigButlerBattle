@@ -4,6 +4,7 @@
 #include "GameFinishedWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 
 bool UGameFinishedWidget::Initialize()
 {
@@ -20,9 +21,11 @@ bool UGameFinishedWidget::Initialize()
 	return bInit;
 }
 
-void UGameFinishedWidget::SetWonText(const FString& Text) const
+void UGameFinishedWidget::SetWonText(int ControllerID, const FString& Text) const
 {
 	WonText->SetText(FText::FromString(Text));
+	PlayerIcon->SetBrushFromTexture(PlayerIcons[ControllerID]);
+	PlayerIcon->SetBrushSize({ 64.f, 64.f });
 }
 
 void UGameFinishedWidget::OnQuitPressed()

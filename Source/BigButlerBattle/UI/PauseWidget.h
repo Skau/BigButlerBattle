@@ -14,6 +14,8 @@ class UButton;
 class UWidgetSwitcher;
 class USoundSettingsWidget;
 class UCameraSettingsWidget;
+class UTexture2D;
+class UImage;
 
 /**
  * 
@@ -48,6 +50,9 @@ public:
     UButton* Button_Back;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* PlayerIcon;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UWidgetSwitcher* Switcher;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -55,6 +60,9 @@ public:
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UCameraSettingsWidget* CameraSettings;
+
+    UPROPERTY(EditDefaultsOnly)
+    TArray<UTexture2D*> PlayerIcons;
 
     FContinueGameSignature ContinueGame;
     FQuitGameSignature QuitGame;

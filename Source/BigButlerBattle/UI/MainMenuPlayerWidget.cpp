@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
 #include "ButlerGameInstance.h"
@@ -23,7 +24,6 @@ bool UMainMenuPlayerWidget::Initialize()
 	const bool bInit =  Super::Initialize();
 
 	Button_Join->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnJoinPressed);
-	Buttons.Add(Button_Join);
 
 	Button_Ready->OnClicked.AddDynamic(this, &UMainMenuPlayerWidget::OnReadyPressed);
 	Buttons.Add(Button_Ready);
@@ -40,6 +40,8 @@ void UMainMenuPlayerWidget::OnPlayerControllerSet()
 {
 	ID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 	PlayerNameText->SetText(FText::FromString("Player " + FString::FromInt(ID + 1)));
+	PlayerIcon->SetBrushFromTexture(PlayerIcons[ID]);
+	PlayerIcon->SetBrushSize({ 128.f, 128.f });
 }
 
 void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)

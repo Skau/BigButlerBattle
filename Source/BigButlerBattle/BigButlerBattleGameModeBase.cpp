@@ -248,7 +248,7 @@ void ABigButlerBattleGameModeBase::OnGameFinished(const int ControllerID) const
 
 	if (!GameFinishedWidget->IsVisible())
 	{
-		GameFinishedWidget->SetWonText("Player " + FString::FromInt(ControllerID + 1) + " won!");
+		GameFinishedWidget->SetWonText(ControllerID, "Player " + FString::FromInt(ControllerID + 1) + " won!");
 		GameFinishedWidget->SetVisibility(ESlateVisibility::Visible);
 		const auto Controller = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
 		GameFinishedWidget->FocusWidget(Controller);

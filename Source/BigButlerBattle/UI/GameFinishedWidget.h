@@ -8,6 +8,8 @@
 
 class UTextBlock;
 class UButton;
+class UImage;
+class UTexture2D;
 
 DECLARE_DELEGATE(FQuitGameSignature);
 
@@ -22,7 +24,7 @@ class BIGBUTLERBATTLE_API UGameFinishedWidget : public UBaseUserWidget
 public:
     bool Initialize() override;
 
-    void SetWonText(const FString& Text) const;
+    void SetWonText(int ControllerID, const FString& Text) const;
 
     FQuitGameSignature QuitGame;
 
@@ -32,6 +34,12 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UButton* Button_Quit;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* PlayerIcon;
+
+    UPROPERTY(EditDefaultsOnly)
+    TArray<UTexture2D*> PlayerIcons;
 
 private:
     UFUNCTION()

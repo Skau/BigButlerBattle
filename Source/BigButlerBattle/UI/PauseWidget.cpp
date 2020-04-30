@@ -5,9 +5,11 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
+#include "Components/Image.h"
 #include "SoundSettingsWidget.h"
 #include "CameraSettingsWidget.h"
 #include "Kismet/GameplayStatics.h"
+
 
 bool UPauseWidget::Initialize()
 {
@@ -42,6 +44,8 @@ void UPauseWidget::OnPlayerControllerSet()
 {
 	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 	PlayerText->SetText(FText::FromString("By Player " + FString::FromInt(ControllerID + 1)));
+	PlayerIcon->SetBrushFromTexture(PlayerIcons[ControllerID]);
+	PlayerIcon->SetBrushSize({ 64.f, 64.f });
 }
 
 void UPauseWidget::Reset()
