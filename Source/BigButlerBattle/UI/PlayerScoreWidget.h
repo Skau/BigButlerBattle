@@ -7,6 +7,8 @@
 #include "PlayerScoreWidget.generated.h"
 
 class UTextBlock;
+class UTexture2D;
+class UImage;
 
 /**
  * 
@@ -19,7 +21,7 @@ class BIGBUTLERBATTLE_API UPlayerScoreWidget : public UUserWidget
 public:
 	bool Initialize() override;
 
-    void SetPlayerName(const FString& Name);
+    void SetPlayerName(const FString& Name, UTexture2D* Icon);
     void UpdateScore(int NewScore);
 
 protected:
@@ -29,4 +31,6 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UTextBlock* PlayerScore;
 
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* PlayerIcon;
 };

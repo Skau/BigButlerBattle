@@ -44,6 +44,8 @@ void UPlayerWidget::UpdateTimer(const FString& String)
 
 void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewState)
 {
+	SetTimerVisiblity(NewState == EMainItemState::PickedUp);
+
 	FString player = (ControllerID == ID) ? "You " : "Player " + FString::FromInt(ControllerID + 1);
 	FString state = "";
 
@@ -59,12 +61,12 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 		state = " delivered ";
 	}
 
-	AddMessage(player + state + " the main item!");
+	AddMessage(ControllerID, player + state + " the main item!");
 }
 
 void UPlayerWidget::OnMainItemSet()
 {
-	AddMessage("The King demands a new item!");
+	AddMessage(-1, "The King demands a new item!");
 }
 
 void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& Controllers)
@@ -104,7 +106,7 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 
 		auto ControllerID = UGameplayStatics::GetPlayerControllerID(Controllers[i]);
 
-		PlayerScoreWidget->SetPlayerName("Player " + FString::FromInt(ControllerID + 1) + ": ");
+		PlayerScoreWidget->SetPlayerName("Player " + FString::FromInt(ControllerID + 1) + ": ", PlayerIcons[ControllerID]);
 
 		PlayerScores.Add(ControllerID, PlayerScoreWidget);
 
@@ -129,36 +131,51 @@ void UPlayerWidget::UpdateScore(int ControllerID, int NewScore)
 	}
 }
 
-void UPlayerWidget::AddMessage(const FString& Message, const float Duration)
+void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const float Duration)
 {
 	if (Message.IsEmpty())
 		return;
 
+	auto HorizontalBox = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+
+	auto Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
+
+	Icon->SetBrushFromTexture((ControllerID >= 0) ? PlayerIcons[ControllerID] : KingIcon);
+	Icon->SetBrushSize({ 64.f, 64.f });
+
+	HorizontalBox->AddChildToHorizontalBox(Icon);
+
 	auto NewTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 	NewTextBlock->SetText(FText::FromString(Message));
-	NewTextBlock->Font.Size = 48;
+	NewTextBlock->SetFont(FontInfo);
+	NewTextBlock->SetColorAndOpacity(FSlateColor({ 1.f, 0.8f, 0.23f, 1.f }));
 	NewTextBlock->SetJustification(ETextJustify::Center);
 
-	for (auto& TextBlock : TextBlocks)
+	HorizontalBox->AddChildToHorizontalBox(NewTextBlock);
+	MessageBox->AddChildToVerticalBox(HorizontalBox);
+
+	for (auto& OldMessage : Messages)
 	{
-		TextBlock->SetOpacity(0.6f);
+		for (auto& Child : OldMessage->GetAllChildren())
+		{
+			Child->SetRenderOpacity(0.6f);
+		}
 	}
 
-	TextBlocks.Add(NewTextBlock);
-	MessageBox->AddChildToVerticalBox(NewTextBlock);
+	Messages.Add(HorizontalBox);
 
 	btd::Delay(this, Duration, [this]()
 	{
 		if (GetName().Contains("None")) // Yup..
 			return;
 
-		if(TextBlocks.Num())
+		if(Messages.Num())
 		{
-			auto TextBlock = TextBlocks[0];
-			if (TextBlock != nullptr)
+			auto OldMessage = Messages[0];
+			if (OldMessage != nullptr)
 			{
-				MessageBox->RemoveChild(TextBlock);
-				TextBlocks.RemoveSingle(TextBlock);
+				MessageBox->RemoveChild(OldMessage);
+				Messages.RemoveSingle(OldMessage);
 			}
 		}
 	});
@@ -178,4 +195,9 @@ void UPlayerWidget::HideKeybinds()
 	{
 		Image_Keybinds->SetVisibility(ESlateVisibility::Hidden);
 	}
+}
+
+void UPlayerWidget::SetTimerVisiblity(bool Visible)
+{
+	TimerBox->SetVisibility(Visible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 }

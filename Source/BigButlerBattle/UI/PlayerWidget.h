@@ -9,9 +9,10 @@
 class UHorizontalBox;
 class UTextBlock;
 class UVerticalBox;
-class UImage;
+class UTexture2D;
 class APlayerCharacterController;
 class UPlayerScoreWidget;
+class UImage;
 enum class EMainItemState : uint8;
 /**
  * 
@@ -44,6 +45,9 @@ public:
 
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UHorizontalBox* TimerBox;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UTextBlock* Text_Timer;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -58,11 +62,21 @@ protected:
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<UPlayerScoreWidget> PlayerScoreWidgetClass;
 
+    UPROPERTY(EditDefaultsOnly)
+    FSlateFontInfo FontInfo;
+
+    UPROPERTY(EditDefaultsOnly)
+    TArray<UTexture2D*> PlayerIcons;
+
+    UPROPERTY(EditDefaultsOnly)
+    UTexture2D* KingIcon;
+
 private:
-    void AddMessage(const FString& Message, const float Duration = 3.f);
+    void AddMessage(int ControllerID, const FString& Message, const float Duration = 3.f);
+
+    void SetTimerVisiblity(bool Visible);
 
     TMap<int, UPlayerScoreWidget*> PlayerScores;
 
-    TArray<UTextBlock*> TextBlocks;
-
+    TArray<UHorizontalBox*> Messages;
 };
