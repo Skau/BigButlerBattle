@@ -20,6 +20,8 @@ public:
 
 	void StartToLeaveMap() override;
 
+	void BeginPlay() override;
+
 private:
 	TArray<FTimerHandle> TimerHandles;
 };

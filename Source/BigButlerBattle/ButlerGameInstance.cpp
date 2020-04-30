@@ -26,15 +26,6 @@ void UButlerGameInstance::Init()
 	}
 
 	PlayerOptions.AddDefaulted(4);
-
-	btd::Delay(this, 0.5f, [=]()
-	{
-		if (BackgroundMusic)
-		{
-			AudioComponent = UGameplayStatics::CreateSound2D(GetWorld(), BackgroundMusic, 1.0f, 1.0f, 0.0f, SoundConcurrency, true, true);
-			AudioComponent->Play();
-		}
-	});
 }
 
 float UButlerGameInstance::GetMainSoundVolume()
@@ -113,7 +104,13 @@ void UButlerGameInstance::Shutdown()
 void UButlerGameInstance::FadeBetweenMusic(bool bNewLevelIsMainMenu)
 {
 	if (!AudioComponent)
-		return;
+	{
+		if (BackgroundMusic)
+		{
+			AudioComponent = UGameplayStatics::CreateSound2D(GetWorld(), BackgroundMusic, 1.0f, 1.0f, 0.0f, SoundConcurrency, true, true);
+			AudioComponent->Play();
+		}
+	}
 
 	Fade = (float)bNewLevelIsMainMenu;
 

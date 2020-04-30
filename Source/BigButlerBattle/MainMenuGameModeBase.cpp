@@ -174,7 +174,6 @@ void AMainMenuGameModeBase::Countdown()
 				UGameplayStatics::RemovePlayer(controller, true);
 			}
 		}
-		Cast<UButlerGameInstance>(GetGameInstance())->LevelChanged(false);
 		UGameplayStatics::OpenLevel(GetWorld(), LevelToPlay);
 	}
 	else

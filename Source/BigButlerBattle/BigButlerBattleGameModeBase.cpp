@@ -263,8 +263,6 @@ void ABigButlerBattleGameModeBase::OnPlayerQuit() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("GM: Player Quit"));
 
-	Cast<UButlerGameInstance>(GetGameInstance())->LevelChanged(true);
-
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 

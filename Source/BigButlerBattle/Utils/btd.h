@@ -8,6 +8,7 @@
 #include "UObject/Object.h"
 #include "Kismet/GameplayStatics.h"
 #include "MyGameModeBase.h"
+#include "ButlerGameInstance.h"
 
 /**
  * 
@@ -50,25 +51,26 @@ namespace btd
     * @param How many seconds to wait before call.
     * @param The lambda to call.
     */
-    FORCEINLINE static FTimerHandle Delay(UObject* Context, const float Seconds, TFunction<void(void)> Lambda)
+    FORCEINLINE static void Delay(UObject* Context, const float Seconds, TFunction<void(void)> Lambda)
     {
+        if (!Context)
+            return;
+
         FTimerDelegate TimerCallback;
-        static FTimerHandle Handle;
-        auto lambda = [&, Lambda]()
-        {
-            Lambda();
-        };
+        FTimerHandle Handle;
         
         TimerCallback.BindLambda(Lambda);
 
-        auto GM = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(Context->GetWorld()));
-        if (GM)
-        {
-            GM->GetWorldTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
-            GM->AddTimerHandle(Handle);
-        }
+        Context->GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, Seconds, false);
 
-        return Handle;
+        if (!Context->IsA<UButlerGameInstance>())
+        {
+            auto GM = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(Context->GetWorld()));
+            if (GM)
+            {
+                GM->AddTimerHandle(Handle);
+            }
+        }
     }
 
     /*
