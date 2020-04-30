@@ -872,6 +872,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 			}
 		});
 		Spawned->Launch(LaunchVelocity);
+		Spawned->SetParticlesEnable(true);
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 
