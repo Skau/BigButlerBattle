@@ -136,6 +136,8 @@ void ATaskObject::Tick(float DeltaTime)
 			Reset();
 		}
 	}
+	else
+		TimeSinceDropped = 0.f;
 }
 
 #if WITH_EDITOR
@@ -380,6 +382,8 @@ void ATaskObject::OnPickedUp()
 			Enable(true, true, true);
 		});
 	}
+
+	bRecordingTimeSinceDropped = false;
 }
 
 void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics)
