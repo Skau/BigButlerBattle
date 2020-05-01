@@ -79,6 +79,8 @@ protected:
 
 	void Tick(float DeltaTime) override;
 
+	bool bDed = false;
+
 
 
 

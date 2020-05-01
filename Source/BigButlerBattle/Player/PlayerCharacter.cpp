@@ -332,10 +332,17 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 		UGameplayStatics::PlaySoundAtLocation(this, CrashSound, GetActorLocation(), 1.f);
 
 	OnCharacterFell.ExecuteIfBound(CurrentRoom, GetActorLocation());
+
+	bDed = true;
+	for (auto& obj : TaskObjectsInPickupRange)
+		obj->SetSelected(false);
 }
 
 void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	if (bDed)
+		return;
+
 	if (auto Other = Cast<APlayerCharacter>(OtherActor))
 	{
 		if (Movement->Velocity.Size() > CrashVelocityFallOffThreshold)
@@ -954,6 +961,9 @@ void APlayerCharacter::ResetItemIndex()
 
 void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (bDed)
+		return;
+
 	if (OtherActor->IsA(ATaskObject::StaticClass()) && !bHasMainItem)
 	{
 		auto TaskObject = Cast<ATaskObject>(OtherActor);
@@ -977,6 +987,9 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 
 void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (bDed)
+		return;
+
 	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
@@ -986,6 +999,9 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 
 void APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (bDed)
+		return;
+
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
 		if (!bHasMainItem && DroppedObjects.Find(Object) == INDEX_NONE)
@@ -997,6 +1013,9 @@ void APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveCompone
 
 void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (bDed)
+		return;
+
 	if (auto Object = Cast<ATaskObject>(OtherActor))
 	{
 		if (Object == ClosestPickup)

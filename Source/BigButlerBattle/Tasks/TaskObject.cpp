@@ -62,11 +62,11 @@ void ATaskObject::Reset()
 	Destroy();
 }
 
-void ATaskObject::SetParticlesEnable(bool bEnabled)
+void ATaskObject::SetParticlesEnable(bool bEnable)
 {
 	if (Particles && Particles->GetSystemInstance())
 	{
-		if (bEnabled && !bOnTray)
+		if (bEnable && !bOnTray)
 		{
 			Particles->GetSystemInstance()->Activate();
 		}
