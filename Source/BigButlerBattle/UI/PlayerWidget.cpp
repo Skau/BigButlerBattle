@@ -79,7 +79,7 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 
 	FSlateChildSize SizeBoxSize;
 	SizeBoxSize.SizeRule = ESlateSizeRule::Fill;
-	SizeBoxSize.Value = 0.1f;
+	SizeBoxSize.Value = 0.25f;
 
 	FSlateChildSize OverlaySize;
 	OverlaySize.SizeRule = ESlateSizeRule::Automatic;
@@ -93,14 +93,6 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 		auto HorizontalSlot = ScoreBox->AddChildToHorizontalBox(SizeBox);
 		HorizontalSlot->SetSize(SizeBoxSize);
 
-		auto Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
-
-		auto Image = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-		Image->SetColorAndOpacity(ImageColor);
-
-		auto OverlaySlot = Overlay->AddChildToOverlay(Image);
-		OverlaySlot->HorizontalAlignment = EHorizontalAlignment::HAlign_Fill;
-
 		auto PlayerScoreWidget = CreateWidget<UPlayerScoreWidget>(this, PlayerScoreWidgetClass);
 		PlayerScoreWidget->Initialize();
 
@@ -110,10 +102,7 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 
 		PlayerScores.Add(ControllerID, PlayerScoreWidget);
 
-		OverlaySlot = Overlay->AddChildToOverlay(PlayerScoreWidget);
-		OverlaySlot->HorizontalAlignment = EHorizontalAlignment::HAlign_Fill;
-
-		HorizontalSlot = ScoreBox->AddChildToHorizontalBox(Overlay);
+		HorizontalSlot = ScoreBox->AddChildToHorizontalBox(PlayerScoreWidget);
 		HorizontalSlot->SetSize(OverlaySize);
 		HorizontalSlot->HorizontalAlignment = EHorizontalAlignment::HAlign_Fill;
 	}
