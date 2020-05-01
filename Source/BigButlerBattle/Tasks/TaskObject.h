@@ -43,7 +43,7 @@ public:
 
 	bool GetIsRespawning() const { return bIsRespawning; }
 
-	void SetParticlesEnable(bool bEnabled);
+	void SetParticlesEnable(bool bEnable);
 
 	bool bOnTray = false;
 
