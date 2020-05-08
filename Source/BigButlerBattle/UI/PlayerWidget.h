@@ -13,7 +13,9 @@ class UTexture2D;
 class APlayerCharacterController;
 class UPlayerScoreWidget;
 class UImage;
+class ATaskObject;
 enum class EMainItemState : uint8;
+
 /**
  * 
  */
@@ -25,11 +27,13 @@ class BIGBUTLERBATTLE_API UPlayerWidget : public UBaseUserWidget
 public:
     bool Initialize() override;
 
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	
     void UpdateTimer(const FString& String);
 
     void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
 
-    void OnMainItemSet();
+    void OnMainItemSet(ATaskObject* Object);
 
     // Used to create the widgets on start (called by gamemode)
     void InitializeScores(const TArray<APlayerCharacterController*>& Controllers);
@@ -59,6 +63,9 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UVerticalBox* MessageBox;
 
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UWidget* MainItemIcon;
+	
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<UPlayerScoreWidget> PlayerScoreWidgetClass;
 
@@ -71,7 +78,12 @@ protected:
     UPROPERTY(EditDefaultsOnly)
     UTexture2D* KingIcon;
 
+
 private:
+    ATaskObject* MainItem;
+
+    bool bHasMainItem = false;
+	
     void AddMessage(int ControllerID, const FString& Message, const float Duration = 3.f);
 
     void SetTimerVisiblity(bool Visible);
