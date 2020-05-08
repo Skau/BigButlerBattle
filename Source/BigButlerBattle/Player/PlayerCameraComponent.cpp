@@ -38,6 +38,7 @@ UPlayerCameraComponent::UPlayerCameraComponent()
 	PostProcessSettings.bOverride_ColorGamma = true;
 	PostProcessSettings.bOverride_ColorGainShadows = true;
 	PostProcessSettings.bOverride_FilmSlope = true;
+	PostProcessSettings.bOverride_MotionBlurAmount = true;
 	PostProcessSettings.bOverride_MotionBlurTargetFPS = true;
 	PostProcessSettings.bOverride_ReflectionsType = true;
 
@@ -64,6 +65,7 @@ UPlayerCameraComponent::UPlayerCameraComponent()
 	PostProcessSettings.ColorGamma = FVector4 { 0.946601f, 0.971328f, 1.f, 1.f };
 	PostProcessSettings.ColorGainShadows = FVector4 { 0.621799f, 0.758338f, 1.f, 1.f};
 	PostProcessSettings.FilmSlope = 0.809524f;
+	PostProcessSettings.MotionBlurAmount = 0.f;
 	PostProcessSettings.MotionBlurTargetFPS = 61;
 	PostProcessSettings.ReflectionsType = EReflectionsType::ScreenSpace;
 }
