@@ -731,6 +731,8 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		// Scale it down
 		Spawned->SetActorScale3D(Spawned->GetActorScale3D() * 0.3f);
 
+		Object->Next = Spawned;
+
 		if (PickupSound)
 			UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), 1.f);
 
@@ -881,6 +883,8 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		});
 		Spawned->Launch(LaunchVelocity);
 		Spawned->SetParticlesEnable(true);
+
+		Object->Next = Spawned;
 
 		OnTaskObjectDropped.ExecuteIfBound(Spawned);
 

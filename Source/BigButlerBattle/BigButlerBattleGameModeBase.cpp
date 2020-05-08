@@ -166,7 +166,7 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 			{
 				for (auto& Controller : Controllers)
 				{
-					Controller->GetPlayerWidget()->OnMainItemSet();
+					Controller->GetPlayerWidget()->OnMainItemSet(*Itr);
 				}
 				return;
 			}
@@ -372,7 +372,7 @@ void ABigButlerBattleGameModeBase::SetNewMainItem(float delay)
 
 			for (auto& Controller : Controllers)
 			{
-				Controller->GetPlayerWidget()->OnMainItemSet();
+				Controller->GetPlayerWidget()->OnMainItemSet(Object);
 			}
 		}
 

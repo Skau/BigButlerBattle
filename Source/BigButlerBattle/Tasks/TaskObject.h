@@ -47,6 +47,8 @@ public:
 
 	bool bOnTray = false;
 
+	ATaskObject* Next;
+
 protected:
 	void BeginPlay() override;
 

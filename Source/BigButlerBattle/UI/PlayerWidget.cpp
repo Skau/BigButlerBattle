@@ -19,7 +19,9 @@
 #include "Tasks/Task.h"
 #include "Blueprint/WidgetTree.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Tasks/TaskObject.h"
+#include <Runtime\UMG\Public\Blueprint\SlateBlueprintLibrary.h>
 
 bool UPlayerWidget::Initialize()
 {
@@ -32,6 +34,32 @@ bool UPlayerWidget::Initialize()
 	}
 
 	return bInit;
+}
+
+void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if(MainItemIcon && MainItem && !bHasMainItem)
+	{
+		FVector2D Pos;
+		auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
+		if(PC->ProjectWorldLocationToScreen(MainItem->GetActorLocation(), Pos, true))
+		{
+			
+			FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
+			FVector2D ViewportPosition2D;
+			USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
+			
+			auto Size = GetDesiredSize();
+
+			ViewportPosition2D.X = FMath::Clamp(ViewportPosition2D.X, 0.f, Size.X);
+			ViewportPosition2D.Y = FMath::Clamp(ViewportPosition2D.Y, 0.f, Size.Y);
+
+			// Add lerp maybe
+			MainItemIcon->SetRenderTranslation(ViewportPosition2D);
+		}
+	}
 }
 
 void UPlayerWidget::UpdateTimer(const FString& String)
@@ -53,20 +81,43 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 	{
 	case EMainItemState::PickedUp:
 		state = " picked up ";
+		if (ControllerID == ID)
+		{			
+			MainItemIcon->SetVisibility(ESlateVisibility::Hidden);
+			bHasMainItem = true;
+		}
+		if (MainItem)
+			MainItem = MainItem->Next;
 		break;
 	case EMainItemState::Dropped:
 		state = " dropped ";
+		if (bHasMainItem)
+		{			
+			bHasMainItem = false;
+			MainItemIcon->SetVisibility(ESlateVisibility::Visible);
+		}
+		if (MainItem)
+			MainItem = MainItem->Next;
 		break;
 	case EMainItemState::Delivered:
 		state = " delivered ";
+		MainItem = nullptr;
+		MainItemIcon->SetVisibility(ESlateVisibility::Hidden);
+		if (bHasMainItem)
+			bHasMainItem = false;
 	}
 
 	AddMessage(ControllerID, player + state + " the main item!");
 }
 
-void UPlayerWidget::OnMainItemSet()
+void UPlayerWidget::OnMainItemSet(ATaskObject* Object)
 {
 	AddMessage(-1, "The King demands a new item!");
+	MainItem = Object;
+	if(MainItem)
+	{
+		MainItemIcon->SetVisibility(ESlateVisibility::Visible);
+	}
 }
 
 void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& Controllers)
