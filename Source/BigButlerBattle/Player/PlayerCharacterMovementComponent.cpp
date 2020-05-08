@@ -891,6 +891,9 @@ void UPlayerCharacterMovementComponent::CalcGrindingRailVelocity(float DeltaTime
 
 	float Speed = (bUseConstantGrindingSpeed ? RailGrindingSpeed : CurrentSpline.StartVelocitySize)
 		+ CurrentSpline.TravelTime * GrindingAcceleration;
+	// Early velocity clamp to lessen floating point errors
+	Speed = FMath::Clamp(Speed, 0.f, GrindingMaxSpeed);
+	
 	float NextSplinePos = SplineRef.FindInputKeyClosestToWorldLocation(SplineWorldPos + Dir * DeltaTime * Speed);
 	
 	FVector CurveCorrectedDir = SplineRef.GetLocationAtSplineInputKey(NextSplinePos, ESplineCoordinateSpace::World) - SplineWorldPos;
