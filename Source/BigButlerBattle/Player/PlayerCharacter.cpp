@@ -48,9 +48,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SpringArm = CreateDefaultSubobject<UPlayerSpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->SetRelativeLocation(FVector(0, 80.f, 0.f));
-	SpringArm->SetRelativeRotation(FRotator(5.f, 0, 0));
-	SpringArm->TargetArmLength = 300.f;
+	SpringArm->SetRelativeLocation(FVector(0, 0.f, 0.f));
+	SpringArm->SetRelativeRotation(FRotator(0.000027f, -17.f, 0));
+	SpringArm->TargetArmLength = 320.f;
 	SpringArm->bEnableCameraLag = true;
 	SpringArm->CameraLagSpeed = 10.f;
 	SpringArm->bEnableCameraRotationLag = true;
@@ -60,6 +60,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 	Camera = CreateDefaultSubobject<UPlayerCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+	Camera->SetRelativeRotation(FRotator(0.f, 17.f, 0));
 
 	TaskObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
 	TaskObjectPickupCollision->SetupAttachment(RootComponent);
@@ -80,7 +81,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
 	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
-	TaskObjectCameraCollision->SetRelativeLocation(FVector{630.f, -80.f, 4.f});
+	TaskObjectCameraCollision->SetRelativeLocation(FVector{720.f, -95.f, 4.f});
 	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f + SpringArm->GetRelativeRotation().Pitch, 0.f, 0.f));
 	TaskObjectCameraCollision->InitCapsuleSize(324.f, 410.f);
 
