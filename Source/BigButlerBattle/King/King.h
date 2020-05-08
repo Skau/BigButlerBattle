@@ -7,6 +7,7 @@
 #include "King.generated.h"
 
 class UBoxComponent;
+class APlayerCharacter;
 
 UCLASS()
 class BIGBUTLERBATTLE_API AKing : public AActor
@@ -17,6 +18,13 @@ public:
 	AKing();
 
 	bool bCanReceiveMainItem = false;
+
+	// Called by gamemode when timer runs out
+	bool CheckIfAnyInRange();
+
+	void AddClosePlayer(APlayerCharacter* Player);
+	void RemoveClosePlayer(APlayerCharacter* Player);
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent;
@@ -25,5 +33,6 @@ protected:
 	UBoxComponent* BoxCollision;
 
 private:
+	TArray<APlayerCharacter*> PlayersInRange;
 
 };

@@ -992,6 +992,10 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 		{
 			OnDeliverTasks.ExecuteIfBound(Inventory);
 		}
+		else
+		{
+			King->AddClosePlayer(this);
+		}
 	}
 }
 
@@ -1004,6 +1008,10 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 	{
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 		TaskObject->SetSelected(false);
+	}
+	else if (auto King = Cast<AKing>(OtherActor))
+	{
+		King->RemoveClosePlayer(this);
 	}
 }
 

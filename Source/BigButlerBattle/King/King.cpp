@@ -4,6 +4,7 @@
 #include "King.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Player/PlayerCharacter.h"
 
 AKing::AKing()
 {
@@ -20,5 +21,28 @@ AKing::AKing()
 	BoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 }
 
+bool AKing::CheckIfAnyInRange()
+{
+	for(auto& Player : PlayersInRange)
+	{
+		if(IsValid(Player) && Player->bHasMainItem)
+		{
+			Player->OnDeliverTasks.ExecuteIfBound(Player->GetInventory());
+			return true;
+		}
+	}
+	return false;
+}
+
+void AKing::AddClosePlayer(APlayerCharacter* Player)
+{
+	if(IsValid(Player))
+		PlayersInRange.AddUnique(Player);
+}
+
+void AKing::RemoveClosePlayer(APlayerCharacter* Player)
+{
+	PlayersInRange.RemoveSingle(Player);
+}
 
 

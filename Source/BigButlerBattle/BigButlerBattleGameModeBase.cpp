@@ -190,10 +190,14 @@ void ABigButlerBattleGameModeBase::Tick(float DeltaTime)
 			if (King)
 			{
 				King->bCanReceiveMainItem = true;
-				for (auto& Controller : Controllers)
+				if(!King->CheckIfAnyInRange())
 				{
-					Controller->GetPlayerWidget()->UpdateTimer("Deliver Item!");
+					for (auto& Controller : Controllers)
+					{
+						Controller->GetPlayerWidget()->UpdateTimer("Deliver Item!");
+					}
 				}
+
 				bTimeDone = true;
 				return;
 			}
