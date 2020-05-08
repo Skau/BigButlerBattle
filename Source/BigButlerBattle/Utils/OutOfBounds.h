@@ -16,6 +16,9 @@ class BIGBUTLERBATTLE_API AOutOfBounds : public AActor
 public:	
 	AOutOfBounds();
 
+	UPROPERTY(EditAnywhere)
+	bool bCanAffectPlayers = true;
+
 protected:
 	void BeginPlay() override;
 

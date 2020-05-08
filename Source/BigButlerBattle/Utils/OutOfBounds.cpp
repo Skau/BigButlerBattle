@@ -28,7 +28,10 @@ void AOutOfBounds::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCompon
 {
 	if (auto Player = Cast<APlayerCharacter>(OtherActor))
 	{
-		Player->EnableRagdoll();
+		if (bCanAffectPlayers)
+		{
+			Player->EnableRagdoll();
+		}
 	}
 	else if(auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
