@@ -15,7 +15,6 @@ UPlayerCameraComponent::UPlayerCameraComponent()
 	FieldOfView = 105.f;
 
 	// =================== Postprocessing ====================================
-	PostProcessSettings.bOverride_BloomMethod = true;
 	PostProcessSettings.bOverride_BloomIntensity = true;
 	PostProcessSettings.bOverride_BloomThreshold = true;
 	PostProcessSettings.bOverride_Bloom1Tint = true;
@@ -42,7 +41,6 @@ UPlayerCameraComponent::UPlayerCameraComponent()
 	PostProcessSettings.bOverride_MotionBlurTargetFPS = true;
 	PostProcessSettings.bOverride_ReflectionsType = true;
 
-	PostProcessSettings.BloomMethod = EBloomMethod::BM_FFT;
 	PostProcessSettings.BloomIntensity = 1.75238f;
 	PostProcessSettings.BloomThreshold = 0.028572f;
 	PostProcessSettings.Bloom1Tint = FLinearColor{0.782849f, 0.3465f, 0.3465f};
