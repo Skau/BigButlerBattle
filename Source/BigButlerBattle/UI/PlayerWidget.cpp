@@ -188,7 +188,6 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 	auto NewTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 	NewTextBlock->SetText(FText::FromString(Message));
 	NewTextBlock->SetFont(FontInfo);
-	NewTextBlock->SetColorAndOpacity(FSlateColor({ 1.f, 0.8f, 0.23f, 1.f }));
 	NewTextBlock->SetJustification(ETextJustify::Center);
 
 	HorizontalBox->AddChildToHorizontalBox(NewTextBlock);
