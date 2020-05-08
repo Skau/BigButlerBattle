@@ -800,6 +800,11 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float deltaTime, int32 Iter
 				SetMovementMode(EMovementMode::MOVE_Falling);
 				StartNewPhysics(remainingTime, Iterations);
 			}
+			else
+			{
+				// Correct grinding offset floating point error
+				CorrectGrindingPosError();
+			}
 		}
 	}
 }
@@ -896,7 +901,6 @@ void UPlayerCharacterMovementComponent::CalcGrindingRailVelocity(float DeltaTime
 	if (Velocity.ContainsNaN())
 		Velocity = FVector::ZeroVector;
 
-
 	const auto vDir = Velocity.GetSafeNormal();
 	// Add acceleration:
 	// Velocity += vDir * GrindingAcceleration * DeltaTime;
@@ -950,6 +954,25 @@ bool UPlayerCharacterMovementComponent::IsAtCurveEnd(float DeltaTime) const
 	auto lastPoint = CurrentSpline.SkateboardSplineReference->GetLocationAtSplinePoint(lastIndex, ESplineCoordinateSpace::World);
 	auto nextPoint = splineWorldPos + Velocity * DeltaTime;
 	return FVector::DotProduct(nextPoint - lastPoint, nextPoint - splineWorldPos) > 0.f;
+}
+
+void UPlayerCharacterMovementComponent::CorrectGrindingPosError()
+{
+	if (CurrentSpline.HasValue())
+	{
+		if (CurrentSpline.TravelTime > GrindingPositionValidationCount * GrindingPositionValidationInterval)
+		{
+			++GrindingPositionValidationCount;
+
+			auto owner = Cast<APlayerCharacter>(GetOwner());
+			if (IsValid(owner))
+			{
+				FHitResult Hit(1.f);
+				auto CorrectingVelocity = CurrentSpline.SkateboardSplineReference->GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) - GetSkateboardLocation(owner);
+				bool bMoveResult = SafeMoveUpdatedComponent(CorrectingVelocity, GrindingRotation, true, Hit);
+			}
+		}
+	}
 }
 
 FVector UPlayerCharacterMovementComponent::GetSkateboardLocation(APlayerCharacter* Owner)

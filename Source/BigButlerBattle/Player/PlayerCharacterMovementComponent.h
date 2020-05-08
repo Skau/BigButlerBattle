@@ -346,6 +346,9 @@ protected:
 
 	FQuat GrindingRotation;
 
+	float GrindingPositionValidationTimer;
+	unsigned int GrindingPositionValidationCount = 0;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|Start")
 	bool bUseConstantEnteringSpeed = true;
 
@@ -378,6 +381,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail")
 	float GrindingAcceleration = 135.f;
 
+	/**
+	 * How often the movement component will validate it's position on a rail in order
+	 * to make up for floating point precision errors.
+	 * Lower values will check often, increasing precision but also cost.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Position Validation Interval"))
+	float GrindingPositionValidationInterval = 0.4f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
 	float GrindingMaxSpeed = 2065.f;
 
@@ -391,6 +402,7 @@ protected:
 	bool InEndInterval() const;
 	bool InEndInterval(int32 LastIndex, bool bForward) const;
 	bool IsAtCurveEnd(float DeltaTime) const;
+	void CorrectGrindingPosError();
 
 	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
 
