@@ -387,7 +387,7 @@ protected:
 	 * Lower values will check often, increasing precision but also cost.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Position Validation Interval"))
-	float GrindingPositionValidationInterval = 0.4f;
+	float GrindingPositionValidationInterval = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
 	float GrindingMaxSpeed = 2065.f;
@@ -416,4 +416,5 @@ void UPlayerCharacterMovementComponent::SetSpline(Args&&... args)
 {
 	CurrentSpline = FSplineInfo{std::move(args)...};
 	CurrentSpline.OnSplineChanged.AddUObject(this, &UPlayerCharacterMovementComponent::OnSplineChangedImplementation);
+	GrindingPositionValidationCount = 0;
 }
