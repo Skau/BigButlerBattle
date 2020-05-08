@@ -128,8 +128,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	// Set overlap threshold to ignore everything but the rail's
 	GrindingOverlapThreshold->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	GrindingOverlapThreshold->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
-	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -60.f});
-	GrindingOverlapThreshold->SetSphereRadius(200.f);
+	GrindingOverlapThreshold->SetRelativeLocation(FVector{0.f, 0.f, -70.f});
+	GrindingOverlapThreshold->SetSphereRadius(120.f);
 
 
 	// Particles
