@@ -367,8 +367,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	bool CanTackle = true;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Angle Threshold"))
-	float TackleAngleThreshold = 45.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Cooldown"))
+	float TackleCooldown = 3.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tackling", meta = (DisplayName = "Strength"))
 	float TackleStrength = 100.f;
@@ -377,9 +377,8 @@ protected:
 	void OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-
-
+	
+	bool bCanTackle = true;
 
 
 /// ========================================= Sounds =================================================

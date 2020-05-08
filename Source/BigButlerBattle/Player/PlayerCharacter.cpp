@@ -46,6 +46,10 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	GetCapsuleComponent()->SetCapsuleHalfHeight(100.f);
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
 
+	bUseControllerRotationYaw = false;
+
+	// Springarm / Camera
+	
 	SpringArm = CreateDefaultSubobject<UPlayerSpringArmComponent>("Spring Arm");
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->SetRelativeLocation(FVector(0, 0.f, 0.f));
@@ -62,10 +66,11 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->SetRelativeRotation(FRotator(0.f, 17.f, 0));
 
+
+	// Task objects
+	
 	TaskObjectPickupCollision = CreateDefaultSubobject<UBoxComponent>("Object Pickup Collision");
 	TaskObjectPickupCollision->SetupAttachment(RootComponent);
-
-	// Default values
 
 	TaskObjectPickupCollision->SetGenerateOverlapEvents(true);
 	TaskObjectPickupCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
@@ -76,8 +81,6 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision = CreateDefaultSubobject<UCapsuleComponent>("Capsule Object Collision");
 	TaskObjectCameraCollision->SetupAttachment(Camera);
 
-	// Default values
-
 	TaskObjectCameraCollision->SetGenerateOverlapEvents(true);
 	TaskObjectCameraCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 
@@ -85,6 +88,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	TaskObjectCameraCollision->SetRelativeRotation(FRotator(-90.f + SpringArm->GetRelativeRotation().Pitch, 0.f, 0.f));
 	TaskObjectCameraCollision->InitCapsuleSize(324.f, 410.f);
 
+	// Tray
+	
 	Tray = CreateDefaultSubobject<UStaticMeshComponent>("Tray");
 	Tray->SetupAttachment(GetMesh(), "TraySocket");
 	Tray->SetRelativeLocation(FVector(60.f, -50.f, 184.f));
@@ -92,7 +97,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	Tray->SetRelativeScale3D(FVector(2.5f, 2.5f, 2.5f));
 
 
-	check(Tray != nullptr);
+	// Inventory
 
 	TraySlotNames.Reserve(4);
 	TraySlotNames.Add("Slot_0");
@@ -108,7 +113,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 
 
 
-	bUseControllerRotationYaw = false;
+	// Tackle range
 
 	PlayersInRangeCollision = CreateDefaultSubobject<UBoxComponent>("Players In Range Collision");
 	PlayersInRangeCollision->SetupAttachment(RootComponent);
@@ -116,8 +121,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	PlayersInRangeCollision->SetGenerateOverlapEvents(true);
 	PlayersInRangeCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	PlayersInRangeCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	PlayersInRangeCollision->SetRelativeLocation(FVector{ 0, 0, 32.f });
-	PlayersInRangeCollision->SetBoxExtent(FVector{ 128.f, 256.f, 128.f });
+	PlayersInRangeCollision->SetRelativeLocation(FVector{ 70.f, 0, 32.f });
+	PlayersInRangeCollision->SetBoxExtent(FVector{ 80.f, 128.f, 128.f });
 
 
 	// Sound
@@ -1036,6 +1041,10 @@ void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent
 
 void APlayerCharacter::TryTackle()
 {
+	if (!bCanTackle)
+		return;
+
+	
 	if (AnimInstance)
 	{
 		// Cancel tackle if already doing something (like throwing)
@@ -1056,13 +1065,7 @@ void APlayerCharacter::TryTackle()
 	{
 		auto OtherPlayer = PlayersInRange[i];
 		auto OtherPlayerLocation = OtherPlayer->GetActorLocation();
-
-		// Check angle
-		Direction = (OtherPlayerLocation - GetActorLocation()).GetSafeNormal();
-		auto angle = FMath::RadiansToDegrees(btd::FastAcos(FMath::Abs(FVector::DotProduct(GetActorForwardVector(), Direction))));
-		if (angle < TackleAngleThreshold)
-			continue;
-
+		
 		// Check distance
 		auto Distance = FVector::Distance(GetActorLocation(), OtherPlayerLocation);
 		if (Distance < ClosestDistance)
@@ -1073,6 +1076,12 @@ void APlayerCharacter::TryTackle()
 	{
 		ClosestPlayer->EnableRagdoll(Direction * TackleStrength, ClosestPlayer->GetActorLocation());
 		PlayersInRange.RemoveSingle(ClosestPlayer);
+		bCanTackle = false;
+		
+		btd::Delay(this, TackleCooldown, [this]()
+		{
+			bCanTackle = true;
+		});
 	}
 }
 
@@ -1088,9 +1097,7 @@ void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent
 void APlayerCharacter::OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (auto Other = Cast<APlayerCharacter>(OtherActor))
-	{
 		PlayersInRange.RemoveSingle(Other);
-	}
 }
 
 void APlayerCharacter::UpdateClosestTaskObject()
