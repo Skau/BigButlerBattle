@@ -14,6 +14,8 @@ class APlayerCharacterController;
 class UPlayerScoreWidget;
 class UImage;
 class ATaskObject;
+class APlayerCharacter;
+class ABigButlerBattleGameModeBase;
 enum class EMainItemState : uint8;
 
 /**
@@ -65,6 +67,15 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UWidget* MainItemIcon;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* PlayerIcon1;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* PlayerIcon2;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UImage* PlayerIcon3;
 	
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<UPlayerScoreWidget> PlayerScoreWidgetClass;
@@ -78,6 +89,7 @@ protected:
     UPROPERTY(EditDefaultsOnly)
     UTexture2D* KingIcon;
 
+	
 
 private:
     ATaskObject* MainItem;
@@ -87,6 +99,12 @@ private:
     void AddMessage(int ControllerID, const FString& Message, const float Duration = 3.f);
 
     void SetTimerVisiblity(bool Visible);
+
+    TArray<UImage*> PlayerIconWidgets;
+	
+    TArray<APlayerCharacterController*> PlayerControllers;
+
+    ABigButlerBattleGameModeBase* GameMode;
 
     TMap<int, UPlayerScoreWidget*> PlayerScores;
 

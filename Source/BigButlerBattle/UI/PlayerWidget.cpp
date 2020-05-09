@@ -5,6 +5,8 @@
 #include "PlayerScoreWidget.h"
 #include "Utils/btd.h"
 #include "Player/PlayerCharacterController.h"
+#include "GameFramework/Character.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -27,10 +29,14 @@ bool UPlayerWidget::Initialize()
 {
 	bool bInit = Super::Initialize();
 
-	auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (GM)
+	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode)
 	{
-		InitializeScores(GM->GetControllers());
+		InitializeScores(GameMode->GetControllers());
+
+		PlayerIconWidgets.Add(PlayerIcon1);
+		PlayerIconWidgets.Add(PlayerIcon2);
+		PlayerIconWidgets.Add(PlayerIcon3);
 	}
 
 	return bInit;
@@ -40,13 +46,15 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+	auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
+
+	// Main item icon
+	
 	if(MainItemIcon && MainItem && !bHasMainItem)
 	{
 		FVector2D Pos;
-		auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
 		if(PC->ProjectWorldLocationToScreen(MainItem->GetActorLocation(), Pos, true))
 		{
-			
 			FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
 			FVector2D ViewportPosition2D;
 			USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
@@ -58,6 +66,58 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 			// Add lerp maybe
 			MainItemIcon->SetRenderTranslation(ViewportPosition2D);
+		}
+	}
+
+	// Player icons
+
+	
+	// Have to do some initializing here because ID is not set yet in Initialize()
+	if(!PlayerControllers.Num())
+	{
+		for (auto& Controller : GameMode->GetControllers())
+		{
+			auto ControllerID = UGameplayStatics::GetPlayerControllerID(Controller);
+			if (ControllerID != ID)
+			{
+				PlayerControllers.Add(Controller);
+			}
+		}
+
+		for (int i = 0; i < PlayerControllers.Num(); ++i)
+		{
+			auto ControllerID = UGameplayStatics::GetPlayerControllerID(PlayerControllers[i]);
+			PlayerIconWidgets[i]->SetBrushFromTexture(PlayerIcons[ControllerID]);
+		}
+	}
+	
+	for(int i = 0; i < PlayerControllers.Num(); ++i)
+	{
+		auto Widget = PlayerIconWidgets[i];
+		
+		if (Widget->Visibility == ESlateVisibility::Hidden)
+			Widget->SetVisibility(ESlateVisibility::Visible);
+		
+		FVector2D Pos;
+		auto Player = Cast<ACharacter>(PlayerControllers[i]->GetPawn());
+		if(Player)
+		{
+			auto WorldPos = Player->GetActorLocation();
+			WorldPos.Z += 100.f;
+			if (PC->ProjectWorldLocationToScreen(WorldPos, Pos, true))
+			{
+				FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
+				FVector2D ViewportPosition2D;
+				USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
+
+				auto Size = GetDesiredSize();
+
+					ViewportPosition2D.X = FMath::Clamp(ViewportPosition2D.X, 0.f, Size.X);
+				ViewportPosition2D.Y = FMath::Clamp(ViewportPosition2D.Y, 0.f, Size.Y);
+
+				// Add lerp maybe
+				Widget->SetRenderTranslation(ViewportPosition2D);
+			}
 		}
 	}
 }
