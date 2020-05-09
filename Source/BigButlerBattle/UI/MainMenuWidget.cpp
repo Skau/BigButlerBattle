@@ -11,6 +11,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "CameraDirector.h"
 #include "Utils/btd.h"
+#include "Animation/UMGSequencePlayer.h"
 
 UMainMenuWidget::UMainMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -59,8 +60,34 @@ bool UMainMenuWidget::Initialize()
 	CameraDirector = Cast<ACameraDirector>(UGameplayStatics::GetActorOfClass(GetWorld(), ACameraDirector::StaticClass()));
 
 	DefaultWidgetToFocus = Button_Play;
+	
+	UProperty* prop = GetClass()->PropertyLink;
+	while (prop != nullptr)
+	{
+		if (prop->GetClass() == UObjectProperty::StaticClass())
+		{
+			UObjectProperty* objectProp = Cast<UObjectProperty>(prop);
+			
+			if (objectProp->PropertyClass == UWidgetAnimation::StaticClass())
+			{
+				UObject* object = objectProp->GetObjectPropertyValue_InContainer(this);
+
+				Animation = Cast<UWidgetAnimation>(object);
+				if (Animation != nullptr)
+					break;
+			}
+		}
+		prop = prop->PropertyLinkNext;
+	}
+
+	PlayAnimation();
 
 	return bInit;
+}
+
+void UMainMenuWidget::PlayAnimation()
+{
+	PlayAnimationForward(Animation);
 }
 
 void UMainMenuWidget::OnPlayPressed()
@@ -72,7 +99,7 @@ void UMainMenuWidget::OnPlayPressed()
 		return;
 	}
 
-	SetVisibility(ESlateVisibility::Hidden);
+
 	if(PlayWidget->MainMenuWidget != this)
 		PlayWidget->MainMenuWidget = this;
 
@@ -80,6 +107,12 @@ void UMainMenuWidget::OnPlayPressed()
 	{
 		CameraDirector->BlendToCharacterSelectionCamera();
 	}
+
+	auto Player = PlayAnimationReverse(Animation);
+	btd::Delay(this, Animation->GetEndTime() - Animation->GetStartTime(), [this]()
+	{
+		SetVisibility(ESlateVisibility::Hidden);
+	});
 
 	btd::Delay(this, CameraDirector->CharacterSelectCameraBlendTime, [=]()
 	{

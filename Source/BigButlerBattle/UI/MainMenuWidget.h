@@ -14,6 +14,7 @@ class UHelpWidget;
 class UMainMenuOptionsWidget;
 class AMainMenuGameModeBase;
 class ACameraDirector;
+class UWidgetAnimation;
 
 /**
  * 
@@ -48,6 +49,9 @@ public:
 
 	TArray<FTransform> ButlerTransforms;
 
+	// Called by MainMenuPlayWidget on back to main menu
+	void PlayAnimation();
+
 protected:
 	void NativeConstruct() override;
 
@@ -65,4 +69,8 @@ private:
 
 	UFUNCTION()
 	void OnQuitPressed();
+
+	UWidgetAnimation* Animation;
+
+	bool Finished = false;
 };

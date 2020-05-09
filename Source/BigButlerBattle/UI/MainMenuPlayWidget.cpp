@@ -41,6 +41,9 @@ void UMainMenuPlayWidget::BackToMainMenu()
 	SetVisibility(ESlateVisibility::Hidden);
 	MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
 	MainMenuWidget->FocusWidget(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	MainMenuWidget->PlayAnimation();
+	
+	
 	if (MainMenuWidget->CameraDirector)
 	{
 		MainMenuWidget->CameraDirector->PlaySequence();
