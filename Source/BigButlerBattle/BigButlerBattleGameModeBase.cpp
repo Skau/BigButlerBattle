@@ -194,7 +194,7 @@ void ABigButlerBattleGameModeBase::Tick(float DeltaTime)
 				{
 					for (auto& Controller : Controllers)
 					{
-						Controller->GetPlayerWidget()->UpdateTimer("Deliver Item!");
+						Controller->GetPlayerWidget()->UpdateTimerText(ControllerIDHoldingItem, true);
 					}
 				}
 
@@ -292,6 +292,13 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 	{
 		if (PickupMainItemSound)
 			UGameplayStatics::PlaySound2D(this, PickupMainItemSound, 1.f);
+
+		ControllerIDHoldingItem = ControllerID;
+			
+		for (auto& Controller : Controllers)
+		{
+			Controller->GetPlayerWidget()->UpdateTimerText(ControllerID, false);
+		}
 	}
 	break;
 	case EMainItemState::Dropped:

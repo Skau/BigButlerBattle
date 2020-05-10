@@ -112,5 +112,7 @@ protected:
 private:
 	void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
 
+	int ControllerIDHoldingItem = -1;
+
 	AKing* King = nullptr;
 };

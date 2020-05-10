@@ -56,7 +56,7 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		FVector2D Pos;
 		if (WorldToScreen(MainItem->GetActorLocation(), Pos))
 		{
-			KingIconWidget->SetRenderTranslation(Pos);
+			MainItemIconWidget->SetRenderTranslation(Pos);
 		}
 	}
 
@@ -121,11 +121,40 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	}
 }
 
+void UPlayerWidget::UpdateTimerText(int ControllerID, bool bCanDeliver)
+{
+	if (!Timer_Text)
+		return;
+	
+	Timer_Image->SetBrushFromTexture(PlayerIcons[ControllerID]);
+	
+	FString Message;
+
+	if(bCanDeliver)
+	{
+		FString player = (ControllerID == ID) ? "You " : "Player " + FString::FromInt(ControllerID + 1) + " ";
+		Message = player + "can deliver!";
+		if (Timer_Time)
+			Timer_Time->SetVisibility(ESlateVisibility::Hidden);
+	}
+	else
+	{
+		FString player = (ControllerID == ID) ? "you " : "player " + FString::FromInt(ControllerID + 1) + " ";
+		
+		Message = "Time until " + player + "can deliver:";
+	}
+
+	Timer_Text->SetText(FText::FromString(Message));
+}
+
 void UPlayerWidget::UpdateTimer(const FString& String)
 {
-	if (Text_Timer)
+	if(Timer_Time)
 	{
-		Text_Timer->SetText(FText::FromString(String));
+		if (Timer_Time->Visibility == ESlateVisibility::Hidden)
+			Timer_Time->SetVisibility(ESlateVisibility::Visible);
+		
+		Timer_Time->SetText(FText::FromString(String));
 	}
 }
 
@@ -166,7 +195,7 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 			bHasMainItem = false;
 	}
 
-	AddMessage(ControllerID, player + state + " the main item!");
+	AddMessage(ControllerID, player + state + " the item!");
 }
 
 void UPlayerWidget::OnMainItemSet(ATaskObject* Object)
@@ -240,7 +269,7 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 	auto Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 
 	Icon->SetBrushFromTexture((ControllerID >= 0) ? PlayerIcons[ControllerID] : MainItemIcon);
-	Icon->SetBrushSize({ 64.f, 64.f });
+	Icon->SetBrushSize({ 32.f, 32.f });
 
 	HorizontalBox->AddChildToHorizontalBox(Icon);
 
@@ -249,7 +278,9 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 	NewTextBlock->SetFont(FontInfo);
 	NewTextBlock->SetJustification(ETextJustify::Center);
 
-	HorizontalBox->AddChildToHorizontalBox(NewTextBlock);
+	auto Slot = HorizontalBox->AddChildToHorizontalBox(NewTextBlock);
+	Slot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
+	Slot->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
 	MessageBox->AddChildToVerticalBox(HorizontalBox);
 
 	for (auto& OldMessage : Messages)

@@ -32,6 +32,8 @@ public:
 
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	
+    void UpdateTimerText(int ControllerID, bool bCanDeliver);
+
     void UpdateTimer(const FString& String);
 
     void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
@@ -55,7 +57,13 @@ protected:
     UHorizontalBox* TimerBox;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-    UTextBlock* Text_Timer;
+    UImage* Timer_Image;
+	
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UTextBlock* Timer_Text;
+	
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UTextBlock* Timer_Time;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UImage* Image_Keybinds;
