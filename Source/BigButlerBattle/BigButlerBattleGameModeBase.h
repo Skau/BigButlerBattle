@@ -39,6 +39,9 @@ public:
 
 	TArray<APlayerCharacterController*> GetControllers() const { return Controllers; }
 
+
+	AKing* GetKing() const { return King; }
+
 protected:
 	void BeginPlay() override;
 
@@ -53,8 +56,6 @@ protected:
 	TSubclassOf<UGameFinishedWidget> GameFinishedWidgetClass;
 
 	UGameFinishedWidget* GameFinishedWidget;
-
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (DisplayName = "PickupMainItem"))
 	USoundBase *PickupMainItemSound = nullptr;

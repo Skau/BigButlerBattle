@@ -16,6 +16,7 @@ class UImage;
 class ATaskObject;
 class APlayerCharacter;
 class ABigButlerBattleGameModeBase;
+class AKing;
 enum class EMainItemState : uint8;
 
 /**
@@ -66,7 +67,10 @@ protected:
     UVerticalBox* MessageBox;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-    UWidget* MainItemIcon;
+    UWidget* MainItemIconWidget;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    UWidget* KingIconWidget;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     UImage* PlayerIcon1;
@@ -87,12 +91,14 @@ protected:
     TArray<UTexture2D*> PlayerIcons;
 
     UPROPERTY(EditDefaultsOnly)
-    UTexture2D* KingIcon;
+    UTexture2D* MainItemIcon;
 
 	
 
 private:
     ATaskObject* MainItem;
+
+    AKing* King;
 
     bool bHasMainItem = false;
 	
@@ -110,5 +116,7 @@ private:
 
     TArray<UHorizontalBox*> Messages;
 
-    FVector2D ClampPosition(FVector2D Position);
+    bool WorldToScreen(const FVector& WorldLocation, FVector2D& ScreenPosition);
+
+    FVector2D ClampPosition(FVector2D Position) const;
 };

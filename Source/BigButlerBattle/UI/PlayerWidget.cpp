@@ -23,7 +23,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Tasks/TaskObject.h"
-#include <Runtime\UMG\Public\Blueprint\SlateBlueprintLibrary.h>
+#include "King/King.h"
+#include "Runtime/UMG/Public/Blueprint/SlateBlueprintLibrary.h"
+
 
 bool UPlayerWidget::Initialize()
 {
@@ -46,20 +48,33 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
 
 	// Main item icon
 	
-	if(MainItemIcon && MainItem && !bHasMainItem)
+	if(MainItemIconWidget && MainItem && !bHasMainItem)
 	{
 		FVector2D Pos;
-		if(PC->ProjectWorldLocationToScreen(MainItem->GetActorLocation(), Pos, true))
+		if (WorldToScreen(MainItem->GetActorLocation(), Pos))
 		{
-			const FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
-			FVector2D ViewportPosition2D;
-			USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
-			
-			MainItemIcon->SetRenderTranslation(ClampPosition(ViewportPosition2D));
+			KingIconWidget->SetRenderTranslation(Pos);
+		}
+	}
+
+	// King icon
+
+	if(!King)
+	{
+		King = GameMode->GetKing();
+	}
+
+	if (KingIconWidget && King)
+	{
+		FVector WorldPos = King->GetActorLocation();
+		WorldPos.Z += 300.f;
+		FVector2D Pos;
+		if (WorldToScreen(WorldPos, Pos))
+		{
+			KingIconWidget->SetRenderTranslation(Pos);
 		}
 	}
 
@@ -92,19 +107,15 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		if (Widget->Visibility == ESlateVisibility::Hidden)
 			Widget->SetVisibility(ESlateVisibility::Visible);
 		
-		FVector2D Pos;
 		auto Player = Cast<ACharacter>(PlayerControllers[i]->GetPawn());
 		if(Player)
 		{
 			auto WorldPos = Player->GetActorLocation();
 			WorldPos.Z += 100.f;
-			if (PC->ProjectWorldLocationToScreen(WorldPos, Pos, true))
+			FVector2D Pos;
+			if(WorldToScreen(WorldPos, Pos))
 			{
-				FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
-				FVector2D ViewportPosition2D;
-				USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
-
-				Widget->SetRenderTranslation(ClampPosition(ViewportPosition2D));
+				Widget->SetRenderTranslation(Pos);
 			}
 		}
 	}
@@ -131,7 +142,7 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 		state = " picked up ";
 		if (ControllerID == ID)
 		{			
-			MainItemIcon->SetVisibility(ESlateVisibility::Hidden);
+			MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
 			bHasMainItem = true;
 		}
 		if (MainItem)
@@ -142,7 +153,7 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 		if (bHasMainItem)
 		{			
 			bHasMainItem = false;
-			MainItemIcon->SetVisibility(ESlateVisibility::Visible);
+			MainItemIconWidget->SetVisibility(ESlateVisibility::Visible);
 		}
 		if (MainItem)
 			MainItem = MainItem->Next;
@@ -150,7 +161,7 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 	case EMainItemState::Delivered:
 		state = " delivered ";
 		MainItem = nullptr;
-		MainItemIcon->SetVisibility(ESlateVisibility::Hidden);
+		MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
 		if (bHasMainItem)
 			bHasMainItem = false;
 	}
@@ -164,7 +175,7 @@ void UPlayerWidget::OnMainItemSet(ATaskObject* Object)
 	MainItem = Object;
 	if(MainItem)
 	{
-		MainItemIcon->SetVisibility(ESlateVisibility::Visible);
+		MainItemIconWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 }
 
@@ -228,7 +239,7 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 
 	auto Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 
-	Icon->SetBrushFromTexture((ControllerID >= 0) ? PlayerIcons[ControllerID] : KingIcon);
+	Icon->SetBrushFromTexture((ControllerID >= 0) ? PlayerIcons[ControllerID] : MainItemIcon);
 	Icon->SetBrushSize({ 64.f, 64.f });
 
 	HorizontalBox->AddChildToHorizontalBox(Icon);
@@ -289,7 +300,25 @@ void UPlayerWidget::SetTimerVisiblity(bool Visible)
 	TimerBox->SetVisibility(Visible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 }
 
-FVector2D UPlayerWidget::ClampPosition(FVector2D Position)
+bool UPlayerWidget::WorldToScreen(const FVector& WorldLocation, FVector2D& RelativeScreenPosition)
+{
+	auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
+	FVector2D Pos;
+	if (PC->ProjectWorldLocationToScreen(WorldLocation, Pos, true))
+	{
+		FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
+		FVector2D ViewportPosition2D;
+		USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
+
+		RelativeScreenPosition = ClampPosition(ViewportPosition2D);
+		
+		return true;
+	}
+
+	return false;
+}
+
+FVector2D UPlayerWidget::ClampPosition(FVector2D Position) const
 {
 	const auto Geometry = GetCachedGeometry();
 	const auto LocalSize = Geometry.GetLocalSize();
