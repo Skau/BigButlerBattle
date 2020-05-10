@@ -55,17 +55,11 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		FVector2D Pos;
 		if(PC->ProjectWorldLocationToScreen(MainItem->GetActorLocation(), Pos, true))
 		{
-			FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
+			const FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
 			FVector2D ViewportPosition2D;
 			USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
 			
-			auto Size = GetDesiredSize();
-
-			ViewportPosition2D.X = FMath::Clamp(ViewportPosition2D.X, 0.f, Size.X);
-			ViewportPosition2D.Y = FMath::Clamp(ViewportPosition2D.Y, 0.f, Size.Y);
-
-			// Add lerp maybe
-			MainItemIcon->SetRenderTranslation(ViewportPosition2D);
+			MainItemIcon->SetRenderTranslation(ClampPosition(ViewportPosition2D));
 		}
 	}
 
@@ -110,13 +104,7 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 				FVector2D ViewportPosition2D;
 				USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
 
-				auto Size = GetDesiredSize();
-
-					ViewportPosition2D.X = FMath::Clamp(ViewportPosition2D.X, 0.f, Size.X);
-				ViewportPosition2D.Y = FMath::Clamp(ViewportPosition2D.Y, 0.f, Size.Y);
-
-				// Add lerp maybe
-				Widget->SetRenderTranslation(ViewportPosition2D);
+				Widget->SetRenderTranslation(ClampPosition(ViewportPosition2D));
 			}
 		}
 	}
@@ -299,4 +287,15 @@ void UPlayerWidget::HideKeybinds()
 void UPlayerWidget::SetTimerVisiblity(bool Visible)
 {
 	TimerBox->SetVisibility(Visible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+}
+
+FVector2D UPlayerWidget::ClampPosition(FVector2D Position)
+{
+	const auto Geometry = GetCachedGeometry();
+	const auto LocalSize = Geometry.GetLocalSize();
+	const auto Middle = Geometry.AbsoluteToLocal(Geometry.GetAbsolutePosition()) + LocalSize / 2.0f;
+
+	return {FMath::Clamp(Position.X, Middle.X - LocalSize.X / 2.0f, Middle.X + LocalSize.X / 2.0f),
+			FMath::Clamp(Position.Y, Middle.Y - LocalSize.Y / 2.0f, Middle.Y + LocalSize.Y / 2.0f)};
+	
 }

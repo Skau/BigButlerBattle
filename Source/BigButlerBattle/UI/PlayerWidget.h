@@ -109,4 +109,6 @@ private:
     TMap<int, UPlayerScoreWidget*> PlayerScores;
 
     TArray<UHorizontalBox*> Messages;
+
+    FVector2D ClampPosition(FVector2D Position);
 };
