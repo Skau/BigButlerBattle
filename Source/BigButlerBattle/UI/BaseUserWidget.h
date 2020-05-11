@@ -30,6 +30,7 @@ protected:
 
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+	UPROPERTY()
 	UWidget* DefaultWidgetToFocus = nullptr;
 
 	virtual void OnPlayerControllerSet();
@@ -56,5 +57,6 @@ protected:
 	FSlateSound ButtonHoveredSound;
 
 private:
+	UPROPERTY()
 	UWidget* WidgetFocusedLast = nullptr;
 };

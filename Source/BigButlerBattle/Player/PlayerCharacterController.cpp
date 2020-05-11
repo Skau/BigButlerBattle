@@ -53,10 +53,10 @@ void APlayerCharacterController::SetupInputComponent()
 	Super::SetupInputComponent();
 	check(InputComponent != nullptr);
 
-	FInputActionBinding ab{ "PauseGame", EInputEvent::IE_Pressed };
-	ab.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &APlayerCharacterController::PauseGamePressed);
-	ab.bExecuteWhenPaused = true;
-	InputComponent->AddActionBinding(ab);
+	FInputActionBinding AB{ "PauseGame", EInputEvent::IE_Pressed };
+	AB.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &APlayerCharacterController::PauseGamePressed);
+	AB.bExecuteWhenPaused = true;
+	InputComponent->AddActionBinding(AB);
 
 	InputComponent->BindAction("ShowKeybinds", EInputEvent::IE_Pressed, this, &APlayerCharacterController::ShowKeybinds);
 	InputComponent->BindAction("ShowKeybinds", EInputEvent::IE_Released, this, &APlayerCharacterController::HideKeybinds);
@@ -110,15 +110,15 @@ void APlayerCharacterController::OnPlayerDroppedObject(ATaskObject* Object)
 	}
 }
 
-void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector Position)
+void APlayerCharacterController::OnCharacterFell(ERoomSpawn /*Room*/, const FVector Position)
 {
 	btd::Delay(this, RespawnTime, [&, Position]()
 	{
 		if (!GetPawn() || !this || PlayerCharacter == nullptr || PlayerCharacter->GetName() == "None") // Yup..
 			return;
 
-		const auto playerScale = PlayerCharacter->GetActorScale3D();
-		const auto playerRot = PlayerCharacter->GetActorRotation().Quaternion();
+		const auto PlayerScale = PlayerCharacter->GetActorScale3D();
+		const auto PlayerRot = PlayerCharacter->GetActorRotation().Quaternion();
 
 		if (PlayerCharacter)
 		{
@@ -134,8 +134,8 @@ void APlayerCharacterController::OnCharacterFell(ERoomSpawn Room, const FVector 
 			return;
 		}
 
-		const auto Spawnpos = ButlerGameMode->GetRandomSpawnPos(Position - playerRot * FVector::ForwardVector * 50.f);
-		RespawnCharacter(FTransform{playerRot, Spawnpos, playerScale});
+		const auto Spawnpos = ButlerGameMode->GetRandomSpawnPos(Position - PlayerRot * FVector::ForwardVector * 50.f);
+		RespawnCharacter(FTransform{PlayerRot, Spawnpos, PlayerScale});
 	});	
 }
 

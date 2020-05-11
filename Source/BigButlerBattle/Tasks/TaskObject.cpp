@@ -4,13 +4,11 @@
 #include "TaskObject.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
-#include "ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Math/RandomStream.h"
 #include "TimerManager.h"
 #include "ButlerGameInstance.h"
 #include "Task.h"
-#include "King/King.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Player/PlayerCharacter.h"
 #include "Misc/FileHelper.h"
@@ -38,7 +36,7 @@ ATaskObject::ATaskObject()
 	Particles->SetupAttachment(MeshComponent);
 }
 
-void ATaskObject::SetSelected(const bool Value)
+void ATaskObject::SetSelected(const bool Value) const
 {
 	if (MeshComponent->CustomDepthStencilValue < MainItemStencilValue)
 		MeshComponent->SetCustomDepthStencilValue(static_cast<int32>(Value));
@@ -56,13 +54,13 @@ void ATaskObject::Reset()
 	if (bIsMainItem)
 	{
 		// When out of bounds or not reachable (not touched for TimeUntilResetThreshold seconds)
-		auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+		const auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 		GM->SetNewMainItem();
 	}
 	Destroy();
 }
 
-void ATaskObject::SetParticlesEnable(bool bEnable)
+void ATaskObject::SetParticlesEnable(const bool bEnable) const
 {
 	if (Particles && Particles->GetSystemInstance())
 	{
@@ -150,19 +148,19 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	const FName PropertyName = PropertyChangedEvent.Property != nullptr ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	if (PropertyName == NAME_None)
 		return;
 
-	if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, TaskType)))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, TaskType))
 	{
 		if (!SetDataFromTable())
 		{
 			SetDefault();
 		}
 	}
-	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, FoodDataTable)))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, FoodDataTable))
 	{
 		if (TaskType == EObjectType::Food && FoodDataTable)
 		{
@@ -176,7 +174,7 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			SetDefault();
 		}
 	}
-	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, DrinksDataTable)))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, DrinksDataTable))
 	{
 		if (TaskType == EObjectType::Drink && DrinksDataTable)
 		{
@@ -190,7 +188,7 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			SetDefault();
 		}
 	}
-	else if ((PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, CutleryDataTable)))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(ATaskObject, CutleryDataTable))
 	{
 		if (TaskType == EObjectType::Cutlery && CutleryDataTable)
 		{
@@ -225,7 +223,7 @@ void ATaskObject::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 bool ATaskObject::SetDataFromTable()
 {
 	FRandomStream Stream;
-	auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	const auto Instance = Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (Instance)
 	{
 		Stream.Initialize(Instance->GetCurrentRandomSeed() + (GetActorLocation().X * 1234.25f) + (GetActorLocation().Y * 5678.98f) + 1.75f + GetActorLocation().Z * 3456);
@@ -283,7 +281,7 @@ bool ATaskObject::SetDataFromTable()
 		}
 		else
 		{
-			MeshComponent->SetStaticMesh((DefaultMesh) ? DefaultMesh : nullptr);
+			MeshComponent->SetStaticMesh(DefaultMesh ? DefaultMesh : nullptr);
 		}
 
 		if (const auto Material = TaskData->Material)
@@ -292,15 +290,12 @@ bool ATaskObject::SetDataFromTable()
 		}
 		else
 		{
-			MeshComponent->SetMaterial(0, (DefaultMaterial) ? DefaultMaterial : nullptr);
+			MeshComponent->SetMaterial(0, DefaultMaterial ? DefaultMaterial : nullptr);
 		}
 		return true;
 	}
-	else
-	{
-		return false;
-	}
 
+	return false;
 }
 
 bool ATaskObject::SetDataFromAssetData()
@@ -315,7 +310,7 @@ bool ATaskObject::SetDataFromAssetData()
 		}
 		else
 		{
-			MeshComponent->SetStaticMesh((DefaultMesh) ? DefaultMesh : nullptr);
+			MeshComponent->SetStaticMesh(DefaultMesh ? DefaultMesh : nullptr);
 		}
 
 		if (const auto Material = TaskData->Material)
@@ -324,15 +319,13 @@ bool ATaskObject::SetDataFromAssetData()
 		}
 		else
 		{
-			MeshComponent->SetMaterial(0, (DefaultMaterial) ? DefaultMaterial : nullptr);
+			MeshComponent->SetMaterial(0, DefaultMaterial ? DefaultMaterial : nullptr);
 		}
 		return true;
 		
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 void ATaskObject::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -393,23 +386,23 @@ void ATaskObject::OnPickedUp()
 	ObjectIdleTimer = 0.f;
 }
 
-void ATaskObject::Enable(const bool NewVisiblity, const bool NewCollision, const bool NewPhysics)
+void ATaskObject::Enable(const bool NewVisibility, const bool NewCollision, const bool NewPhysics)
 {
 	if (MeshComponent != nullptr)
 	{
-		MeshComponent->SetCustomDepthStencilValue(NewVisiblity && bIsMainItem ? MainItemStencilValue : 0);
+		MeshComponent->SetCustomDepthStencilValue(NewVisibility && bIsMainItem ? MainItemStencilValue : 0);
 
-		MeshComponent->SetVisibility(NewVisiblity);
+		MeshComponent->SetVisibility(NewVisibility);
 
 		MeshComponent->SetSimulatePhysics(NewPhysics);
 		MeshComponent->SetEnableGravity(NewPhysics);
 		MeshComponent->SetMassOverrideInKg(NAME_None, 1.f);
 
-		MeshComponent->SetCollisionEnabled((NewCollision) ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+		MeshComponent->SetCollisionEnabled(NewCollision ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 		MeshComponent->SetGenerateOverlapEvents(NewCollision);
 	}
 
-	bEnabled = NewVisiblity || NewCollision || NewPhysics;
+	bEnabled = NewVisibility || NewCollision || NewPhysics;
 }
 
 void ATaskObject::Launch(const FVector& LaunchVelocity)
@@ -429,8 +422,8 @@ void ATaskObject::UpdateDataTables()
 
 	FString File;
 	FString FilePath = FString(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + FString("Taskdata/DrinksData.csv"));
-	bool success = FFileHelper::LoadFileToString(File, *FilePath);
-	check(success == true);
+	bool bSuccess = FFileHelper::LoadFileToString(File, *FilePath);
+	check(bSuccess == true);
 
 	DrinksDataTable->CreateTableFromCSVString(File);
 
@@ -439,8 +432,8 @@ void ATaskObject::UpdateDataTables()
 	FoodDataTable->bIgnoreExtraFields = true;
 
 	FilePath = FString(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + FString("Taskdata/FoodData.csv"));
-	success = FFileHelper::LoadFileToString(File, *FilePath);
-	check(success == true);
+	bSuccess = FFileHelper::LoadFileToString(File, *FilePath);
+	check(bSuccess == true);
 
 	FoodDataTable->CreateTableFromCSVString(File);
 
@@ -449,8 +442,8 @@ void ATaskObject::UpdateDataTables()
 	CutleryDataTable->bIgnoreExtraFields = true;
 
 	FilePath = FString(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + FString("Taskdata/CutleryData.csv"));
-	success = FFileHelper::LoadFileToString(File, *FilePath);
-	check(success == true);
+	bSuccess = FFileHelper::LoadFileToString(File, *FilePath);
+	check(bSuccess == true);
 
 	CutleryDataTable->CreateTableFromCSVString(File);
 }

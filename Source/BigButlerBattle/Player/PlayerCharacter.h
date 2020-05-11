@@ -31,7 +31,7 @@ DECLARE_DELEGATE_TwoParams(FCharacterFellSignature, ERoomSpawn, FVector);
 DECLARE_DELEGATE_OneParam(FTaskObjectPickedUpSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FTaskObjectDroppedSignature, ATaskObject*);
 DECLARE_DELEGATE_OneParam(FDeliverTasksSignature, TArray<ATaskObject*>&)
-DECLARE_MULTICAST_DELEGATE(JumpEventSignature);
+DECLARE_MULTICAST_DELEGATE(FJumpEventSignature);
 
 // Structs
 USTRUCT(BlueprintType)
@@ -39,7 +39,6 @@ struct FSkateboardTraceResult
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FHitResult Front;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -129,10 +128,10 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UPlayerCharacterMovementComponent *Movement = nullptr;
 
-	float highestInput = 0.f;
+	float HighestInput = 0.f;
 
 public:
-	JumpEventSignature OnJumpEvent;
+	FJumpEventSignature OnJumpEvent;
 
 	void Jump() override;
 
@@ -412,9 +411,9 @@ protected:
 	ARailing* GetClosestRail();
 
 public:
-	void SetRailCollision(bool mode);
+	void SetRailCollision(bool bMode) const;
 	bool CanGrind() const;
-	void StartGrinding(ARailing* rail);
+	void StartGrinding(ARailing* Rail);
 
 	UFUNCTION()
 	void OnGrindingOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

@@ -12,8 +12,8 @@ struct FFeetTransform
 	FTransform Left;
 	FTransform Right;
 
-	FFeetTransform(const FTransform& left, const FTransform& right)
-	 : Left{left}, Right{right}
+	FFeetTransform(const FTransform& Left, const FTransform& Right)
+	 : Left{Left}, Right{Right}
 	{}
 };
 
@@ -26,12 +26,11 @@ struct BIGBUTLERBATTLE_API FAnimNode_GetFeetTargets : public FAnimNode_Base
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Links)
     FComponentSpacePoseLink Pose;
 
-public:
     // FAnimNode_Base interface
-    virtual void Initialize_AnyThread(const FAnimationInitializeContext &Context) override;
-    virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext &Context) override;
-    virtual void Update_AnyThread(const FAnimationUpdateContext &Context) override;
-    virtual void EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output) override;
+    void Initialize_AnyThread(const FAnimationInitializeContext &Context) override;
+    void CacheBones_AnyThread(const FAnimationCacheBonesContext &Context) override;
+    void Update_AnyThread(const FAnimationUpdateContext &Context) override;
+    void EvaluateComponentSpace_AnyThread(FComponentSpacePoseContext& Output) override;
     // End of FAnimNode_Base interface
 
 
@@ -47,7 +46,7 @@ public:
 	FFeetTransform GetSkateboardFeetTransformInButlerSpace(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh) const;
 
 	FTransform GetLocalSkateboardToButlerTransform(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh) const;
-	FTransform GetLocalButlerToSkateboardTransform(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& skateboardMesh) const;
+	FTransform GetLocalButlerToSkateboardTransform(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh) const;
 
 protected:
     FRotator GetSkateboardRotationOffset(const USkeletalMeshComponent& SkateboardMesh) const;

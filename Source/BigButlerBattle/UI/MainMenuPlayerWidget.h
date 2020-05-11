@@ -68,7 +68,7 @@ public:
 
 	UMainMenuPlayWidget* MainPlayWidget;
 
-	void SpawnCharacter(FTransform Transform);
+	void SpawnCharacter(const FTransform& Transform);
 
 	APlayerCharacter* CharacterInstance = nullptr;
 protected:
@@ -112,8 +112,8 @@ private:
 
 	FVector ButlerSpawnPosition;
 
-	void ShowCharacter();
+	void ShowCharacter() const;
 
-	void HideCharacter();
+	void HideCharacter() const;
 
 };

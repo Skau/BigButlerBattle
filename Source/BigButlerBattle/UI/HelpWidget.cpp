@@ -8,7 +8,7 @@
 
 bool UHelpWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	Button_Continue->OnClicked.AddDynamic(this, &UHelpWidget::OnContinueButtonPressed);
 

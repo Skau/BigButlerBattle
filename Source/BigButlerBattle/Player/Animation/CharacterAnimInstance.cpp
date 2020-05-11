@@ -46,7 +46,6 @@ void UCharacterAnimInstance::NativeBeginPlay()
 	if (!IsValid(Character))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Character isn't valid!"));
-		return;
 	}
 }
 
@@ -55,23 +54,23 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	if (!Character)
 		return;
 
-	auto moveComp = Character->GetPlayerCharacterMovementComponent();
-	if (!moveComp)
+	const auto MoveComp = Character->GetPlayerCharacterMovementComponent();
+	if (!MoveComp)
 		return;
 
-	bIsFalling = moveComp->IsFalling();
-	bIsGrinding = moveComp->IsGrinding();
+	bIsFalling = MoveComp->IsFalling();
+	bIsGrinding = MoveComp->IsGrinding();
 
-	auto newInput = Character->GetInputAxis();
-	if (newInput.X < 0.f)
-		newInput.X = 0.f;
+	auto NewInput = Character->GetInputAxis();
+	if (NewInput.X < 0.f)
+		NewInput.X = 0.f;
 
 	if (bChangedDirections)
 		bChangedDirections = false;
 	else
 	{
-		bChangedDirections = btd::sign(newInput.Y, 0.01f) && btd::sign(newInput.Y, 0.01f) != btd::sign(Input.Y, 0.01f);
+		bChangedDirections = btd::Sign(NewInput.Y, 0.01f) && btd::Sign(NewInput.Y, 0.01f) != btd::Sign(Input.Y, 0.01f);
 	}
 
-	Input = newInput;
+	Input = NewInput;
 }

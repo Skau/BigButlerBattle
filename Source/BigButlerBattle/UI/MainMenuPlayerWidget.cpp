@@ -10,7 +10,6 @@
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 #include "MainMenuGameModeBase.h"
-#include "ButlerGameInstance.h"
 #include "Player/PlayerCharacter.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Utils/btd.h"
@@ -44,7 +43,7 @@ void UMainMenuPlayerWidget::OnPlayerControllerSet()
 	PlayerIcon->SetBrushSize({ 128.f, 128.f });
 }
 
-void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
+void UMainMenuPlayerWidget::SetCurrentWidgetSwitcherIndex(const EWidgetSwitcherIndex NewIndex)
 {
 	CurrentIndex = NewIndex;
 	Switcher->SetActiveWidgetIndex(static_cast<int>(CurrentIndex));
@@ -89,7 +88,7 @@ void UMainMenuPlayerWidget::OnBackButtonPressed()
 	{
 	case EWidgetSwitcherIndex::Join:
 	{
-		auto GameMode = Cast<AMainMenuGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+		const auto GameMode = Cast<AMainMenuGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 		if (GameMode && !GameMode->HasAnyPlayerJoined())
 			MainPlayWidget->BackToMainMenu();
 	}
@@ -114,7 +113,7 @@ void UMainMenuPlayerWidget::OnJoinPressed()
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::Main);
 }
 
-void UMainMenuPlayerWidget::UpdateJoinedStatus(bool bHasJoined) const
+void UMainMenuPlayerWidget::UpdateJoinedStatus(const bool bHasJoined) const
 {
 	const auto ControllerID = UGameplayStatics::GetPlayerControllerID(OwningPlayerController);
 	OnToggleJoinedGame.ExecuteIfBound(bHasJoined, ControllerID);
@@ -140,7 +139,7 @@ void UMainMenuPlayerWidget::OnCameraOptionsPressed()
 	SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex::CameraOptions);
 }
 
-void UMainMenuPlayerWidget::SpawnCharacter(FTransform Transform)
+void UMainMenuPlayerWidget::SpawnCharacter(const FTransform& Transform)
 {
 	if (!IsValid(CharacterInstance))
 	{
@@ -150,7 +149,7 @@ void UMainMenuPlayerWidget::SpawnCharacter(FTransform Transform)
 	}
 }
 
-void UMainMenuPlayerWidget::ShowCharacter()
+void UMainMenuPlayerWidget::ShowCharacter() const
 {
 	if (IsValid(CharacterInstance))
 	{
@@ -158,7 +157,7 @@ void UMainMenuPlayerWidget::ShowCharacter()
 	}
 }
 
-void UMainMenuPlayerWidget::HideCharacter()
+void UMainMenuPlayerWidget::HideCharacter() const
 {
 	if (IsValid(CharacterInstance))
 	{

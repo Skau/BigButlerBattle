@@ -29,13 +29,13 @@ class BIGBUTLERBATTLE_API ABigButlerBattleGameModeBase : public AMyGameModeBase
 public:
 	ABigButlerBattleGameModeBase();
 
-	ASpawnpoint* GetRandomSpawnpoint(const ERoomSpawn Room, const FVector& Position);
+	ASpawnpoint* GetRandomSpawnpoint(ERoomSpawn Room, const FVector& Position);
 	FVector GetRandomSpawnPos(const FVector& Position) const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RespawnRadius = 1000.f;
 
-	void SetNewMainItem(float delay = 0.5f);
+	void SetNewMainItem(float Delay = 0.5f);
 
 	TArray<APlayerCharacterController*> GetControllers() const { return Controllers; }
 

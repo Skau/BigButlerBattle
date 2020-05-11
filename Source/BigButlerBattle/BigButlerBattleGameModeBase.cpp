@@ -5,14 +5,12 @@
 #include "ButlerGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "Player/PlayerCharacter.h"
 #include "Player/PlayerCharacterController.h"
 #include "UI/PauseWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
 #include "Tasks/TaskObject.h"
 #include "EngineUtils.h"
-#include "Math/RandomStream.h"
 #include "Tasks/Task.h"
 #include "Utils/btd.h"
 #include "UI/GameFinishedWidget.h"
@@ -135,10 +133,10 @@ void ABigButlerBattleGameModeBase::BeginPlay()
 		GameWidget = CreateWidget<UGameWidget>(Controllers[0], GameWidgetClass);
 		GameWidget->AddToViewport();
 
-		auto time = FString::FromInt(static_cast<int>(TotalSecondsToHold));
+		const auto Time = FString::FromInt(static_cast<int>(TotalSecondsToHold));
 		for (auto& Controller : Controllers)
 		{
-			Controller->GetPlayerWidget()->UpdateTimer(time);
+			Controller->GetPlayerWidget()->UpdateTimer(Time);
 		}
 	}
 
@@ -202,15 +200,15 @@ void ABigButlerBattleGameModeBase::Tick(float DeltaTime)
 				return;
 			}
 		}
-		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+		const auto Time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
 		for (auto& Controller : Controllers)
 		{
-			Controller->GetPlayerWidget()->UpdateTimer(time);
+			Controller->GetPlayerWidget()->UpdateTimer(Time);
 		}
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerPaused(int ControllerID) const
+void ABigButlerBattleGameModeBase::OnPlayerPaused(const int ControllerID) const
 {
 	const auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID);
 
@@ -259,14 +257,12 @@ void ABigButlerBattleGameModeBase::OnGameFinished(const int ControllerID) const
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
 
-	if (WinSound && this)
+	if (WinSound)
 		UGameplayStatics::PlaySound2D(this, WinSound, 1.f);
 }
 
 void ABigButlerBattleGameModeBase::OnPlayerQuit() const
 {
-	UE_LOG(LogTemp, Warning, TEXT("GM: Player Quit"));
-
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 
@@ -281,7 +277,7 @@ void ABigButlerBattleGameModeBase::SetupSpawnpoints()
 	}
 }
 
-void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMainItemState NewState)
+void ABigButlerBattleGameModeBase::OnMainItemStateChanged(const int ControllerID, const EMainItemState NewState)
 {
 	bItemCurrentlyBeingHeld = NewState == EMainItemState::PickedUp;
 
@@ -303,22 +299,19 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 	break;
 	case EMainItemState::Dropped:
 	{
-		if (bTimeDone)
-		{
-			if(King)
-				King->bCanReceiveMainItem = false;
+		if(King)
+			King->bCanReceiveMainItem = false;
 
-			bTimeDone = false;
-		}
+		bTimeDone = false;
 
 		if (DropMainItemSound)
 			UGameplayStatics::PlaySound2D(this, DropMainItemSound, 1.f);
 
 		SecondsLeftToHold = TotalSecondsToHold;
-		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+		const auto Time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
 		for (auto& Controller : Controllers)
 		{
-			Controller->GetPlayerWidget()->UpdateTimer(time);
+			Controller->GetPlayerWidget()->UpdateTimer(Time);
 		}
 	}
 	break;
@@ -327,7 +320,7 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 		if (DeliverMainItemSound)
 			UGameplayStatics::PlaySound2D(this, DeliverMainItemSound, 1.f);
 
-		auto PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
+		const auto PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ControllerID));
 
 		// Player won
 		if (PlayerController->GetScore() >= TotalPointsToWin)
@@ -340,15 +333,12 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 		bTimeDone = false;
 		if(King)
 			King->bCanReceiveMainItem = false;
-		bItemCurrentlyBeingHeld = false;
+			
 		SecondsLeftToHold = TotalSecondsToHold;
-
-
-		auto time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
+		const auto Time = FString::FromInt(static_cast<int>(SecondsLeftToHold));
 		for (auto& Controller : Controllers)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s score: %d"), *Controller->GetName(), Controller->GetScore());
-			Controller->GetPlayerWidget()->UpdateTimer(time);
+			Controller->GetPlayerWidget()->UpdateTimer(Time);
 			Controller->GetPlayerWidget()->UpdateScore(ControllerID, PlayerController->GetScore());
 		}
 	}
@@ -361,10 +351,10 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(int ControllerID, EMai
 	}
 }
 
-void ABigButlerBattleGameModeBase::SetNewMainItem(float delay)
+void ABigButlerBattleGameModeBase::SetNewMainItem(const float Delay)
 {
 	// Give it a second to let all task objects be in correct state
-	btd::Delay(this, delay, [=]()
+	btd::Delay(this, Delay, [=]()
 	{
 		// Set main item (get random one from all task objects)
 		TArray<AActor*> Actors;
@@ -374,7 +364,7 @@ void ABigButlerBattleGameModeBase::SetNewMainItem(float delay)
 			ATaskObject* Object = nullptr;
 			while (!Object || Object->GetIsRespawning())
 			{
-				int Index = FMath::RandRange(0, Actors.Num() - 1);
+				const int Index = FMath::RandRange(0, Actors.Num() - 1);
 				Object = Cast<ATaskObject>(Actors[Index]);
 			}
 
@@ -396,7 +386,7 @@ ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(const ERoomSpawn 
 {
 	float ClosestDistance = MAX_FLT;
 	ASpawnpoint* ClosestSpawnpoint = nullptr;
-	
+
 	for (auto& Spawnpoint : Spawnpoints[Room])
 	{
 		const auto Distance = FVector::Distance(Position, Spawnpoint->GetActorLocation());
@@ -412,26 +402,26 @@ ASpawnpoint* ABigButlerBattleGameModeBase::GetRandomSpawnpoint(const ERoomSpawn 
 
 FVector ABigButlerBattleGameModeBase::GetRandomSpawnPos(const FVector& Position) const
 {
-	auto world = GetWorld();
-	if (!IsValid(world))
+	auto World = GetWorld();
+	if (!IsValid(World))
 		return FVector::ZeroVector;
 
-	auto navSys = Cast<UNavigationSystemV1>(world->GetNavigationSystem());
-	if (!IsValid(navSys))
+	const auto NavSys = Cast<UNavigationSystemV1>(World->GetNavigationSystem());
+	if (!IsValid(NavSys))
 		return FVector::ZeroVector;
 
-	FNavLocation navPoint;
-	if (!IsValid(navSys->MainNavData))
+	FNavLocation NavPoint;
+	if (!IsValid(NavSys->MainNavData))
 	{
 		UE_LOG(LogTemp, Error, TEXT("MainNavSysData is missing!"));
 		return FVector::ZeroVector;
 	}
 
-	if (!navSys->GetRandomPointInNavigableRadius(Position, RespawnRadius, navPoint))
+	if (!NavSys->GetRandomPointInNavigableRadius(Position, RespawnRadius, NavPoint))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Could'nt find a point in navigable space!"));
 		return FVector::ZeroVector;
 	}
 
-	return navPoint.Location;
+	return NavPoint.Location;
 }

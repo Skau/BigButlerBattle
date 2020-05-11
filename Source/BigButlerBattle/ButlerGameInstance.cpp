@@ -5,7 +5,6 @@
 #include "Components/AudioComponent.h"
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
-#include "AudioDevice.h"
 #include "Utils/btd.h"
 
 UButlerGameInstance::UButlerGameInstance(const FObjectInitializer& ObjectInitializer)
@@ -28,7 +27,7 @@ void UButlerGameInstance::Init()
 	PlayerOptions.AddDefaulted(4);
 }
 
-float UButlerGameInstance::GetMainSoundVolume()
+float UButlerGameInstance::GetMainSoundVolume() const
 {
 	if (MainSoundClass)
 	{
@@ -37,7 +36,7 @@ float UButlerGameInstance::GetMainSoundVolume()
 	return -1.f;
 }
 
-float UButlerGameInstance::UpdateMainSoundVolume(bool bShouldIncrement)
+float UButlerGameInstance::UpdateMainSoundVolume(const bool bShouldIncrement) const
 {
 	if (MainSoundClass)
 	{
@@ -48,7 +47,7 @@ float UButlerGameInstance::UpdateMainSoundVolume(bool bShouldIncrement)
 	return -1.f;
 }
 
-float UButlerGameInstance::GetBackgroundSoundVolume()
+float UButlerGameInstance::GetBackgroundSoundVolume() const
 {
 	if (BackgroundSoundClass)
 	{
@@ -57,7 +56,7 @@ float UButlerGameInstance::GetBackgroundSoundVolume()
 	return -1.f;
 }
 
-float UButlerGameInstance::UpdateBackgroundSoundVolume(bool bShouldIncrement)
+float UButlerGameInstance::UpdateBackgroundSoundVolume(const bool bShouldIncrement) const
 {
 	if (BackgroundSoundClass)
 	{
@@ -68,7 +67,7 @@ float UButlerGameInstance::UpdateBackgroundSoundVolume(bool bShouldIncrement)
 	return -1.f;
 }
 
-float UButlerGameInstance::GetSoundEffectsSoundVolume()
+float UButlerGameInstance::GetSoundEffectsSoundVolume() const
 {
 	if (SoundEffectsSoundClass)
 	{
@@ -77,7 +76,7 @@ float UButlerGameInstance::GetSoundEffectsSoundVolume()
 	return -1.f;
 }
 
-float UButlerGameInstance::UpdateSoundEffectsSoundVolume(bool bShouldIncrement)
+float UButlerGameInstance::UpdateSoundEffectsSoundVolume(const bool bShouldIncrement) const
 {
 	if (SoundEffectsSoundClass)
 	{
@@ -88,7 +87,7 @@ float UButlerGameInstance::UpdateSoundEffectsSoundVolume(bool bShouldIncrement)
 	return -1.f;
 }
 
-void UButlerGameInstance::LevelChanged(bool bNewLevelIsMainMenu)
+void UButlerGameInstance::LevelChanged(const bool bNewLevelIsMainMenu)
 {
 	FadeBetweenMusic(bNewLevelIsMainMenu);
 }
@@ -112,7 +111,7 @@ void UButlerGameInstance::FadeBetweenMusic(bool bNewLevelIsMainMenu)
 		}
 	}
 
-	Fade = (float)bNewLevelIsMainMenu;
+	Fade = static_cast<float>(bNewLevelIsMainMenu);
 
 	if(!bNewLevelIsMainMenu)
 		AudioComponent->SetIntParameter(FName{ "InGameSoundIndex" }, FMath::RandRange(0, 2));

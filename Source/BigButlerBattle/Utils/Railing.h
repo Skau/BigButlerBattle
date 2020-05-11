@@ -40,10 +40,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Railing")
 	bool bLoopedRail = false;
 
-protected:
-
-
-public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RailMesh;
 
@@ -58,7 +54,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
-	void BuildSpline();
+	void BuildSpline() const;
 
 public:
 	// Called every frame

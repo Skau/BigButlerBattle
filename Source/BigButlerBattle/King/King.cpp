@@ -42,7 +42,8 @@ void AKing::AddClosePlayer(APlayerCharacter* Player)
 
 void AKing::RemoveClosePlayer(APlayerCharacter* Player)
 {
-	PlayersInRange.RemoveSingle(Player);
+	if(PlayersInRange.Num())
+		PlayersInRange.RemoveSingle(Player);
 }
 
 

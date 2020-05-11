@@ -70,6 +70,7 @@ private:
 	UFUNCTION()
 	void OnQuitPressed();
 
+	UPROPERTY()
 	UWidgetAnimation* Animation;
 
 	bool Finished = false;

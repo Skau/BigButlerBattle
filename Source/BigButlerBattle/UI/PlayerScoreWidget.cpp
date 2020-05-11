@@ -7,19 +7,19 @@
 
 bool UPlayerScoreWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	return bInit;
 }
 
-void UPlayerScoreWidget::SetPlayerName(const FString& Name, UTexture2D* Icon)
+void UPlayerScoreWidget::SetPlayerName(const FString& Name, UTexture2D* Icon) const
 {
 	PlayerName->SetText(FText::FromString(Name));
 	PlayerIcon->SetBrushFromTexture(Icon);
 	PlayerIcon->SetBrushSize({ 64.f, 64.f });
 }
 
-void UPlayerScoreWidget::UpdateScore(int NewScore)
+void UPlayerScoreWidget::UpdateScore(const int NewScore) const
 {
 	if (PlayerScore)
 	{

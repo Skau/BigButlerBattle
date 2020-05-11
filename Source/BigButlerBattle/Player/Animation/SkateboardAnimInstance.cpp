@@ -9,7 +9,7 @@ void USkateboardAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 
-    auto Owner = Cast<APlayerCharacter>(TryGetPawnOwner());
+    const auto Owner = Cast<APlayerCharacter>(TryGetPawnOwner());
     if (Owner)
     {
 	    const auto MoveComp = Owner->GetMovementComponent();

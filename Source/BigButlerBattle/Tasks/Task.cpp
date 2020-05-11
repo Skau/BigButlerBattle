@@ -26,5 +26,5 @@ bool UTask::InitTaskData(uint8* Data)
 
 bool UTask::IsEqual(const UTask* Other) const
 {
-    return (Other && Other->Name == Name);
+    return Other && Other->Name == Name;
 }

@@ -21,7 +21,7 @@ bool UGameFinishedWidget::Initialize()
 	return bInit;
 }
 
-void UGameFinishedWidget::SetWonText(int ControllerID, const FString& Text) const
+void UGameFinishedWidget::SetWonText(const int ControllerID, const FString& Text) const
 {
 	WonText->SetText(FText::FromString(Text));
 	PlayerIcon->SetBrushFromTexture(PlayerIcons[ControllerID]);

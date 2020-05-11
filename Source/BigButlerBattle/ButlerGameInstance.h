@@ -34,17 +34,17 @@ public:
 
 	TArray<FPlayerOptions> PlayerOptions;
 
-	float GetMainSoundVolume();
+	float GetMainSoundVolume() const;
 
-	float UpdateMainSoundVolume(bool bShouldIncrement);
+	float UpdateMainSoundVolume(bool bShouldIncrement) const;
 
-	float GetBackgroundSoundVolume();
+	float GetBackgroundSoundVolume() const;
 
-	float UpdateBackgroundSoundVolume(bool bShouldIncrement);
+	float UpdateBackgroundSoundVolume(bool bShouldIncrement) const;
 
-	float GetSoundEffectsSoundVolume();
+	float GetSoundEffectsSoundVolume() const;
 
-	float UpdateSoundEffectsSoundVolume(bool bShouldIncrement);
+	float UpdateSoundEffectsSoundVolume(bool bShouldIncrement) const;
 
 	void LevelChanged(bool bNewLevelIsMainMenu);
 

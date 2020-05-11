@@ -21,8 +21,8 @@ class BIGBUTLERBATTLE_API UPlayerScoreWidget : public UUserWidget
 public:
 	bool Initialize() override;
 
-    void SetPlayerName(const FString& Name, UTexture2D* Icon);
-    void UpdateScore(int NewScore);
+    void SetPlayerName(const FString& Name, UTexture2D* Icon) const;
+    void UpdateScore(int NewScore) const;
 
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

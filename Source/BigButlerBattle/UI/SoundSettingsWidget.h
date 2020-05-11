@@ -86,5 +86,5 @@ protected:
 	void OnSFXUpPressed();
 	
 private:
-	UButlerGameInstance* GetGameInstance();
+	UButlerGameInstance* GetGameInstance() const;
 };

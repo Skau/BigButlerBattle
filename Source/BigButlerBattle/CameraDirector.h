@@ -20,7 +20,7 @@ public:
 
 	void PlaySequence();
 
-	void BlendToCharacterSelectionCamera();
+	void BlendToCharacterSelectionCamera() const;
 
 	UPROPERTY(EditAnywhere)
 	float CharacterSelectCameraBlendTime = 0.5f;

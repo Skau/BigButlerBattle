@@ -99,7 +99,7 @@ void UPlayerSpringArmComponent::UpdateDesiredArmLocation(bool bDoTrace, bool bDo
 
         // Do a sweep to ensure we are not penetrating the world
         FVector ResultLoc;
-        if (bDoTrace && (TargetArmLength != 0.0f))
+        if (bDoTrace && TargetArmLength != 0.0f)
         {
             bIsCameraFixed = true;
             FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(SpringArm), false, GetOwner());

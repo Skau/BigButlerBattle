@@ -13,7 +13,7 @@ UMainMenuOptionsWidget::UMainMenuOptionsWidget(const FObjectInitializer& ObjectI
 
 bool UMainMenuOptionsWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	Button_Sound->OnClicked.AddDynamic(this, &UMainMenuOptionsWidget::OnSoundPressed);
 	Buttons.Add(Button_Sound);
@@ -41,7 +41,7 @@ void UMainMenuOptionsWidget::OnBackButtonPressed()
 	}
 }
 
-void UMainMenuOptionsWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
+void UMainMenuOptionsWidget::SetCurrentWidgetSwitcherIndex(const EWidgetSwitcherIndex NewIndex)
 {
 	CurrentIndex = NewIndex;
 	Switcher->SetActiveWidgetIndex(static_cast<int>(CurrentIndex));

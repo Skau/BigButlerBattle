@@ -36,35 +36,35 @@ void FAnimNode_GetFeetTargets::EvaluateComponentSpace_AnyThread(FComponentSpaceP
     // Return Base Pose, Un Modified
     Pose.EvaluateComponentSpace(Output);
 
-    auto animInstance = Cast<UCharacterAnimInstance>(Output.AnimInstanceProxy->GetAnimInstanceObject());
-    if (IsValid(animInstance) && (animInstance->bLeftLegIK || animInstance->bRightLegIK))
+    auto AnimInstance = Cast<UCharacterAnimInstance>(Output.AnimInstanceProxy->GetAnimInstanceObject());
+    if (IsValid(AnimInstance) && (AnimInstance->bLeftLegIK || AnimInstance->bRightLegIK))
     {
-        auto character = Cast<APlayerCharacter>(animInstance->TryGetPawnOwner());
-        if (IsValid(character))
+        const auto Character = Cast<APlayerCharacter>(AnimInstance->TryGetPawnOwner());
+        if (IsValid(Character))
         {
-            const auto& ButlerMesh = character->GetMesh();
-            const auto& SkateboardMesh = character->GetSkateboardMesh();
+            const auto& ButlerMesh = Character->GetMesh();
+            const auto& SkateboardMesh = Character->GetSkateboardMesh();
 
             const bool bMeshValid = IsValid(ButlerMesh) && IsValid(SkateboardMesh);
             
             // Get rotation offset
-            const auto RotationOffset = animInstance->SkateboardRotationOffset = bMeshValid ? GetSkateboardRotationOffset(*SkateboardMesh) : FRotator{};
+            const auto RotationOffset = AnimInstance->SkateboardRotationOffset = bMeshValid ? GetSkateboardRotationOffset(*SkateboardMesh) : FRotator{};
 
 
             // Get left and right foot targets
-            if (animInstance->bLeftLegIK)
-                animInstance->LeftFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, true) : FVector{}, Output.Pose, RotationOffset.Quaternion(), true);
+            if (AnimInstance->bLeftLegIK)
+                AnimInstance->LeftFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, true) : FVector{}, Output.Pose, RotationOffset.Quaternion(), true);
 
-            if (animInstance->bRightLegIK)
-                animInstance->RightFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, false) : FVector{}, Output.Pose, RotationOffset.Quaternion(), false);
+            if (AnimInstance->bRightLegIK)
+                AnimInstance->RightFootTarget = GetFootLocation(bMeshValid ? GetSocketPos(*ButlerMesh, *SkateboardMesh, false) : FVector{}, Output.Pose, RotationOffset.Quaternion(), false);
 
 
             // Get left and right joint targets
-            if (animInstance->bLeftLegIK)
-                animInstance->LeftLegJointLocationFinal = GetKneeLocation(Output.Pose, true);
+            if (AnimInstance->bLeftLegIK)
+                AnimInstance->LeftLegJointLocationFinal = GetKneeLocation(Output.Pose, true);
                 
-            if (animInstance->bRightLegIK)
-                animInstance->RightLegJointLocationFinal = GetKneeLocation(Output.Pose, false);
+            if (AnimInstance->bRightLegIK)
+                AnimInstance->RightLegJointLocationFinal = GetKneeLocation(Output.Pose, false);
         }
     }
 }
@@ -102,10 +102,10 @@ FTransform FAnimNode_GetFeetTargets::GetLocalSkateboardToButlerTransform(const U
 }
 
 auto FAnimNode_GetFeetTargets::GetLocalButlerToSkateboardTransform(const USkeletalMeshComponent& ButlerMesh,
-                                                                   const USkeletalMeshComponent& skateboardMesh) const
+                                                                   const USkeletalMeshComponent& SkateboardMesh) const
 -> FTransform
 {
-    return skateboardMesh.GetComponentTransform().GetRelativeTransformReverse(ButlerMesh.GetComponentTransform());
+    return SkateboardMesh.GetComponentTransform().GetRelativeTransformReverse(ButlerMesh.GetComponentTransform());
 }
 
 FRotator FAnimNode_GetFeetTargets::GetSkateboardRotationOffset(const USkeletalMeshComponent& SkateboardMesh) const
@@ -113,12 +113,12 @@ FRotator FAnimNode_GetFeetTargets::GetSkateboardRotationOffset(const USkeletalMe
     return SkateboardMesh.GetRelativeRotation();
 }
 
-FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const USkeletalMeshComponent& SkateboardMesh, bool bLeft) const
+FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const USkeletalMeshComponent& SkateboardMesh, const bool bLeft) const
 {
     return GetFootLocation(SocketPos, PoseIn, GetSkateboardRotationOffset(SkateboardMesh).Quaternion(), bLeft);
 }
 
-FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const FQuat& FeetRotationOffset, bool bLeft) const
+FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& SocketPos, FCSPose<FCompactPose>& PoseIn, const FQuat& FeetRotationOffset, const bool bLeft) const
 {
 	const auto BoneContainer = PoseIn.GetPose().GetBoneContainer();
 
@@ -126,12 +126,12 @@ FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& SocketPos, FCSP
     const FName AnkleBone{bLeft ? "foot_l" : "foot_r"};
 
     // Get foot bone transform
-    FCompactPoseBoneIndex compactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(FootBone));
-    const auto FootPos = PoseIn.GetComponentSpaceTransform(compactBoneIndex).GetTranslation();
+    FCompactPoseBoneIndex CompactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(FootBone));
+    const auto FootPos = PoseIn.GetComponentSpaceTransform(CompactBoneIndex).GetTranslation();
 
     // Get ankle bone transform
-    compactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(AnkleBone));
-    const auto AnklePos = PoseIn.GetComponentSpaceTransform(compactBoneIndex).GetTranslation();
+    CompactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(AnkleBone));
+    const auto AnklePos = PoseIn.GetComponentSpaceTransform(CompactBoneIndex).GetTranslation();
     
     // Get delta direction vector
     auto FootDir = FootPos - AnklePos;
@@ -140,7 +140,7 @@ FVector FAnimNode_GetFeetTargets::GetFootLocation(const FVector& SocketPos, FCSP
     return SocketPos - FootDir;
 }
 
-FVector FAnimNode_GetFeetTargets::GetKneeLocation(FCSPose<FCompactPose>& PoseIn, bool bLeft) const
+FVector FAnimNode_GetFeetTargets::GetKneeLocation(FCSPose<FCompactPose>& PoseIn, const bool bLeft) const
 {
     const auto BoneContainer = PoseIn.GetPose().GetBoneContainer();
 
@@ -148,18 +148,18 @@ FVector FAnimNode_GetFeetTargets::GetKneeLocation(FCSPose<FCompactPose>& PoseIn,
     const FName ThighBone{bLeft ? "thigh_l" : "thigh_r"};
 
     // Get foot bone transform
-    FCompactPoseBoneIndex compactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(ThighBone));
-    const auto ThighPos = PoseIn.GetComponentSpaceTransform(compactBoneIndex).GetTranslation();
+    FCompactPoseBoneIndex CompactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(ThighBone));
+    const auto ThighPos = PoseIn.GetComponentSpaceTransform(CompactBoneIndex).GetTranslation();
 
     // Get ankle bone transform
-    compactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(KneeBone));
-    const auto KneePos = PoseIn.GetComponentSpaceTransform(compactBoneIndex).GetTranslation();
+    CompactBoneIndex = BoneContainer.GetCompactPoseIndexFromSkeletonIndex(BoneContainer.GetPoseBoneIndexForBoneName(KneeBone));
+    const auto KneePos = PoseIn.GetComponentSpaceTransform(CompactBoneIndex).GetTranslation();
 
-    auto KneeDir = KneePos - ThighPos;
+    const auto KneeDir = KneePos - ThighPos;
     return KneeDir.GetSafeNormal2D() * 100.f;
 }
 
-FVector FAnimNode_GetFeetTargets::GetSocketPos(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh, bool bLeft) const
+FVector FAnimNode_GetFeetTargets::GetSocketPos(const USkeletalMeshComponent& ButlerMesh, const USkeletalMeshComponent& SkateboardMesh, const bool bLeft) const
 {
     auto Trans = bLeft ? GetComponentSkateboardFeetTransform(SkateboardMesh).Left : GetComponentSkateboardFeetTransform(SkateboardMesh).Right;
     Trans = Trans * GetLocalSkateboardToButlerTransform(ButlerMesh, SkateboardMesh);
