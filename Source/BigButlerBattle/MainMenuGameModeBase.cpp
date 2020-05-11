@@ -6,7 +6,6 @@
 #include "UI/MainMenuPlayWidget.h"
 #include "UI/MainMenuOptionsWidget.h"
 #include "Kismet/GameplayStatics.h"
-#include "UI/MainMenuWidget.h"
 #include "UI/MainMenuPlayerWidget.h"
 #include "UI/HelpWidget.h"
 #include "TimerManager.h"
@@ -36,10 +35,10 @@ void AMainMenuGameModeBase::BeginPlay()
 		Controllers.Add(UGameplayStatics::CreatePlayer(GetWorld(), ID));
 	}
 
-	Controllers.Sort([](APlayerController& p1, APlayerController& p2)
+	Controllers.Sort([](APlayerController& P1, APlayerController& P2)
 	{
 			UE_LOG(LogTemp, Warning, TEXT("Controller sort"));
-			return UGameplayStatics::GetPlayerControllerID(&p1) < UGameplayStatics::GetPlayerControllerID(&p2);
+			return UGameplayStatics::GetPlayerControllerID(&P1) < UGameplayStatics::GetPlayerControllerID(&P2);
 	});
 
 	UE_LOG(LogTemp, Warning, TEXT("Number of controllers: %i"), Controllers.Num());
@@ -51,7 +50,7 @@ void AMainMenuGameModeBase::BeginPlay()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Controllers[%i] is not valid."));
+			UE_LOG(LogTemp, Warning, TEXT("Controllers[%i] is not valid."), i);
 		}
 	}
 
@@ -168,10 +167,10 @@ void AMainMenuGameModeBase::Countdown()
 	
 		for(auto& ID : PlayerNotJoinedIDs)
 		{
-			if (const auto controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
+			if (const auto Controller = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Removing Controller ID %i, because it never joined."), ID);
-				UGameplayStatics::RemovePlayer(controller, true);
+				UGameplayStatics::RemovePlayer(Controller, true);
 			}
 		}
 		UGameplayStatics::OpenLevel(GetWorld(), LevelToPlay);

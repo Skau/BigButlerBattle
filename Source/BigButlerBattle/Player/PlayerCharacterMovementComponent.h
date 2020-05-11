@@ -38,7 +38,6 @@ DECLARE_EVENT_OneParam(UPlayerCharacterMovementComponent, FSplineStateChangedSig
 // Structs
 struct FSplineInfo
 {
-public:
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Grinding Movement", meta = (DisplayName = "Spline Reference"))
 	USplineComponent* SkateboardSplineReference = nullptr;
 
@@ -56,7 +55,6 @@ public:
 
 	FSplineStateChangedSignature OnSplineChanged;
 
-public:
 	FSplineInfo(USplineComponent* Spline = nullptr, bool bLooped = false);
 
 	bool HasValue() const { return SkateboardSplineReference != nullptr; }
@@ -184,8 +182,8 @@ protected:
 	bool bBraking = false;
 	bool bIsStandstill = false;
 
-	float forwardVelocityFactor{0.f};
-	float rightVelocityFactor{0.f};
+	float ForwardVelocityFactor{0.f};
+	float RightVelocityFactor{0.f};
 
 public:
 	// Parameter is mode that started
@@ -211,8 +209,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetRotationInput() const { return InputDir.Y; }
 
-	float GetRightVelocityFactor() const { return rightVelocityFactor; }
-	float GetForwardVelocityFactor() const { return forwardVelocityFactor; }
+	float GetRightVelocityFactor() const { return RightVelocityFactor; }
+	float GetForwardVelocityFactor() const { return ForwardVelocityFactor; }
 
 	float GetMaxForwardAcceleration() const;
 
@@ -262,7 +260,7 @@ protected:
 	/** @note Movement update functions should only be called through StartNewPhysics()*/
 	void PhysCustom(float DeltaTime, int32 Iterations) override;
 
-	void PhysSkateboard(float deltaTime, int32 Iterations);
+	void PhysSkateboard(float DeltaTime, int32 Iterations);
 
 	float GetSidewaysDeceleration() const;
 
@@ -392,19 +390,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Movement: Grinding Movement|On Rail", meta = (DisplayName = "Max Speed"))
 	float GrindingMaxSpeed = 2065.f;
 
-	void PhysGrinding(float deltaTime, int32 Iterations);
+	void PhysGrinding(float DeltaTime, int32 Iterations);
 
 	void CalcGrindingVelocity(float DeltaTime);
 
 	void CalcGrindingEnteringVelocity(float DeltaTime);
 	void CalcGrindingRailVelocity(float DeltaTime);
-	float GetNewCurvePoint();
+	float GetNewCurvePoint() const;
 	bool InEndInterval() const;
 	bool InEndInterval(int32 LastIndex, bool bForward) const;
 	bool IsAtCurveEnd(float DeltaTime) const;
 	void CorrectGrindingPosError();
 
-	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr);
+	FVector GetSkateboardLocation(APlayerCharacter* Owner = nullptr) const;
 
 	UFUNCTION()
 	void OnSplineChangedImplementation(EGrindingMovementState NewState);

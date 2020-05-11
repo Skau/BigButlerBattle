@@ -15,17 +15,16 @@ UTaskFactory::UTaskFactory(const FObjectInitializer& ObjectInitializer)
 	SupportedClass = UTask::StaticClass();
 }
 
-UObject* UTaskFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+UObject* UTaskFactory::FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
 {
     if (TaskClass != nullptr)
     {
-        return NewObject<UTask>(InParent, TaskClass, Name, Flags | RF_Transactional);
+        return NewObject<UTask>(InParent, TaskClass, InName, Flags | RF_Transactional);
     }
-    else
-    {
-        check(Class->IsChildOf(UTask::StaticClass()));
-        return NewObject<UTask>(InParent, TaskClass, Name, Flags | RF_Transactional);
-    }
+
+    check(InClass->IsChildOf(UTask::StaticClass()));
+    return NewObject<UTask>(InParent, TaskClass, InName, Flags | RF_Transactional);
+
 }
 
 bool UTaskFactory::ConfigureProperties()

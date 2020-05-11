@@ -3,7 +3,6 @@
 
 #include "RoomUpdater.h"
 #include "Components/BoxComponent.h"
-#include "Spawnpoint.h"
 #include "Player/PlayerCharacter.h"
 
 ARoomUpdater::ARoomUpdater()
@@ -29,6 +28,6 @@ void ARoomUpdater::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, 
 {
 	if (auto Player = Cast<APlayerCharacter>(OtherActor))
 	{
-		Player->CurrentRoom = (Player->CurrentRoom == RoomConnection1) ? RoomConnection2 : RoomConnection1;
+		Player->CurrentRoom = Player->CurrentRoom == RoomConnection1 ? RoomConnection2 : RoomConnection1;
 	}
 }

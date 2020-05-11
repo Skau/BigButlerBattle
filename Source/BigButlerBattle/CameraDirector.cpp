@@ -40,7 +40,7 @@ void ACameraDirector::PlaySequence()
 	}
 }
 
-void ACameraDirector::BlendToCharacterSelectionCamera()
+void ACameraDirector::BlendToCharacterSelectionCamera() const
 {
 	if (SequencePlayer->IsPlaying())
 	{

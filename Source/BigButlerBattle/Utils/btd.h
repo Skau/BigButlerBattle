@@ -15,22 +15,22 @@
  */
 namespace btd
 {
-    FORCEINLINE FVector SwapXY(const FVector& v)
+    FORCEINLINE FVector SwapXY(const FVector& V)
     {
-        return FVector{v.Y, v.X, v.Z}; 
+        return FVector{V.Y, V.X, V.Z}; 
     }
 
-    FORCEINLINE FVector SwapY(const FVector& v)
+    FORCEINLINE FVector SwapY(const FVector& V)
     {
-        return FVector{v.X, -v.Y, v.Z};
+        return FVector{V.X, -V.Y, V.Z};
     }
 
-    FORCEINLINE static float GetAngleBetween(FVector Vector1, FVector Vector2)
+    FORCEINLINE static float GetAngleBetween(const FVector& Vector1, const FVector& Vector2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Vector1, Vector2) / (Vector1.Size() * Vector2.Size())));
     }
     
-    FORCEINLINE static float GetAngleBetweenNormals(FVector Normal1, FVector Normal2)
+    FORCEINLINE static float GetAngleBetweenNormals(const FVector& Normal1, const FVector& Normal2)
     {
         return FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal1, Normal2)));
     }
@@ -40,9 +40,9 @@ namespace btd
     * Maximum error of 0.18 rad.
     * @ref https://stackoverflow.com/questions/3380628/fast-arc-cos-algorithm
     */
-    FORCEINLINE static float FastAcos(float rad) 
+    FORCEINLINE static float FastAcos(const float Rad) 
     {
-        return (-0.69813170079773212 * rad * rad - 0.87266462599716477) * rad + 1.5707963267948966;
+        return (-0.69813170079773212 * Rad * Rad - 0.87266462599716477) * Rad + 1.5707963267948966;
     }
 
     /*
@@ -51,7 +51,7 @@ namespace btd
     * @param How many seconds to wait before call.
     * @param The lambda to call.
     */
-    FORCEINLINE static void Delay(UObject* Context, const float Seconds, TFunction<void(void)> Lambda)
+    FORCEINLINE static void Delay(UObject* Context, const float Seconds, TFunction<void()> Lambda)
     {
         if (!Context)
             return;
@@ -80,7 +80,7 @@ namespace btd
     * @param How many iterations to call.
     * @param The lambda to call.
     */
-    FORCEINLINE static void Repeat(UObject* Context, const float Seconds, const int Iterations, TFunction<void(void)> Lambda)
+    FORCEINLINE static void Repeat(UObject* Context, const float Seconds, const int Iterations, TFunction<void()> Lambda)
     {
         if (Iterations <= 0)
             return;
@@ -126,33 +126,33 @@ namespace btd
         }
     }
 
-    inline static FInputActionBinding BindActionLambda(UInputComponent* Input, FName ActionName, const EInputEvent KeyEvent, TFunction<void(void)> func)
+    inline static FInputActionBinding BindActionLambda(UInputComponent* Input, const FName& ActionName, const EInputEvent KeyEvent, TFunction<void()> Func)
     {
-        FInputActionBinding ab{ActionName, KeyEvent};
-	    ab.ActionDelegate.GetDelegateForManualSet().BindLambda(func);
-	    return Input->AddActionBinding(MoveTemp(ab));
+        FInputActionBinding AB{ActionName, KeyEvent};
+	    AB.ActionDelegate.GetDelegateForManualSet().BindLambda(Func);
+	    return Input->AddActionBinding(MoveTemp(AB));
     }
 
     template<typename T>
-    inline static int sign(const T& v, float tolerance = SMALL_NUMBER)
+    inline static int Sign(const T& V, float Tolerance = SMALL_NUMBER)
     {
-        auto zero = T{};
-        return FMath::IsNearlyEqual(v, zero, tolerance) ? 0 : (v < zero + tolerance ? -1 : 1);
+        auto Zero = T{};
+        return FMath::IsNearlyEqual(V, Zero, Tolerance) ? 0 : (V < Zero + Tolerance ? -1 : 1);
     }
     
     template <typename T>
-    inline static auto InvLerp(const T &a, const T &b, const T &p)
+    inline static auto InvLerp(const T &A, const T &B, const T &P)
     {
         /**
          * p = a + t * (b - a)
          * p - a = t * (b - a)
          * (p - a) / (b - a) = t
          */
-        return (p - a) / (b - a);
+        return (P - A) / (B - A);
     }
 
     // Converts a single digit integer to a char (or the last digit if multiple digits)
-    inline static TCHAR ConvertIntDigitToChar(int32 Int)
+    inline static TCHAR ConvertIntDigitToChar(const int32 Int)
     {
         return static_cast<TCHAR>(Int % 10) + '0';
     }

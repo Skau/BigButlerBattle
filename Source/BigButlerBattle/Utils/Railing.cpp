@@ -3,7 +3,6 @@
 #include "Railing.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/BoxComponent.h"
 #include "btd.h"
 #include "Utils/DataTables.h"
 #include "Player/PlayerCharacter.h"
@@ -50,7 +49,7 @@ void ARailing::Tick(float DeltaTime)
 
 }
 
-void ARailing::BuildSpline()
+void ARailing::BuildSpline() const
 {
 	if (!SplineComp)
 	{
@@ -122,7 +121,7 @@ void ARailing::BuildSpline()
 void ARailing::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
 {
     //Get the name of the property that was changed
-    FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+    const FName PropertyName = PropertyChangedEvent.Property != nullptr ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
     // We test using GET_MEMBER_NAME_CHECKED so that if someone changes the property name
     // in the future this will fail to compile and we can update it.

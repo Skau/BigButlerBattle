@@ -28,7 +28,6 @@
 #include "NiagaraComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Curves/CurveFloat.h"
-#include "Kismet/GameplayStatics.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UPlayerCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -167,17 +166,17 @@ void APlayerCharacter::BeginPlay()
 
 	Movement = Cast<UPlayerCharacterMovementComponent>(GetMovementComponent());
 
-	Movement->OnCustomMovementStart.AddLambda([&](uint8 MovementMode){
+	Movement->OnCustomMovementStart.AddLambda([&](const uint8 MovementMode){
 		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
 			SetRailCollision(false);
 	});
 
-	Movement->OnCustomMovementEnd.AddLambda([&](uint8 MovementMode){
+	Movement->OnCustomMovementEnd.AddLambda([&](const uint8 MovementMode){
 		if (MovementMode == static_cast<uint8>(ECustomMovementType::MOVE_Grinding))
 			SetRailCollision(true);
 	});
 
-	Movement->OnMovementEnd.AddLambda([&](EMovementMode MovementMode) {
+	Movement->OnMovementEnd.AddLambda([&](const EMovementMode MovementMode) {
 		if (MovementMode == EMovementMode::MOVE_Falling)
 		{
 			if (LandSound)
@@ -205,15 +204,15 @@ void APlayerCharacter::BeginPlay()
 
 
 	// Particles
-	Movement->OnCustomMovementStart.AddLambda([&](uint8 movementMode){
-		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+	Movement->OnCustomMovementStart.AddLambda([&](uint8 MovementMode){
+		if (static_cast<ECustomMovementType>(MovementMode) == ECustomMovementType::MOVE_Grinding)
 		{
 			SkateboardParticles->SetVariableBool(FName{"User.EmittersEnabled"}, true);
 		}
 	});
 
-	Movement->OnCustomMovementEnd.AddLambda([&](uint8 movementMode) {
-		if (static_cast<ECustomMovementType>(movementMode) == ECustomMovementType::MOVE_Grinding)
+	Movement->OnCustomMovementEnd.AddLambda([&](uint8 MovementMode) {
+		if (static_cast<ECustomMovementType>(MovementMode) == ECustomMovementType::MOVE_Grinding)
 		{
 			SkateboardParticles->SetVariableBool(FName{"User.EmittersEnabled"}, false);
 		}
@@ -262,25 +261,25 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	if (CanGrind())
 	{
-		if (auto rail = GetClosestRail())
+		if (const auto Rail = GetClosestRail())
 		{
-			StartGrinding(rail);
+			StartGrinding(Rail);
 		}
 	}
 
 	// Particles
-	const auto wheels = GetWheelLocations();
+	const auto Wheels = GetWheelLocations();
 	for (int i{0}; i < 4; ++i)
 	{
-		FString var{"User.WheelPos"};
-		var.AppendChar(btd::ConvertIntDigitToChar(i));
+		FString Var{"User.WheelPos"};
+		Var.AppendChar(btd::ConvertIntDigitToChar(i));
 
-		SkateboardParticles->SetVariableVec3(*var, wheels[i]);
+		SkateboardParticles->SetVariableVec3(*Var, Wheels[i]);
 	}
-	float velocityFactor = Movement->Velocity.Size2D() / SkidmarkVelocityThreshold;
-	velocityFactor = FMath::Clamp(SkidmarkStrengthCurve ? SkidmarkStrengthCurve->GetFloatValue(velocityFactor) : velocityFactor, 0.f, 1.f);
-	const float skidMarkStrength = velocityFactor * FMath::Abs(Movement->GetRotationInput()) * static_cast<float>(!(Movement->IsFalling()));
-	SkateboardParticles->SetVariableFloat(FName{"User.SkidMarkStrength"}, skidMarkStrength);
+	float VelocityFactor = Movement->Velocity.Size2D() / SkidmarkVelocityThreshold;
+	VelocityFactor = FMath::Clamp(SkidmarkStrengthCurve ? SkidmarkStrengthCurve->GetFloatValue(VelocityFactor) : VelocityFactor, 0.f, 1.f);
+	const float SkidMarkStrength = VelocityFactor * FMath::Abs(Movement->GetRotationInput()) * static_cast<float>(!Movement->IsFalling());
+	SkateboardParticles->SetVariableFloat(FName{"User.SkidMarkStrength"}, SkidMarkStrength);
 }
 
 
@@ -340,8 +339,8 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 	OnCharacterFell.ExecuteIfBound(CurrentRoom, GetActorLocation());
 
 	bDed = true;
-	for (auto& obj : TaskObjectsInPickupRange)
-		obj->SetSelected(false);
+	for (auto& OBJ : TaskObjectsInPickupRange)
+		OBJ->SetSelected(false);
 }
 
 void APlayerCharacter::OnCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -384,27 +383,27 @@ void APlayerCharacter::MoveForward(float Value)
 
 	bool bBraking = false;
 	bool bMovingBackwards = false;
-	auto acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
+	auto Acceleration = Movement->GetInputAcceleration(bBraking, bMovingBackwards, Value);
 
 	if (!bBraking && Value != 0 && AnimInstance && !AnimInstance->IsAnyMontagePlaying())
 	{
 		// Normalize with time
-		const float deltaTime = GetWorld()->GetDeltaSeconds();
-		acceleration = Movement->GetInputAccelerationTimeNormalized(acceleration, bBraking, deltaTime);
-		if (Movement->CanForwardAccelerate(acceleration, deltaTime, bMovingBackwards))
+		const float DeltaTime = GetWorld()->GetDeltaSeconds();
+		Acceleration = Movement->GetInputAccelerationTimeNormalized(Acceleration, bBraking, DeltaTime);
+		if (Movement->CanForwardAccelerate(Acceleration, DeltaTime, bMovingBackwards))
 		{
-			highestInput = 0.f;
+			HighestInput = 0.f;
 			AnimInstance->ForwardKick();
 		}
 	}
 
-	if (Value > highestInput)
-		highestInput = Value;
+	if (Value > HighestInput)
+		HighestInput = Value;
 }
 
 void APlayerCharacter::AddForwardInput()
 {
-	AddMovementInput(FVector::ForwardVector * highestInput);
+	AddMovementInput(FVector::ForwardVector * HighestInput);
 }
 
 void APlayerCharacter::MoveRight(float Value)
@@ -457,15 +456,15 @@ void APlayerCharacter::UpdateCameraRotation(const float DeltaTime)
 	DesiredCameraRotation.Y = FMath::Clamp(DesiredCameraRotation.Y, -CameraRotationPitchHeight, CameraRotationPitchHeight);
 
 	// Find camera lerp factor
-	const float lerpFactor = FMath::Clamp(CameraRotationSpeed * DeltaTime, 0.f, 1.f);
+	const float LerpFactor = FMath::Clamp(CameraRotationSpeed * DeltaTime, 0.f, 1.f);
 
 
 	// Find new rotation
 	const bool bXNearZero = FMath::Abs(DesiredCameraRotation.X - CameraRotation.X) / CameraRotationYawAngle < CameraRotationDeadZone;
 	const bool bYNearZero = FMath::Abs(DesiredCameraRotation.Y - CameraRotation.Y) / CameraRotationPitchHeight < CameraRotationDeadZone;
 
-	CameraRotation.X = bXNearZero ? DesiredCameraRotation.X : FMath::Lerp(CameraRotation.X, DesiredCameraRotation.X, lerpFactor);
-	CameraRotation.Y = bYNearZero ? DesiredCameraRotation.Y : FMath::Lerp(CameraRotation.Y, DesiredCameraRotation.Y, lerpFactor);
+	CameraRotation.X = bXNearZero ? DesiredCameraRotation.X : FMath::Lerp(CameraRotation.X, DesiredCameraRotation.X, LerpFactor);
+	CameraRotation.Y = bYNearZero ? DesiredCameraRotation.Y : FMath::Lerp(CameraRotation.Y, DesiredCameraRotation.Y, LerpFactor);
 
 
 	// Set rotation of camera
@@ -588,18 +587,18 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 	// Case 2/4: Grinding
 	else if (Movement->IsGrinding())
 	{
-		const auto railNormal = Movement->GetRailNormal();
-		if (railNormal.IsNearlyZero())
+		const auto RailNormal = Movement->GetRailNormal();
+		if (RailNormal.IsNearlyZero())
 			return;
 
-		auto desiredRotation = GetDesiredRotation(railNormal);
-		float alpha = (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime;
+		auto DesiredRotation = GetDesiredRotation(RailNormal);
+		float Alpha = (SkateboardRotationGrindingSpeed / 0.017f) * DeltaTime;
 		if (AnimInstance)
 		{
-			AnimInstance->LeftLegJointRotation = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, alpha);
-			AnimInstance->RightLegJointRotation = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, alpha);
+			AnimInstance->LeftLegJointRotation = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, Alpha);
+			AnimInstance->RightLegJointRotation = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat{GetActorUpVector(), -PI / 2}, Alpha);
 		}
-		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), desiredRotation, alpha));
+		SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, Alpha));
 	}
 	// Case 3/4: On Ground
 	else
@@ -613,12 +612,12 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 		// Both hits:
 		if (TraceResults.Front.bBlockingHit && TraceResults.Back.bBlockingHit)
 		{
-			auto dot = FVector::DotProduct(TraceResults.Front.ImpactNormal, TraceResults.Back.ImpactNormal);
-			if (dot != 0)
+			auto Dot = FVector::DotProduct(TraceResults.Front.ImpactNormal, TraceResults.Back.ImpactNormal);
+			if (Dot != 0)
 			{
 				auto NewNormal = (TraceResults.Front.ImpactNormal + TraceResults.Back.ImpactNormal).GetSafeNormal();
 				auto DesiredRotation = GetDesiredRotation(NewNormal);
-				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * dot));
+				SkateboardMesh->SetWorldRotation(FQuat::Slerp(SkateboardMesh->GetComponentQuat(), DesiredRotation, (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime * Dot));
 			}
 
 			// There is a case here where we should fall, because if the player handbrakes over an edge it is still glued to the slope and it looks weird.
@@ -645,17 +644,17 @@ void APlayerCharacter::UpdateSkateboardRotation(float DeltaTime)
 	// Reset joint locations
 	if ((GetMovementComponent()->IsFalling() || !Movement->IsGrinding()) && AnimInstance)
 	{
-		const float alpha = (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime;
+		const float Alpha = (SkateboardRotationGroundSpeed / 0.017f) * DeltaTime;
 		if (!AnimInstance->LeftLegJointRotation.IsIdentity())
 		{
-			const auto lerp = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat::Identity, alpha);
-			AnimInstance->LeftLegJointRotation = lerp.IsIdentity(0.0001f) ? FQuat::Identity : lerp;
+			const auto Lerp = FQuat::Slerp(AnimInstance->LeftLegJointRotation, FQuat::Identity, Alpha);
+			AnimInstance->LeftLegJointRotation = Lerp.IsIdentity(0.0001f) ? FQuat::Identity : Lerp;
 		}
 
 		if (!AnimInstance->RightLegJointRotation.IsIdentity())
 		{
-			const auto lerp = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat::Identity, alpha);
-			AnimInstance->RightLegJointRotation = lerp.IsIdentity(0.0001f) ? FQuat::Identity : lerp;
+			const auto Lerp = FQuat::Slerp(AnimInstance->RightLegJointRotation, FQuat::Identity, Alpha);
+			AnimInstance->RightLegJointRotation = Lerp.IsIdentity(0.0001f) ? FQuat::Identity : Lerp;
 		}
 	}
 }
@@ -749,8 +748,8 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 void APlayerCharacter::ThrowStart()
 {
 	bool bFound = false;
-	for (const auto& obj : Inventory)
-		if (obj)
+	for (const auto& OBJ : Inventory)
+		if (OBJ)
 		{
 			bFound = true;
 			break;
@@ -845,7 +844,7 @@ void APlayerCharacter::Throw()
 	IncrementCurrentItemIndex();
 }
 
-void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, FVector LaunchVelocity)
+void APlayerCharacter::DetachObject(ATaskObject* Object, const FVector SpawnLocation, const FVector LaunchVelocity)
 {
 	if (Object)
 	{
@@ -861,12 +860,12 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 			Spawned->SetAsMainItem();
 
 		// Spawn transform
-		auto transform = Object->GetTransform();
+		auto Transform = Object->GetTransform();
 
 		// Scale (scale it back up)
-		transform.SetScale3D(transform.GetScale3D() / 0.3f);
+		Transform.SetScale3D(Transform.GetScale3D() / 0.3f);
 
-		transform.SetLocation(SpawnLocation);
+		Transform.SetLocation(SpawnLocation);
 
 		if (LaunchVelocity != FVector::ZeroVector)
 		{
@@ -874,7 +873,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 		}
 
 		// Finish
-		Spawned = Cast<ATaskObject>(UGameplayStatics::FinishSpawningActor(Spawned, transform));
+		Spawned = Cast<ATaskObject>(UGameplayStatics::FinishSpawningActor(Spawned, Transform));
 		DroppedObjects.Add(Spawned);
 		btd::Delay(this, 0.5f, [this]()
 		{
@@ -882,7 +881,7 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, FVector SpawnLocation, 
 			{
 				if (DroppedObjects.IsValidIndex(0))
 				{
-					auto Object = DroppedObjects[0];
+					const auto Object = DroppedObjects[0];
 					DroppedObjects.Remove(Object);
 				}
 			}
@@ -976,7 +975,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionBeginOverlap(UPrimitiveCompone
 
 	if (OtherActor->IsA(ATaskObject::StaticClass()) && !bHasMainItem)
 	{
-		auto TaskObject = Cast<ATaskObject>(OtherActor);
+		const auto TaskObject = Cast<ATaskObject>(OtherActor);
 		if(TaskObject == ClosestPickup)
 		{
 			OnObjectPickedUp(TaskObject);
@@ -1004,7 +1003,7 @@ void APlayerCharacter::OnTaskObjectPickupCollisionEndOverlap(UPrimitiveComponent
 	if (bDed)
 		return;
 
-	if (auto TaskObject = Cast<ATaskObject>(OtherActor))
+	if (const auto TaskObject = Cast<ATaskObject>(OtherActor))
 	{
 		TaskObjectsInPickupRange.RemoveSingle(TaskObject);
 		TaskObject->SetSelected(false);
@@ -1020,7 +1019,7 @@ void APlayerCharacter::OnTaskObjectCameraCollisionBeginOverlap(UPrimitiveCompone
 	if (bDed)
 		return;
 
-	if (auto Object = Cast<ATaskObject>(OtherActor))
+	if (const auto Object = Cast<ATaskObject>(OtherActor))
 	{
 		if (!bHasMainItem && DroppedObjects.Find(Object) == INDEX_NONE)
 		{
@@ -1034,7 +1033,7 @@ void APlayerCharacter::OnTaskObjectCameraCollisionEndOverlap(UPrimitiveComponent
 	if (bDed)
 		return;
 
-	if (auto Object = Cast<ATaskObject>(OtherActor))
+	if (const auto Object = Cast<ATaskObject>(OtherActor))
 	{
 		if (Object == ClosestPickup)
 		{
@@ -1065,17 +1064,17 @@ void APlayerCharacter::TryTackle()
 	if (!PlayersInRange.Num())
 		return;
 
-	float ClosestDistance = MAX_FLT;
+	const float ClosestDistance = MAX_FLT;
 	APlayerCharacter* ClosestPlayer = nullptr;
-	FVector Direction = FVector::ZeroVector;
+	const FVector Direction = FVector::ZeroVector;
 
 	for (int i = 0; i < PlayersInRange.Num(); ++i)
 	{
-		auto OtherPlayer = PlayersInRange[i];
+		const auto OtherPlayer = PlayersInRange[i];
 		auto OtherPlayerLocation = OtherPlayer->GetActorLocation();
 		
 		// Check distance
-		auto Distance = FVector::Distance(GetActorLocation(), OtherPlayerLocation);
+		const auto Distance = FVector::Distance(GetActorLocation(), OtherPlayerLocation);
 		if (Distance < ClosestDistance)
 			ClosestPlayer = OtherPlayer;
 	}
@@ -1095,7 +1094,7 @@ void APlayerCharacter::TryTackle()
 
 void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (auto Other = Cast<APlayerCharacter>(OtherActor))
+	if (const auto Other = Cast<APlayerCharacter>(OtherActor))
 	{
 		if(Other != this)
 			PlayersInRange.AddUnique(Other);
@@ -1104,7 +1103,7 @@ void APlayerCharacter::OnPlayersInRangeCollisionBeginOverlap(UPrimitiveComponent
 
 void APlayerCharacter::OnPlayersInRangeCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (auto Other = Cast<APlayerCharacter>(OtherActor))
+	if (const auto Other = Cast<APlayerCharacter>(OtherActor))
 		PlayersInRange.RemoveSingle(Other);
 }
 
@@ -1122,7 +1121,7 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 	for (int i = 0; i < TaskObjectsInCameraRange.Num(); ++i)
 	{
-		auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
+		const auto Distance = FVector::Distance(TaskObjectsInCameraRange[i]->GetActorLocation(), GetActorLocation());
 		if (Distance < Closest)
 		{
 			Closest = Distance;
@@ -1143,28 +1142,28 @@ void APlayerCharacter::UpdateClosestTaskObject()
 
 ARailing* APlayerCharacter::GetClosestRail()
 {
-	ARailing* rail{nullptr};
-	float currentRange{MAX_FLT};
+	ARailing* Rail{nullptr};
+	float CurrentRange{MAX_FLT};
 
-	for (auto& item : RailsInRange)
+	for (auto& Item : RailsInRange)
 	{
-		if (item)
+		if (Item)
 		{
-			auto range = (item->GetActorLocation() - GetActorLocation()).Size();
-			if (range < currentRange)
+			const auto Range = (Item->GetActorLocation() - GetActorLocation()).Size();
+			if (Range < CurrentRange)
 			{
-				currentRange = range;
-				rail = item;
+				CurrentRange = Range;
+				Rail = Item;
 			}
 		}
 	}
 
-	return rail;
+	return Rail;
 }
 
-void APlayerCharacter::SetRailCollision(bool mode)
+void APlayerCharacter::SetRailCollision(bool bMode) const
 {
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, mode ? ECollisionResponse::ECR_Block : ECollisionResponse::ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, bMode ? ECollisionResponse::ECR_Block : ECollisionResponse::ECR_Ignore);
 }
 
 bool APlayerCharacter::CanGrind() const
@@ -1172,33 +1171,33 @@ bool APlayerCharacter::CanGrind() const
 	return Movement->IsFalling() && CurrentGrindingRail == nullptr /* && !Movement->CurrentSpline.HasValue() */;
 }
 
-void APlayerCharacter::StartGrinding(ARailing* rail)
+void APlayerCharacter::StartGrinding(ARailing* Rail)
 {
 	// Start grinding
-	CurrentGrindingRail = rail;
-	Movement->SetSpline(rail->SplineComp, rail->bLoopedRail);
+	CurrentGrindingRail = Rail;
+	Movement->SetSpline(Rail->SplineComp, Rail->bLoopedRail);
 	Movement->SetMovementMode(EMovementMode::MOVE_Custom, static_cast<uint8>(ECustomMovementType::MOVE_Grinding));
 }
 
 void APlayerCharacter::OnGrindingOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	auto rail = Cast<ARailing>(OtherActor);
-	if (rail)
+	const auto Rail = Cast<ARailing>(OtherActor);
+	if (Rail)
 	{
-		RailsInRange.Add(rail);
+		RailsInRange.Add(Rail);
 
 		if (CanGrind())
-			StartGrinding(rail);
+			StartGrinding(Rail);
 	}
 }
 
 void APlayerCharacter::OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	auto rail = Cast<ARailing>(OtherActor);
-	if (rail)
+	const auto Rail = Cast<ARailing>(OtherActor);
+	if (Rail)
 	{
-		RailsInRange.RemoveSingle(rail);
-		if (CurrentGrindingRail == rail)
+		RailsInRange.RemoveSingle(Rail);
+		if (CurrentGrindingRail == Rail)
 			CurrentGrindingRail = nullptr;
 	}
 }
@@ -1207,22 +1206,22 @@ void APlayerCharacter::OnGrindingOverlapEnd(UPrimitiveComponent* OverlappedCompo
 
 TArray<FVector> APlayerCharacter::GetWheelLocations() const
 {
-	constexpr int32 wheelCount = 4;
-	TArray<FVector> locations;
-	locations.Reserve(wheelCount);
-	locations.AddZeroed(wheelCount);
+	constexpr int32 WheelCount = 4;
+	TArray<FVector> Locations;
+	Locations.Reserve(WheelCount);
+	Locations.AddZeroed(WheelCount);
 	
 	if (!IsValid(SkateboardMesh))
-		return locations;
+		return Locations;
 
-	auto compTrans = SkateboardMesh->GetComponentSpaceTransforms();
+	auto CompTrans = SkateboardMesh->GetComponentSpaceTransforms();
 
-	const FName bones[]{"WheelsBack", "WheelsFront"};
-	FTransform boneTrans = FTransform::Identity;
-	for (int i{0}; i < wheelCount; ++i)
+	const FName Bones[]{"WheelsBack", "WheelsFront"};
+	FTransform BoneTrans = FTransform::Identity;
+	for (int i{0}; i < WheelCount; ++i)
 	{
-		auto boneIndex = SkateboardMesh->GetBoneIndex(bones[i / 2]);
-		if (boneIndex == INDEX_NONE)
+		const auto BoneIndex = SkateboardMesh->GetBoneIndex(Bones[i / 2]);
+		if (BoneIndex == INDEX_NONE)
 		{
 			++i; // Add one to skip both wheels on bone
 			continue;
@@ -1230,12 +1229,12 @@ TArray<FVector> APlayerCharacter::GetWheelLocations() const
 
 		// Only update each other bone (for efficiency)
 		if (!(i % 2))
-			boneTrans = SkateboardMesh->GetBoneTransform(boneIndex);
+			BoneTrans = SkateboardMesh->GetBoneTransform(BoneIndex);
 
-		const FVector dir{0.f, (i % 2 ? 1.f : -1.f) * ParticleWheelOffset, 0.f};
-		locations[i] = boneTrans.TransformPosition(dir);
+		const FVector Dir{0.f, (i % 2 ? 1.f : -1.f) * ParticleWheelOffset, 0.f};
+		Locations[i] = BoneTrans.TransformPosition(Dir);
 	}
 
-	return locations;
+	return Locations;
 }
 

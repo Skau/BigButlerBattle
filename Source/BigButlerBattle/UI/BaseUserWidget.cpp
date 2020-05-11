@@ -12,10 +12,10 @@
 UBaseUserWidget::UBaseUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	ConstructorHelpers::FObjectFinder<USoundCue> ButtonPressedDefiniton(TEXT("SoundCue'/Game/Audio/UI/ButtonPressed_Cue.ButtonPressed_Cue'"));
+	const ConstructorHelpers::FObjectFinder<USoundCue> ButtonPressedDefiniton(TEXT("SoundCue'/Game/Audio/UI/ButtonPressed_Cue.ButtonPressed_Cue'"));
 	ButtonPressedSound.SetResourceObject(ButtonPressedDefiniton.Object);
 
-	ConstructorHelpers::FObjectFinder<USoundCue> ButtonHoveredDefinition(TEXT("SoundCue'/Game/Audio/UI/ButtonSwitch_Cue.ButtonSwitch_Cue'"));
+	const ConstructorHelpers::FObjectFinder<USoundCue> ButtonHoveredDefinition(TEXT("SoundCue'/Game/Audio/UI/ButtonSwitch_Cue.ButtonSwitch_Cue'"));
 	ButtonHoveredSound.SetResourceObject(ButtonHoveredDefinition.Object);
 }
 
@@ -61,7 +61,7 @@ void UBaseUserWidget::FocusWidget(APlayerController* Controller, UWidget* Widget
 {
 	if (IsValid(Controller))
 	{
-		UWidget* ActualWidgetToFocus = (WidgetToFocus == nullptr && DefaultWidgetToFocus) ? DefaultWidgetToFocus : WidgetToFocus;
+		UWidget* ActualWidgetToFocus = WidgetToFocus == nullptr && DefaultWidgetToFocus ? DefaultWidgetToFocus : WidgetToFocus;
 		WidgetFocusedLast = ActualWidgetToFocus;
 
 		if (ActualWidgetToFocus)

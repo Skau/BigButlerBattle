@@ -83,11 +83,11 @@ void UPlayerCameraComponent::BeginPlay()
 	if (!IsValid(FOVCurve))
 	{
 		FOVCurve = NewObject<UCurveFloat>(this, TEXT("Default Curve"));
-		FString curveVals{};
-		curveVals += FString{"0,"} + FString::SanitizeFloat(MinFOV, 1) + FString{"\n"};
-		curveVals += FString{"1,"} + FString::SanitizeFloat(MaxPlayerInputFOV, 1) + FString{"\n"};
-		curveVals += FString{"2,"} + FString::SanitizeFloat(MaxFOV, 1) + FString{"\n"};
-		const auto errors = FOVCurve->CreateCurveFromCSVString(curveVals);
+		FString CurveVals{};
+		CurveVals += FString{"0,"} + FString::SanitizeFloat(MinFOV, 1) + FString{"\n"};
+		CurveVals += FString{"1,"} + FString::SanitizeFloat(MaxPlayerInputFOV, 1) + FString{"\n"};
+		CurveVals += FString{"2,"} + FString::SanitizeFloat(MaxFOV, 1) + FString{"\n"};
+		const auto errors = FOVCurve->CreateCurveFromCSVString(CurveVals);
 		for (const auto &err : errors)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Err: %s"), *err);
@@ -98,14 +98,14 @@ void UPlayerCameraComponent::BeginPlay()
 	if (bScaleChromaticAberrationByVelocityCurve && !IsValid(ChromaticAberrationVelocityCurve))
 	{
 		ChromaticAberrationVelocityCurve = NewObject<UCurveFloat>(this, TEXT("Default Curve"));
-		FString curveVals = FString{"0,"} + FString::SanitizeFloat(PostProcessSettings.SceneFringeIntensity, 6)
+		const FString CurveVals = FString{"0,"} + FString::SanitizeFloat(PostProcessSettings.SceneFringeIntensity, 6)
 							+ FString{"\n1,"} + FString::SanitizeFloat(PostProcessSettings.SceneFringeIntensity, 6) + FString{"\n"};
-		const auto errors = ChromaticAberrationVelocityCurve->CreateCurveFromCSVString(curveVals);
-		for (const auto &err : errors)
+		const auto Errors = ChromaticAberrationVelocityCurve->CreateCurveFromCSVString(CurveVals);
+		for (const auto &Err : Errors)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Err: %s"), *err);
+			UE_LOG(LogTemp, Error, TEXT("Err: %s"), *Err);
 		}
-		check(0 == errors.Num());
+		check(0 == Errors.Num());
 	}
 }
 
@@ -123,13 +123,13 @@ void UPlayerCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		const auto MaxVel = MoveComp->MaxCustomMovementSpeed;
 		const auto CurrentVel = bConstrainFOVChangeToVelocityInXYDirections ? Player->GetVelocity().Size2D() : Player->GetVelocity().Size();
 
-		auto range = FMath::Max(CurrentVel / MaxInputVel, 0.f);
-		if (1.f < range)
-			range = 1.f + btd::InvLerp(MaxInputVel, MaxVel, CurrentVel);
+		auto Range = FMath::Max(CurrentVel / MaxInputVel, 0.f);
+		if (1.f < Range)
+			Range = 1.f + btd::InvLerp(MaxInputVel, MaxVel, CurrentVel);
 
-		const auto DesiredFOV = FMath::Clamp(FOVCurve->GetFloatValue(range), MinFOV, MaxFOV);
+		const auto DesiredFOV = FMath::Clamp(FOVCurve->GetFloatValue(Range), MinFOV, MaxFOV);
 		const auto Factor = FMath::Clamp(FieldOfViewSpeedChange * DeltaTime, 0.f, 1.0f);
-		SetFieldOfView((FMath::IsNearlyZero(Info.FOV - DesiredFOV)) ? DesiredFOV : FMath::Lerp(Info.FOV, DesiredFOV, Factor));
+		SetFieldOfView(FMath::IsNearlyZero(Info.FOV - DesiredFOV) ? DesiredFOV : FMath::Lerp(Info.FOV, DesiredFOV, Factor));
 
 		// Chromatic Aberattion
 		PostProcessSettings.SceneFringeIntensity = ChromaticAberrationVelocityCurve->GetFloatValue(FMath::Clamp(CurrentVel / MaxVel, 0.f, 1.f));

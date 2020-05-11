@@ -61,23 +61,23 @@ bool UMainMenuWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Play;
 	
-	UProperty* prop = GetClass()->PropertyLink;
-	while (prop != nullptr)
+	UProperty* Prop = GetClass()->PropertyLink;
+	while (Prop != nullptr)
 	{
-		if (prop->GetClass() == UObjectProperty::StaticClass())
+		if (Prop->GetClass() == UObjectProperty::StaticClass())
 		{
-			UObjectProperty* objectProp = Cast<UObjectProperty>(prop);
+			UObjectProperty* ObjectProp = Cast<UObjectProperty>(Prop);
 			
-			if (objectProp->PropertyClass == UWidgetAnimation::StaticClass())
+			if (ObjectProp->PropertyClass == UWidgetAnimation::StaticClass())
 			{
-				UObject* object = objectProp->GetObjectPropertyValue_InContainer(this);
+				UObject* Object = ObjectProp->GetObjectPropertyValue_InContainer(this);
 
-				Animation = Cast<UWidgetAnimation>(object);
+				Animation = Cast<UWidgetAnimation>(Object);
 				if (Animation != nullptr)
 					break;
 			}
 		}
-		prop = prop->PropertyLinkNext;
+		Prop = Prop->PropertyLinkNext;
 	}
 
 	PlayAnimation();
@@ -108,7 +108,7 @@ void UMainMenuWidget::OnPlayPressed()
 		CameraDirector->BlendToCharacterSelectionCamera();
 	}
 
-	auto Player = PlayAnimationReverse(Animation);
+	PlayAnimationReverse(Animation);
 	btd::Delay(this, Animation->GetEndTime() - Animation->GetStartTime(), [this]()
 	{
 		SetVisibility(ESlateVisibility::Hidden);
@@ -118,28 +118,28 @@ void UMainMenuWidget::OnPlayPressed()
 	{
 		PlayWidget->SetVisibility(ESlateVisibility::Visible);
 
-		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		if (const auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 0))
 		{
 			PlayWidget->PlayerWidget_0->FocusWidget(Player, PlayWidget->PlayerWidget_0->Button_Join);
 			PlayWidget->PlayerWidget_0->SpawnCharacter(ButlerTransforms[0]);
 		}
 
 
-		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 1))
+		if (const auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 1))
 		{
 			PlayWidget->PlayerWidget_1->FocusWidget(Player, PlayWidget->PlayerWidget_1->Button_Join);
 			PlayWidget->PlayerWidget_1->SpawnCharacter(ButlerTransforms[1]);
 		}
 
 
-		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 2))
+		if (const auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 2))
 		{
 			PlayWidget->PlayerWidget_2->FocusWidget(Player, PlayWidget->PlayerWidget_2->Button_Join);
 			PlayWidget->PlayerWidget_2->SpawnCharacter(ButlerTransforms[2]);
 		}
 
 
-		if (auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 3))
+		if (const auto Player = UGameplayStatics::GetPlayerController(GetWorld(), 3))
 		{
 			PlayWidget->PlayerWidget_3->FocusWidget(Player, PlayWidget->PlayerWidget_3->Button_Join);
 			PlayWidget->PlayerWidget_3->SpawnCharacter(ButlerTransforms[3]);

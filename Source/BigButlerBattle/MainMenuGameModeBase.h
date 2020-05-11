@@ -54,6 +54,7 @@ private:
 	void Countdown();
 	void EndCountdown();
 
+	UPROPERTY()
 	TArray<APlayerController*> Controllers;
 
 	TArray<int> PlayerNotJoinedIDs = { 0, 1, 2, 3 };

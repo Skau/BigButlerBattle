@@ -8,7 +8,7 @@
 #include "Engine/World.h"
 #include "MainMenuGameModeBase.h"
 
-void AMyGameModeBase::AddTimerHandle(FTimerHandle TimerHandle)
+void AMyGameModeBase::AddTimerHandle(const FTimerHandle TimerHandle)
 {
 	TimerHandles.Add(TimerHandle);
 }

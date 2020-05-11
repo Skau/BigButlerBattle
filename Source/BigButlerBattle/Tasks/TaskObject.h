@@ -22,28 +22,28 @@ class BIGBUTLERBATTLE_API ATaskObject : public AActor
 public:	
 	ATaskObject();
 
-	UTask* GetTaskData() { return TaskData; }
+	UTask* GetTaskData() const { return TaskData; }
 	void SetTaskData(UTask* Task) { TaskData = Task; }
 
 	void OnPickedUp();
 
-	void Enable(bool NewVisiblity, bool NewCollision, bool NewPhysics);
+	void Enable(bool NewVisibility, bool NewCollision, bool NewPhysics);
 
 	void Launch(const FVector& LaunchVelocity);
 
-	void SetSelected(bool Value);
+	void SetSelected(bool Value) const;
 
 	bool bCanHit = false;
 
 	void SetAsMainItem();
 
-	bool GetIsMainItem() { return bIsMainItem; }
+	bool GetIsMainItem() const { return bIsMainItem; }
 
 	void Reset();
 
 	bool GetIsRespawning() const { return bIsRespawning; }
 
-	void SetParticlesEnable(bool bEnable);
+	void SetParticlesEnable(bool bEnable) const;
 
 	bool bOnTray = false;
 
@@ -61,7 +61,7 @@ protected:
 	UNiagaraComponent* Particles = nullptr;
 
 #if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
 private:
@@ -126,6 +126,5 @@ private:
 	uint8 ParticleDisableTime = 4;
 	bool bEnabled = true;
 
-private:
 	void UpdateDataTables();
 };

@@ -49,8 +49,7 @@ private:
 	UFUNCTION()
 	void OnCameraToggleInvertPitchPressed();
 
-private:
-	UButlerGameInstance* GetGameInstance();
+	UButlerGameInstance* GetGameInstance() const;
 
 	int ID = -1;
 };

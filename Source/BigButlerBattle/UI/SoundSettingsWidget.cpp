@@ -11,7 +11,7 @@ USoundSettingsWidget::USoundSettingsWidget(const FObjectInitializer& ObjectIniti
 	: Super(ObjectInitializer)
 {}
 
-FString USoundSettingsWidget::ToPercent(float Value) const
+FString USoundSettingsWidget::ToPercent(const float Value) const
 {
 	int32 Val = static_cast<int32>(Value * 10.5f) * 10;
 	if (Val == 70)
@@ -21,7 +21,7 @@ FString USoundSettingsWidget::ToPercent(float Value) const
 
 bool USoundSettingsWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	Button_MasterDown->OnClicked.AddDynamic(this, &USoundSettingsWidget::OnMasterDownPressed);
 	Buttons.Add(Button_MasterDown);
@@ -45,7 +45,7 @@ bool USoundSettingsWidget::Initialize()
 
 	DefaultWidgetToFocus = Button_Back;
 
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_MasterVolume->SetText(FText::FromString(ToPercent(Instance->GetMainSoundVolume())));
 
@@ -63,7 +63,7 @@ void USoundSettingsWidget::OnBackButtonPressed()
 
 void USoundSettingsWidget::OnMasterDownPressed()
 {
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_MasterVolume->SetText(FText::FromString(ToPercent(Instance->UpdateMainSoundVolume(false))));
 	}
@@ -73,7 +73,7 @@ void USoundSettingsWidget::OnMasterDownPressed()
 
 void USoundSettingsWidget::OnMasterUpPressed()
 {
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_MasterVolume->SetText(FText::FromString(ToPercent(Instance->UpdateMainSoundVolume(true))));
 	}
@@ -83,7 +83,7 @@ void USoundSettingsWidget::OnMasterUpPressed()
 
 void USoundSettingsWidget::OnBackgroundDownPressed()
 {
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_BackgroundVolume->SetText(FText::FromString(ToPercent(Instance->UpdateBackgroundSoundVolume(false))));
 	}
@@ -93,7 +93,7 @@ void USoundSettingsWidget::OnBackgroundDownPressed()
 
 void USoundSettingsWidget::OnBackgroundUpPressed()
 {
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_BackgroundVolume->SetText(FText::FromString(ToPercent(Instance->UpdateBackgroundSoundVolume(true))));
 	}
@@ -103,7 +103,7 @@ void USoundSettingsWidget::OnBackgroundUpPressed()
 
 void USoundSettingsWidget::OnSFXDownPressed()
 {
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_SFXVolume->SetText(FText::FromString(ToPercent(Instance->UpdateSoundEffectsSoundVolume(false))));
 	}
@@ -113,7 +113,7 @@ void USoundSettingsWidget::OnSFXDownPressed()
 
 void USoundSettingsWidget::OnSFXUpPressed()
 {
-	if (auto Instance = GetGameInstance())
+	if (const auto Instance = GetGameInstance())
 	{
 		TextBlock_SFXVolume->SetText(FText::FromString(ToPercent(Instance->UpdateSoundEffectsSoundVolume(true))));
 	}
@@ -121,7 +121,7 @@ void USoundSettingsWidget::OnSFXUpPressed()
 		UE_LOG(LogTemp, Error, TEXT("USoundSettingsWidget::OnSFXUpPressed: Could not find game instance!"))
 }
 
-UButlerGameInstance* USoundSettingsWidget::GetGameInstance()
+UButlerGameInstance* USoundSettingsWidget::GetGameInstance() const
 {
 	return Cast<UButlerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 }

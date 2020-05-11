@@ -34,7 +34,7 @@ public:
 	
     void UpdateTimerText(int ControllerID, bool bCanDeliver);
 
-    void UpdateTimer(const FString& String);
+    void UpdateTimer(const FString& String) const;
 
     void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
 
@@ -46,9 +46,9 @@ public:
     // Used everytime someone's score changes (called by gamemode)
     void UpdateScore(int ControllerID, int NewScore);
 
-    void ShowKeybinds();
+    void ShowKeybinds() const;
 
-    void HideKeybinds();
+    void HideKeybinds() const;
 
     int ID = -1;
 
@@ -110,9 +110,9 @@ private:
 
     bool bHasMainItem = false;
 	
-    void AddMessage(int ControllerID, const FString& Message, const float Duration = 3.f);
+    void AddMessage(int ControllerID, const FString& Message, float Duration = 3.f);
 
-    void SetTimerVisiblity(bool Visible);
+    void SetTimerVisibility(bool Visible) const;
 
     TArray<UImage*> PlayerIconWidgets;
 	
@@ -124,7 +124,5 @@ private:
 
     TArray<UHorizontalBox*> Messages;
 
-    bool WorldToScreen(const FVector& WorldLocation, FVector2D& ScreenPosition);
-
-    FVector2D ClampPosition(FVector2D Position) const;
+    bool WorldToScreen(const FVector& WorldLocation, FVector2D& RelativeScreenPosition) const;
 };

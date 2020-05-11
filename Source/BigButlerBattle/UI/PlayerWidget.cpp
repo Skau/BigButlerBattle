@@ -6,17 +6,12 @@
 #include "Utils/btd.h"
 #include "Player/PlayerCharacterController.h"
 #include "GameFramework/Character.h"
-#include "Components/CapsuleComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/VerticalBox.h"
-#include "Components/VerticalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
-#include "Components/Overlay.h"
-#include "Components/OverlaySlot.h"
-#include "Components/Image.h"
 #include "BigButlerBattleGameModeBase.h"
 #include "Tasks/Task.h"
 #include "Blueprint/WidgetTree.h"
@@ -29,7 +24,7 @@
 
 bool UPlayerWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	GameMode = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (GameMode)
@@ -86,7 +81,7 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		for (auto& Controller : GameMode->GetControllers())
 		{
-			auto ControllerID = UGameplayStatics::GetPlayerControllerID(Controller);
+			const auto ControllerID = UGameplayStatics::GetPlayerControllerID(Controller);
 			if (ControllerID != ID)
 			{
 				PlayerControllers.Add(Controller);
@@ -95,7 +90,7 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 		for (int i = 0; i < PlayerControllers.Num(); ++i)
 		{
-			auto ControllerID = UGameplayStatics::GetPlayerControllerID(PlayerControllers[i]);
+			const auto ControllerID = UGameplayStatics::GetPlayerControllerID(PlayerControllers[i]);
 			PlayerIconWidgets[i]->SetBrushFromTexture(PlayerIcons[ControllerID]);
 		}
 	}
@@ -106,8 +101,8 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		
 		if (Widget->Visibility == ESlateVisibility::Hidden)
 			Widget->SetVisibility(ESlateVisibility::Visible);
-		
-		auto Player = Cast<ACharacter>(PlayerControllers[i]->GetPawn());
+
+		const auto Player = Cast<ACharacter>(PlayerControllers[i]->GetPawn());
 		if(Player)
 		{
 			auto WorldPos = Player->GetActorLocation();
@@ -121,54 +116,48 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	}
 }
 
-void UPlayerWidget::UpdateTimerText(int ControllerID, bool bCanDeliver)
+void UPlayerWidget::UpdateTimerText(const int ControllerID, const bool bCanDeliver)
 {
-	if (!Timer_Text)
-		return;
-	
 	Timer_Image->SetBrushFromTexture(PlayerIcons[ControllerID]);
 	
 	FString Message;
 
 	if(bCanDeliver)
 	{
-		FString player = (ControllerID == ID) ? "You " : "Player " + FString::FromInt(ControllerID + 1) + " ";
-		Message = player + "can deliver!";
+		const FString Player = ControllerID == ID ? "You " : "Player " + FString::FromInt(ControllerID + 1) + " ";
+		Message = Player + "can deliver!";
 		if (Timer_Time)
 			Timer_Time->SetVisibility(ESlateVisibility::Hidden);
 	}
 	else
 	{
-		FString player = (ControllerID == ID) ? "you " : "player " + FString::FromInt(ControllerID + 1) + " ";
+		const FString Player = ControllerID == ID ? "you " : "player " + FString::FromInt(ControllerID + 1) + " ";
 		
-		Message = "Time until " + player + "can deliver:";
+		Message = "Time until " + Player + "can deliver:";
 	}
 
 	Timer_Text->SetText(FText::FromString(Message));
 }
 
-void UPlayerWidget::UpdateTimer(const FString& String)
+void UPlayerWidget::UpdateTimer(const FString& String) const
 {
-	if(Timer_Time)
-	{
-		if (Timer_Time->Visibility == ESlateVisibility::Hidden)
-			Timer_Time->SetVisibility(ESlateVisibility::Visible);
-		
-		Timer_Time->SetText(FText::FromString(String));
-	}
+	if (Timer_Time->Visibility == ESlateVisibility::Hidden)
+		Timer_Time->SetVisibility(ESlateVisibility::Visible);
+	
+	Timer_Time->SetText(FText::FromString(String));
 }
 
-void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewState)
+void UPlayerWidget::OnMainItemStateChanged(const int ControllerID, const EMainItemState NewState)
 {
-	SetTimerVisiblity(NewState == EMainItemState::PickedUp);
+	SetTimerVisibility(NewState == EMainItemState::PickedUp);
 
-	FString player = (ControllerID == ID) ? "You " : "Player " + FString::FromInt(ControllerID + 1);
-	FString state = "";
+	const FString player = ControllerID == ID ? "You " : "Player " + FString::FromInt(ControllerID + 1);
+	FString State = "";
 
 	switch (NewState)
 	{
 	case EMainItemState::PickedUp:
-		state = " picked up ";
+		State = " picked up ";
 		if (ControllerID == ID)
 		{			
 			MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
@@ -178,7 +167,7 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 			MainItem = MainItem->Next;
 		break;
 	case EMainItemState::Dropped:
-		state = " dropped ";
+		State = " dropped ";
 		if (bHasMainItem)
 		{			
 			bHasMainItem = false;
@@ -188,14 +177,14 @@ void UPlayerWidget::OnMainItemStateChanged(int ControllerID, EMainItemState NewS
 			MainItem = MainItem->Next;
 		break;
 	case EMainItemState::Delivered:
-		state = " delivered ";
+		State = " delivered ";
 		MainItem = nullptr;
 		MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
 		if (bHasMainItem)
 			bHasMainItem = false;
 	}
 
-	AddMessage(ControllerID, player + state + " the item!");
+	AddMessage(ControllerID, player + State + " the item!");
 }
 
 void UPlayerWidget::OnMainItemSet(ATaskObject* Object)
@@ -224,8 +213,6 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 	OverlaySize.SizeRule = ESlateSizeRule::Automatic;
 	OverlaySize.Value = 1.0f;
 
-	const FLinearColor ImageColor(1, 1, 1, 0.09f);
-
 	for (int i = 0; i < Controllers.Num(); ++i)
 	{
 		const auto SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
@@ -243,7 +230,7 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 
 		HorizontalSlot = ScoreBox->AddChildToHorizontalBox(PlayerScoreWidget);
 		HorizontalSlot->SetSize(OverlaySize);
-		HorizontalSlot->HorizontalAlignment = EHorizontalAlignment::HAlign_Fill;
+		HorizontalSlot->HorizontalAlignment = HAlign_Fill;
 	}
 
 	const auto SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
@@ -251,7 +238,7 @@ void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& 
 	HorizontalSlot->SetSize(SizeBoxSize);
 }
 
-void UPlayerWidget::UpdateScore(int ControllerID, int NewScore)
+void UPlayerWidget::UpdateScore(const int ControllerID, const int NewScore)
 {
 	if (PlayerScores.Find(ControllerID))
 	{
@@ -259,7 +246,7 @@ void UPlayerWidget::UpdateScore(int ControllerID, int NewScore)
 	}
 }
 
-void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const float Duration)
+void UPlayerWidget::AddMessage(const int ControllerID, const FString& Message, const float Duration)
 {
 	if (Message.IsEmpty())
 		return;
@@ -268,7 +255,7 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 
 	auto Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 
-	Icon->SetBrushFromTexture((ControllerID >= 0) ? PlayerIcons[ControllerID] : MainItemIcon);
+	Icon->SetBrushFromTexture(ControllerID >= 0 ? PlayerIcons[ControllerID] : MainItemIcon);
 	Icon->SetBrushSize({ 32.f, 32.f });
 
 	HorizontalBox->AddChildToHorizontalBox(Icon);
@@ -278,9 +265,9 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 	NewTextBlock->SetFont(FontInfo);
 	NewTextBlock->SetJustification(ETextJustify::Center);
 
-	auto Slot = HorizontalBox->AddChildToHorizontalBox(NewTextBlock);
-	Slot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
-	Slot->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
+	auto HorizontalSlot = HorizontalBox->AddChildToHorizontalBox(NewTextBlock);
+	HorizontalSlot->SetHorizontalAlignment(HAlign_Center);
+	HorizontalSlot->SetVerticalAlignment(VAlign_Center);
 	MessageBox->AddChildToVerticalBox(HorizontalBox);
 
 	for (auto& OldMessage : Messages)
@@ -300,7 +287,7 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 
 		if(Messages.Num())
 		{
-			auto OldMessage = Messages[0];
+			const auto OldMessage = Messages[0];
 			if (OldMessage != nullptr)
 			{
 				MessageBox->RemoveChild(OldMessage);
@@ -310,7 +297,7 @@ void UPlayerWidget::AddMessage(int ControllerID, const FString& Message, const f
 	});
 }
 
-void UPlayerWidget::ShowKeybinds()
+void UPlayerWidget::ShowKeybinds() const
 {
 	if (Image_Keybinds)
 	{
@@ -318,7 +305,7 @@ void UPlayerWidget::ShowKeybinds()
 	}
 }
 
-void UPlayerWidget::HideKeybinds()
+void UPlayerWidget::HideKeybinds() const
 {
 	if (Image_Keybinds)
 	{
@@ -326,36 +313,28 @@ void UPlayerWidget::HideKeybinds()
 	}
 }
 
-void UPlayerWidget::SetTimerVisiblity(bool Visible)
+void UPlayerWidget::SetTimerVisibility(const bool Visible) const
 {
 	TimerBox->SetVisibility(Visible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 }
 
-bool UPlayerWidget::WorldToScreen(const FVector& WorldLocation, FVector2D& RelativeScreenPosition)
+bool UPlayerWidget::WorldToScreen(const FVector& WorldLocation, FVector2D& RelativeScreenPosition) const
 {
-	auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
+	const auto PC = UGameplayStatics::GetPlayerControllerFromID(GetWorld(), ID);
 	FVector2D Pos;
 	if (PC->ProjectWorldLocationToScreen(WorldLocation, Pos, true))
 	{
-		FVector2D ScreenPosition(FMath::RoundToInt(Pos.X), FMath::RoundToInt(Pos.Y));
-		FVector2D ViewportPosition2D;
-		USlateBlueprintLibrary::ScreenToViewport(PC, ScreenPosition, ViewportPosition2D);
+		USlateBlueprintLibrary::ScreenToViewport(PC, Pos, RelativeScreenPosition);
 
-		RelativeScreenPosition = ClampPosition(ViewportPosition2D);
+		const auto Geometry = GetCachedGeometry();
+		const auto LocalSize = Geometry.GetLocalSize();
+		const auto Middle = Geometry.AbsoluteToLocal(Geometry.GetAbsolutePosition()) + LocalSize / 2.0f;
+
+		RelativeScreenPosition.X = FMath::Clamp(RelativeScreenPosition.X, Middle.X - LocalSize.X / 2.0f, Middle.X + LocalSize.X / 2.0f),
+		RelativeScreenPosition.Y = FMath::Clamp(RelativeScreenPosition.Y, Middle.Y - LocalSize.Y / 2.0f, Middle.Y + LocalSize.Y / 2.0f);
 		
 		return true;
 	}
 
 	return false;
-}
-
-FVector2D UPlayerWidget::ClampPosition(FVector2D Position) const
-{
-	const auto Geometry = GetCachedGeometry();
-	const auto LocalSize = Geometry.GetLocalSize();
-	const auto Middle = Geometry.AbsoluteToLocal(Geometry.GetAbsolutePosition()) + LocalSize / 2.0f;
-
-	return {FMath::Clamp(Position.X, Middle.X - LocalSize.X / 2.0f, Middle.X + LocalSize.X / 2.0f),
-			FMath::Clamp(Position.Y, Middle.Y - LocalSize.Y / 2.0f, Middle.Y + LocalSize.Y / 2.0f)};
-	
 }

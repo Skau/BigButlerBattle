@@ -13,7 +13,7 @@
 
 bool UPauseWidget::Initialize()
 {
-	bool bInit = Super::Initialize();
+	const bool bInit = Super::Initialize();
 
 	SetVisibility(ESlateVisibility::Hidden);
 
@@ -73,7 +73,7 @@ void UPauseWidget::OnBackButtonPressed()
 	}
 }
 
-void UPauseWidget::SetCurrentWidgetSwitcherIndex(EWidgetSwitcherIndex NewIndex)
+void UPauseWidget::SetCurrentWidgetSwitcherIndex(const EWidgetSwitcherIndex NewIndex)
 {
 	CurrentIndex = NewIndex;
 	Switcher->SetActiveWidgetIndex(static_cast<int>(CurrentIndex));
