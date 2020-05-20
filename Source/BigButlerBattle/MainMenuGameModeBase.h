@@ -44,7 +44,7 @@ protected:
 	int MinimumPlayersToStartGame = 1;
 
 	UPROPERTY(EditDefaultsOnly)
-	FName LevelToPlay = "NewLevel";
+	FName LevelToPlay = "Game";
 
 private:
 	void OnPlayerToggledJoinedGame(bool Value, int ID);
