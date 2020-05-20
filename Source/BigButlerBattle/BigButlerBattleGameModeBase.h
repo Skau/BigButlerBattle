@@ -96,7 +96,7 @@ protected:
 	float TotalSecondsToHold = 10.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	int TotalPointsToWin = 5;
+	int TotalPointsToWin = 3;
 
 	// Actual seconds left to hold
 	float SecondsLeftToHold = TotalSecondsToHold;
