@@ -92,6 +92,7 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		{
 			const auto ControllerID = UGameplayStatics::GetPlayerControllerID(PlayerControllers[i]);
 			PlayerIconWidgets[i]->SetBrushFromTexture(PlayerIcons[ControllerID]);
+			PlayerIconWidgets[i]->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 	
