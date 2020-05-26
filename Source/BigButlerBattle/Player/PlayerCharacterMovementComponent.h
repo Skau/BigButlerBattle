@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Misc/Optional.h"
 #include "PlayerCharacterMovementComponent.generated.h"
 
 // Forward declarations
@@ -52,8 +51,8 @@ struct FSplineInfo
 	float StartDistanceToCurve;
 	FVector StartVelocity;
 	float StartVelocitySize; // Cheaper to save length than to do a square root almost every physics frame
-	TOptional<FVector> EnteringDir;
-	FRotator StartRotation;
+	FVector EnteringDir;
+	FQuat StartRotation;
 	float TravelTime{0.f};
 
 	FSplineStateChangedSignature OnSplineChanged;
