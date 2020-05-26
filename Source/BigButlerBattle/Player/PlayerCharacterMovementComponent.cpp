@@ -637,14 +637,22 @@ void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, cons
 
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
-	const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
+	float Speed{0.f};
 
 	if (IsFalling())
 	{
-		return GetRotationInput() * SkateboardAirRotationSpeed;
+		Speed = SkateboardAirRotationSpeed;
+	}
+	else if (IsStandstill())
+	{
+		const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
+		Speed = StandstillRotationSpeed;
+	}
+	else
+	{
+		Speed = FMath::Lerp(SkateboardRotationSpeed, HandbrakeRotationSpeed, GetHandbrakeAmount());
 	}
 
-	const auto Speed = bIsStandstill ? StandstillRotationSpeed : FMath::Lerp(SkateboardRotationSpeed, HandbrakeRotationSpeed, GetHandbrakeAmount());
 	return GetRotationInput() * Speed;
 }
 
