@@ -140,6 +140,11 @@ namespace btd
         return FMath::IsNearlyEqual(V, Zero, Tolerance) ? 0 : (V < Zero + Tolerance ? -1 : 1);
     }
     
+    /** Note: The act of dividing a vector on another vector is undefined but the Unreal
+     * implementation will yield a vector and not a scalar which kinda defeats the purpose
+     * of this function. However, if A, B and P is on a line the resulting vector's
+     * components should be equal which can be further used to get the inverse of a lerp.
+     */
     template <typename T>
     inline static auto InvLerp(const T &A, const T &B, const T &P)
     {
