@@ -304,6 +304,8 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	GetMesh()->WakeAllRigidBodies();
 
+	Movement->SetMovementMode(EMovementMode::MOVE_None);
+	
 	if (!Impulse.IsZero())
 	{
 		GetMesh()->AddImpulseAtLocation(Impulse, HitLocation);
