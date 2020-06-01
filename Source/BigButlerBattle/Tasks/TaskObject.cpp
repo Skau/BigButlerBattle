@@ -16,6 +16,7 @@
 #include "Utils/btd.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystemInstance.h"
+#include "Player/PlayerCharacterController.h"
 
 ATaskObject::ATaskObject()
 {
@@ -55,7 +56,8 @@ void ATaskObject::Reset()
 	{
 		// When out of bounds or not reachable (not touched for TimeUntilResetThreshold seconds)
 		const auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-		GM->SetNewMainItem();
+		GM->OnMainItemStateChanged(-1, EMainItemState::Destroyed);
+		SetAsMainItem(false);
 	}
 	Destroy();
 }

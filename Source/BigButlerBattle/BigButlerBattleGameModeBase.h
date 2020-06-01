@@ -35,10 +35,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RespawnRadius = 1000.f;
 
+	void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
+
 	void SetNewMainItem(float Delay = 0.5f);
 
 	TArray<APlayerCharacterController*> GetControllers() const { return Controllers; }
-
 
 	AKing* GetKing() const { return King; }
 
@@ -84,7 +85,7 @@ private:
 	UFUNCTION()
 	void OnPlayerContinued(int ControllerID) const;
 	UFUNCTION()
-	void OnPlayerQuit() const;
+	void OnPlayerQuit();
 
 	void SetupSpawnpoints();
 
@@ -110,9 +111,9 @@ protected:
 	bool bTimeDone = false;
 
 private:
-	void OnMainItemStateChanged(int ControllerID, EMainItemState NewState);
-
 	int ControllerIDHoldingItem = -1;
 
 	AKing* King = nullptr;
+
+	bool bChangingLevels = false;
 };

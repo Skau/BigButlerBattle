@@ -261,8 +261,9 @@ void ABigButlerBattleGameModeBase::OnGameFinished(const int ControllerID) const
 		UGameplayStatics::PlaySound2D(this, WinSound, 1.f);
 }
 
-void ABigButlerBattleGameModeBase::OnPlayerQuit() const
+void ABigButlerBattleGameModeBase::OnPlayerQuit()
 {
+	bChangingLevels = true;
 	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 
@@ -343,6 +344,9 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(const int ControllerID
 		}
 	}
 	break;
+	case EMainItemState::Destroyed:
+		SetNewMainItem();
+		break;
 	}
 
 	for (auto& Controller : Controllers)
@@ -353,6 +357,9 @@ void ABigButlerBattleGameModeBase::OnMainItemStateChanged(const int ControllerID
 
 void ABigButlerBattleGameModeBase::SetNewMainItem(const float Delay)
 {
+	if (bChangingLevels)
+		return;
+
 	// Give it a second to let all task objects be in correct state
 	btd::Delay(this, Delay, [=]()
 	{

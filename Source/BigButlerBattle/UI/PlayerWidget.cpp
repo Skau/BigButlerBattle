@@ -51,7 +51,14 @@ void UPlayerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		FVector2D Pos;
 		if (WorldToScreen(MainItem->GetActorLocation(), Pos))
 		{
+			if (MainItemIconWidget->GetVisibility() != ESlateVisibility::Visible)
+				MainItemIconWidget->SetVisibility(ESlateVisibility::Visible);
+
 			MainItemIconWidget->SetRenderTranslation(Pos);
+		}
+		else
+		{
+			MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
@@ -179,10 +186,13 @@ void UPlayerWidget::OnMainItemStateChanged(const int ControllerID, const EMainIt
 		break;
 	case EMainItemState::Delivered:
 		State = " delivered ";
-		MainItem = nullptr;
-		MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
 		if (bHasMainItem)
 			bHasMainItem = false;
+	// Note: This part applies so Delivered and Destroyed and hence no break.
+	case EMainItemState::Destroyed:
+		MainItem = nullptr;
+		MainItemIconWidget->SetVisibility(ESlateVisibility::Hidden);
+		break;
 	}
 
 	AddMessage(ControllerID, player + State + " the item!");
@@ -192,10 +202,16 @@ void UPlayerWidget::OnMainItemSet(ATaskObject* Object)
 {
 	AddMessage(-1, "The King demands a new item!");
 	MainItem = Object;
-	if(MainItem)
+	if(IsValid(MainItem))
 	{
 		MainItemIconWidget->SetVisibility(ESlateVisibility::Visible);
 	}
+	else
+	{
+		MainItem = nullptr;
+	}
+}
+
 }
 
 void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& Controllers)
