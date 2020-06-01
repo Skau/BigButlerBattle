@@ -723,7 +723,10 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		Spawned->Enable(true, false, false);
 		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 		if (Object->GetIsMainItem())
+		{
 			Spawned->SetAsMainItem();
+			Object->SetAsMainItem(false);
+		}
 
 		Spawned->bOnTray = true;
 		Spawned->SetParticlesEnable(false);
@@ -859,7 +862,10 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, const FVector SpawnLoca
 		Spawned->SetTaskData(Object->GetTaskData());
 
 		if (Object->GetIsMainItem())
+		{
 			Spawned->SetAsMainItem();
+			Object->SetAsMainItem(false);
+		}
 
 		// Spawn transform
 		auto Transform = Object->GetTransform();

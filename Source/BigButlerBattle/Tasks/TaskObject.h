@@ -35,7 +35,7 @@ public:
 
 	bool bCanHit = false;
 
-	void SetAsMainItem();
+	void SetAsMainItem(bool bMainItem = true);
 
 	bool GetIsMainItem() const { return bIsMainItem; }
 
