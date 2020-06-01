@@ -212,8 +212,6 @@ void UPlayerWidget::OnMainItemSet(ATaskObject* Object)
 	}
 }
 
-}
-
 void UPlayerWidget::InitializeScores(const TArray<APlayerCharacterController*>& Controllers)
 {
 	if (!PlayerScoreWidgetClass)
