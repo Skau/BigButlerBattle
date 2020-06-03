@@ -47,10 +47,12 @@ struct FSplineInfo
 	uint8 PointCount;
 
 	float SplinePos = -1.f;
+	FVector StartPos;
 	float StartDistanceToCurve;
 	FVector StartVelocity;
 	float StartVelocitySize; // Cheaper to save length than to do a square root almost every physics frame
-	FRotator StartRotation;
+	FVector EnteringDir;
+	FQuat StartRotation;
 	float TravelTime{0.f};
 
 	FSplineStateChangedSignature OnSplineChanged;

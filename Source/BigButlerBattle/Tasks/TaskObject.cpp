@@ -16,6 +16,7 @@
 #include "Utils/btd.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystemInstance.h"
+#include "Player/PlayerCharacterController.h"
 
 ATaskObject::ATaskObject()
 {
@@ -42,10 +43,10 @@ void ATaskObject::SetSelected(const bool Value) const
 		MeshComponent->SetCustomDepthStencilValue(static_cast<int32>(Value));
 }
 
-void ATaskObject::SetAsMainItem()
+void ATaskObject::SetAsMainItem(bool bMainItem)
 {
-	bIsMainItem = true;
-	MeshComponent->SetCustomDepthStencilValue(MainItemStencilValue); // Permanent outline (can also be set in beginplay if main item is set in editor)
+	bIsMainItem = bMainItem;
+	MeshComponent->SetCustomDepthStencilValue(bMainItem ? MainItemStencilValue : 0); // Permanent outline (can also be set in beginplay if main item is set in editor)
 }
 
 
@@ -55,7 +56,8 @@ void ATaskObject::Reset()
 	{
 		// When out of bounds or not reachable (not touched for TimeUntilResetThreshold seconds)
 		const auto GM = Cast<ABigButlerBattleGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-		GM->SetNewMainItem();
+		GM->OnMainItemStateChanged(-1, EMainItemState::Destroyed);
+		SetAsMainItem(false);
 	}
 	Destroy();
 }

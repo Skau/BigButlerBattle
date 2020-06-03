@@ -304,6 +304,8 @@ void APlayerCharacter::EnableRagdoll(const FVector& Impulse, const FVector& HitL
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	GetMesh()->WakeAllRigidBodies();
 
+	Movement->SetMovementMode(EMovementMode::MOVE_None);
+	
 	if (!Impulse.IsZero())
 	{
 		GetMesh()->AddImpulseAtLocation(Impulse, HitLocation);
@@ -721,7 +723,10 @@ void APlayerCharacter::OnObjectPickedUp(ATaskObject* Object)
 		Spawned->Enable(true, false, false);
 		UGameplayStatics::FinishSpawningActor(Spawned, FTransform::Identity);
 		if (Object->GetIsMainItem())
+		{
 			Spawned->SetAsMainItem();
+			Object->SetAsMainItem(false);
+		}
 
 		Spawned->bOnTray = true;
 		Spawned->SetParticlesEnable(false);
@@ -857,7 +862,10 @@ void APlayerCharacter::DetachObject(ATaskObject* Object, const FVector SpawnLoca
 		Spawned->SetTaskData(Object->GetTaskData());
 
 		if (Object->GetIsMainItem())
+		{
 			Spawned->SetAsMainItem();
+			Object->SetAsMainItem(false);
+		}
 
 		// Spawn transform
 		auto Transform = Object->GetTransform();

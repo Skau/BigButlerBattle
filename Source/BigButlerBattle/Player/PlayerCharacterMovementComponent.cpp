@@ -637,14 +637,22 @@ void UPlayerCharacterMovementComponent::HandleImpact(const FHitResult& Hit, cons
 
 float UPlayerCharacterMovementComponent::CalcRotation() const
 {
-	const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
+	float Speed{0.f};
 
 	if (IsFalling())
 	{
-		return GetRotationInput() * SkateboardAirRotationSpeed;
+		Speed = SkateboardAirRotationSpeed;
+	}
+	else if (IsStandstill())
+	{
+		const float StandstillRotationSpeed = SkateboardRotationSpeed * SkateboardStandstillRotationSpeed;
+		Speed = StandstillRotationSpeed;
+	}
+	else
+	{
+		Speed = FMath::Lerp(SkateboardRotationSpeed, HandbrakeRotationSpeed, GetHandbrakeAmount());
 	}
 
-	const auto Speed = bIsStandstill ? StandstillRotationSpeed : FMath::Lerp(SkateboardRotationSpeed, HandbrakeRotationSpeed, GetHandbrakeAmount());
 	return GetRotationInput() * Speed;
 }
 
@@ -754,8 +762,6 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float DeltaTime, int32 Iter
 			return;
 		}
 
-		// auto& SplineRef = *CurrentSpline.SkateboardSplineReference;
-
 
 		// 1. If just entering the spline, do a setup.
 		if (CurrentSpline.PlayerState == static_cast<uint8>(EGrindingMovementState::STATE_GodKnowsWhere))
@@ -802,7 +808,7 @@ void UPlayerCharacterMovementComponent::PhysGrinding(float DeltaTime, int32 Iter
 			else
 			{
 				// Correct grinding offset floating point error
-				CorrectGrindingPosError();
+				// CorrectGrindingPosError();
 			}
 		}
 	}
@@ -827,46 +833,54 @@ void UPlayerCharacterMovementComponent::CalcGrindingVelocity(const float DeltaTi
 
 void UPlayerCharacterMovementComponent::CalcGrindingEnteringVelocity(const float DeltaTime)
 {
-	const auto Owner = Cast<APlayerCharacter>(GetOwner());
-	if (!Owner || DeltaTime < MIN_TICK_TIME)
+	if (DeltaTime < MIN_TICK_TIME)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Could'nt get playercharacter!"));
 		return;
 	}
 
 	// Get velocity size
-	const float VelocitySize = bUseConstantEnteringSpeed ? GrindingEnteringSpeed : Velocity.Size();
+	const float VelocitySize = bUseConstantEnteringSpeed ? GrindingEnteringSpeed : CurrentSpline.StartVelocitySize;
 	auto& SplineRef = *CurrentSpline.SkateboardSplineReference;
 
-
 	// Figure out start distance to curve.
-	const float StartVel = bUseConstantEnteringSpeed ? VelocitySize : CurrentSpline.StartVelocitySize;
 	/*
 		v = s / t
 		s / v = s / (s / t) = (s * t) / s = t
 	*/
-	const float SecondsToHitCurve = FMath::IsNearlyZero(StartVel) ?
-	0.f : CurrentSpline.StartDistanceToCurve / StartVel;
-
+	const float SecondsToHitCurve = FMath::IsNearlyZero(VelocitySize) ?
+		0.f : CurrentSpline.StartDistanceToCurve / VelocitySize;
+	const bool bZeroTravelTime = FMath::IsNearlyZero(SecondsToHitCurve);
 
 	// Get how far into the entering process we are (CurrentTimeStep).
 	CurrentSpline.TravelTime += DeltaTime;
-	const float CurrentTimeStep = FMath::IsNearlyZero(SecondsToHitCurve) ? 1.f : CurrentSpline.TravelTime / SecondsToHitCurve;
-
+	const float CurrentTimeStep = bZeroTravelTime ? 1.f : FMath::Clamp(CurrentSpline.TravelTime / SecondsToHitCurve, 0.f, 1.f);
 	const FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
-	// We subtract the skateboard offset because we want the character centre to be the skateboard centre on the curve.
-	const auto Dist = (SplineWorldPos - Owner->GetSkateboardLocation()) - Owner->GetActorLocation();
-	const bool bArrived = FMath::IsNearlyZero(SecondsToHitCurve) || Dist.Size() < VelocitySize * DeltaTime;
 
-	// If we needed to clamp velocity to the distance to the spline, we have arrived on the spline.
+	const bool bArrived = bZeroTravelTime || SecondsToHitCurve <= CurrentSpline.TravelTime || CurrentTimeStep >= 1.f;
+
 	if (bArrived)
 	{
-		Velocity = Dist / DeltaTime;
+		// If arrived at the curve, use one last velocity to correct position.
+		const float remainderTime = SecondsToHitCurve - (CurrentSpline.TravelTime - DeltaTime);
+		if (remainderTime < 0.f || FMath::IsNearlyZero(remainderTime))
+		{
+			Velocity = FVector::ZeroVector;
+		}
+		else
+		{
+			/**
+			 * v2 * DeltaTime = v1 * remainderTime
+			 * v2 = (v1 * remainderTime) / DeltaTime
+			 */
+			Velocity = CurrentSpline.EnteringDir * ((VelocitySize * remainderTime) / DeltaTime);
+		}
+
 		CurrentSpline.SetState(EGrindingMovementState::STATE_OnRail);
 	}
 	else
 	{
-		Velocity = Dist.GetSafeNormal() * VelocitySize;
+		Velocity = CurrentSpline.EnteringDir * VelocitySize;
 	}
 
 	// Check velocity
@@ -876,8 +890,8 @@ void UPlayerCharacterMovementComponent::CalcGrindingEnteringVelocity(const float
 
 	// Rotation
 	const auto SplineDir = SplineRef.GetDirectionAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) * CurrentSpline.SplineDir;
-	const auto TargetRotation = UKismetMathLibrary::MakeRotFromZX(FVector::UpVector, SplineDir);
-	GrindingRotation = FQuat::Slerp(CurrentSpline.StartRotation.Quaternion(), TargetRotation.Quaternion(), CurrentTimeStep);
+	const auto TargetRotation = UKismetMathLibrary::MakeRotFromZX(FVector::UpVector, SplineDir).Quaternion();
+	GrindingRotation = FQuat::Slerp(CurrentSpline.StartRotation, TargetRotation, CurrentTimeStep);
 }
 
 void UPlayerCharacterMovementComponent::CalcGrindingRailVelocity(const float DeltaTime)
@@ -995,14 +1009,16 @@ void UPlayerCharacterMovementComponent::OnSplineChangedImplementation(const EGri
 
 		auto &SplineRef = *CurrentSpline.SkateboardSplineReference;
 
-		const auto StartWorldPos = Owner->GetActorLocation();
+		CurrentSpline.StartPos = Owner->GetActorLocation() + Owner->GetSkateboardLocation();
 		CurrentSpline.StartVelocity = Velocity;
 		CurrentSpline.StartVelocitySize = bOnlyUseHorizontalVelocityInGrindingEntering ? Velocity.Size2D() : Velocity.Size();
-		CurrentSpline.StartRotation = Owner->GetActorRotation();
-		CurrentSpline.SplinePos = SplineRef.FindInputKeyClosestToWorldLocation(StartWorldPos);
+		CurrentSpline.StartRotation = Owner->GetActorRotation().Quaternion();
+		CurrentSpline.SplinePos = SplineRef.FindInputKeyClosestToWorldLocation(CurrentSpline.StartPos);
 		// We subtract the skateboard offset because we want the character centre to be the skateboard centre on the curve.
-		const FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World) - Owner->GetSkateboardLocation();
-		CurrentSpline.StartDistanceToCurve = (SplineWorldPos - StartWorldPos).Size();
+		const FVector SplineWorldPos = SplineRef.GetLocationAtSplineInputKey(CurrentSpline.SplinePos, ESplineCoordinateSpace::World);
+		auto Dir = SplineWorldPos - CurrentSpline.StartPos;
+		CurrentSpline.StartDistanceToCurve = Dir.Size();
+		CurrentSpline.EnteringDir = Dir.GetSafeNormal();
 		// UE_LOG(LogTemp, Warning, TEXT("Started grinding movement! Startingpos: %f"), CurrentSpline.SplinePos);
 		if (!Velocity.IsNearlyZero())
 		{

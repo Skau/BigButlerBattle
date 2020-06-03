@@ -13,7 +13,8 @@ enum class EMainItemState : uint8
 {
 	PickedUp,
 	Dropped,
-	Delivered
+	Delivered,
+	Destroyed
 };
 
 // Broadcasted when the player presses pause
