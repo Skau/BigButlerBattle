@@ -19,3 +19,6 @@ The game is designed for controllers but works with a keyboard as well. Keyboard
 ## Download
 Head over to the [releases](https://github.com/Skau/BigButlerBattle/releases) tab to download the latest compiled build,
 or compile from source yourself. Built using Unreal Engine 4.24.
+
+## License
+Most of the repository is under exclusive copyright, except for the source code located in the *Source* folder which is under a MIT open source license and can be used and distributed freely under the terms specified in the [LICENSE](Source/LICENSE.md) file.
