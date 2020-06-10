@@ -1,0 +1,1 @@
+Copyright (c) 2020 Even Topland, Kristoffer Skau, Trym Horgen, Anders Syvertsen
